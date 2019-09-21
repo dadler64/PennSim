@@ -29,15 +29,6 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <distributionManagement>
-    <repository>
-      <id>github</id>
-      <name>GitHub dadler64 Apache Maven Packages</name>
-      <url>https://maven.pkg.github.com/dadler64/PennSim</url>
-    </repository>
-  </distributionManagement>
-
-
   <build>
     <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
 
