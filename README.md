@@ -6,11 +6,18 @@
 <p align="center">
   <a href="https://img.shields.io/github/issues/dadler64/PennSim">
     <img src="https://img.shields.io/github/issues/dadler64/PennSim.svg"
-         alt="GitHub Issues">
+         alt="GitHub Issues"/>
   </a>
   <a href="https://img.shields.io/github/license/dadler64/PennSim">
     <img src="https://img.shields.io/github/license/dadler64/PennSim.svg"
           alt="License">
+  </a>
+  <a href="https://www.codacy.com/manual/dadler64/PennSim?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dadler64/PennSim&amp;utm_campaign=Badge_Grade">
+    <img src="https://api.codacy.com/project/badge/Grade/d486b62e29c64597be96e34e5a0bb9f5"/>
+  </a>
+  <a href="https://img.shields.io/github/v/release/dadler64/PennSim">
+    <img src="https://img.shields.io/github/v/release/dadler64/PennSim.svg"
+          alt="License"/>
   </a>
 </p>
 
@@ -40,7 +47,7 @@
 
   It is recommended that you import the project into an IDE such as IntelliJ and build it in there.
 
-  Once you get the project running (or have acquired the [PennSim.jar](https://github.com/dadler64/PennSim/packages/)) give [A Gentle Guide to Using PennSim](https://github.com/dadler64/PennSim/wiki/PennSim-Guide) on the wiki a read to learn the basics of PennSim and the LC3 architecture.
+  Once you get the project running (or have acquired the [PennSim.jar](https://github.com/dadler64/PennSim/releases/)) give [A Gentle Guide to Using PennSim](https://github.com/dadler64/PennSim/wiki/PennSim-Guide) on the wiki a read to learn the basics of PennSim and the LC3 architecture.
 
 ## Contributing
 
