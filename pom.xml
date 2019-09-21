@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--suppress ALL-->
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+
+
+  <groupId>com.pennsim</groupId>
+  <artifactId>PennSim</artifactId>
+  <version>1.2.5</version>
+
+  <name>PennSim</name>
+  <description>Decompiled source code for PennSim LC3/P37X simulator.</description>
+  <url>https://github.com/dadler64/PennSim</url>
+
+  <licenses>
+    <license>
+      <name>GNU General Public License, Version 3.0</name>
+      <url>https://www.gnu.org/licenses/</url>
+    </license>
+  </licenses>
+
+  <properties>
+    <icon.windows>src/main/resources/PennSimIcon.ico</icon.windows>
+    <kotlin.version>1.3.50</kotlin.version>
+    <main.class>com.pennsim.PennSim</main.class>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>GitHub dadler64 Apache Maven Packages</name>
+      <url>https://maven.pkg.github.com/dadler64/PennSim</url>
+    </repository>
+  </distributionManagement>
+
+
+  <build>
+    <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+
+    <plugins>
+
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>8</source>
+          <target>8</target>
+        </configuration>
+        <executions>
+          <!-- Replacing default-compile as it is treated specially by maven -->
+          <execution>
+            <id>default-compile</id>
+            <phase>none</phase>
+          </execution>
+          <execution>
+            <id>default-testCompile</id>
+            <phase>none</phase>
+          </execution>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <id>compile</id>
+            <phase>compile</phase>
+          </execution>
+          <execution>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+            <id>testCompile</id>
+            <phase>test-compile</phase>
+          </execution>
+        </executions>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>3.8.1</version>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <configuration>
+              <transformers>
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <manifestEntries>
+                    <Main-Class>${main.class}</Main-Class>
+                    <!--                                        <Build-Number>000</Build-Number>-->
+                  </manifestEntries>
+                </transformer>
+              </transformers>
+            </configuration>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
+        </executions>
+        <groupId>org.apache.maven.plugins</groupId>
+        <version>3.2.1</version>
+      </plugin>
+
+      <plugin>
+        <artifactId>launch4j-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <configuration>
+              <classPath>
+                <mainClass>${main.class}</mainClass>
+                <preCp>anything</preCp>
+              </classPath>
+              <downloadUrl>http://java.com/download</downloadUrl>
+              <headerType>gui</headerType>
+              <icon>${icon.windows}</icon>
+              <jar>
+                ${project.build.directory}/${project.artifactId}-${project.version}.jar
+              </jar>
+              <jre>
+                <jdkPreference>preferJre</jdkPreference>
+                <minVersion>1.8.0</minVersion>
+              </jre>
+              <outfile>${project.build.directory}/${project.artifactId}-${project.version}.exe
+              </outfile>
+              <versionInfo>
+                <companyName>com.adlerd</companyName>
+                <copyright>2019 Dan Adler</copyright>
+                <fileDescription>${project.name}</fileDescription>
+                <fileVersion>${project.version}.0</fileVersion>
+                <internalName>${project.artifactId}</internalName>
+                <originalFilename>${project.artifactId}.exe</originalFilename>
+                <productName>${project.name}</productName>
+                <productVersion>${project.version}.0</productVersion>
+                <txtFileVersion>${project.version}.0</txtFileVersion>
+                <txtProductVersion>${project.version}.0</txtProductVersion>
+              </versionInfo>
+            </configuration>
+            <goals>
+              <goal>launch4j</goal>
+            </goals>
+            <id>l4j-clui</id>
+            <phase>package</phase>
+          </execution>
+        </executions>
+        <groupId>com.akathist.maven.plugins.launch4j</groupId>
+        <version>1.7.25</version>
+      </plugin>
+    </plugins>
+
+  </build>
+
+</project>

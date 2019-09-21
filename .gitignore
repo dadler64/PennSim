@@ -1,0 +1,7 @@
+/out
+/.idea
+/target
+dependency-reduced-pom.xml
+*.obj
+*.sym
+*.iml
