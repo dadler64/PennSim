@@ -15,9 +15,9 @@
   <a href="https://www.codacy.com/manual/dadler64/PennSim?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dadler64/PennSim&amp;utm_campaign=Badge_Grade">
     <img src="https://api.codacy.com/project/badge/Grade/d486b62e29c64597be96e34e5a0bb9f5"/>
   </a>
-  <a href="https://img.shields.io/github/v/release/dadler64/PennSim">
-    <img src="https://img.shields.io/github/v/release/dadler64/PennSim.svg"
-          alt="License"/>
+  <a href="https://img.shields.io/github/release/dadler64/PennSim">
+    <img src="https://img.shields.io/github/release/dadler64/PennSim.svg"
+          alt="Release">
   </a>
 </p>
 
