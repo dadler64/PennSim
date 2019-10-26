@@ -1,5 +1,8 @@
 package com.pennsim;
 
+import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED;
+import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
+
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -14,85 +17,100 @@ import javax.swing.KeyStroke;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
+/**
+ * Class which represents the command line panel where you for the program
+ */
 public class CommandLinePanel extends JPanel implements ActionListener, PrintableConsole {
 
-    private final CommandLine cmd;
-    private final Machine mac;
-    protected JTextField textField = new JTextField(20);
-    protected JTextArea textArea;
+    private final CommandLine commandLine;
+    private final Machine machine;
+    private JTextField textField = new JTextField(20);
+    private JTextArea textArea;
     private GUI gui;
 
-    public CommandLinePanel(Machine var1, CommandLine var2) {
+    CommandLinePanel(Machine machine, CommandLine commandLine) {
         super(new GridBagLayout());
         this.textField.addActionListener(this);
         this.textField.getInputMap().put(KeyStroke.getKeyStroke("UP"), "prevHistory");
         this.textField.getInputMap().put(KeyStroke.getKeyStroke("DOWN"), "nextHistory");
         this.textField.getActionMap().put("prevHistory", new AbstractAction() {
-            public void actionPerformed(ActionEvent var1) {
-                CommandLinePanel.this.textField.setText(CommandLinePanel.this.cmd.getPrevHistory());
+            public void actionPerformed(ActionEvent event) {
+                CommandLinePanel.this.textField.setText(CommandLinePanel.this.commandLine.getPrevHistory());
             }
         });
         this.textField.getActionMap().put("nextHistory", new AbstractAction() {
-            public void actionPerformed(ActionEvent var1) {
-                CommandLinePanel.this.textField.setText(CommandLinePanel.this.cmd.getNextHistory());
+            public void actionPerformed(ActionEvent event) {
+                CommandLinePanel.this.textField.setText(CommandLinePanel.this.commandLine.getNextHistory());
             }
         });
-        this.mac = var1;
-        this.cmd = var2;
-        this.textArea = new JTextArea(5, 70);
+        this.machine = machine;
+        this.commandLine = commandLine;
+        this.textArea = new JTextArea(10, 70);
         this.textArea.setEditable(false);
         this.textArea.setLineWrap(true);
         this.textArea.setWrapStyleWord(true);
-        JScrollPane var3 = new JScrollPane(this.textArea, 22, 30);
-        GridBagConstraints var4 = new GridBagConstraints();
-        var4.gridwidth = 0;
-        var4.fill = 2;
-        this.add(this.textField, var4);
-        var4 = new GridBagConstraints();
-        var4.gridwidth = 0;
-        var4.fill = 1;
-        var4.weightx = 1.0D;
-        var4.weighty = 1.0D;
-        this.add(var3, var4);
+        JScrollPane scrollPane = new JScrollPane(this.textArea, VERTICAL_SCROLLBAR_ALWAYS, HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridwidth = 0;
+        constraints.fill = 2;
+        this.add(this.textField, constraints);
+        constraints = new GridBagConstraints();
+        constraints.gridwidth = 0;
+        constraints.fill = 1;
+        constraints.weightx = 1.0D;
+        constraints.weighty = 1.0D;
+        this.add(scrollPane, constraints);
         this.setMinimumSize(new Dimension(20, 1));
     }
 
-    public void setGUI(GUI var1) {
-        this.cmd.setGUI(var1);
-        this.gui = var1;
+    /**
+     * Set attach this to the main GUI
+     *
+     * @param gui gui to be bound to
+     */
+    void setGUI(GUI gui) {
+        this.commandLine.setGUI(gui);
+        this.gui = gui;
     }
 
+    /**
+     * Clear the command line
+     */
     public void clear() {
-        Document var1 = this.textArea.getDocument();
+        Document document = this.textArea.getDocument();
 
         try {
-            var1.remove(0, var1.getLength());
-        } catch (BadLocationException var3) {
-            ErrorLog.logError(var3);
+            document.remove(0, document.getLength());
+        } catch (BadLocationException e) {
+            ErrorLog.logError(e);
         }
 
     }
 
-    public void actionPerformed(ActionEvent var1) {
-        String var2;
-        if (var1 != null) {
-            var2 = this.textField.getText();
-            this.cmd.scheduleCommand(var2);
+    /**
+     * Execute the action based in the command inputted into the command line
+     *
+     * @param event ex
+     */
+    public void actionPerformed(ActionEvent event) {
+        String text;
+        if (event != null) {
+            text = this.textField.getText();
+            this.commandLine.scheduleCommand(text);
         }
 
-        while (this.cmd.hasMoreCommands() && (!this.mac.isContinueMode() || this.cmd
-                .hasQueuedStop())) {
+        while (this.commandLine.hasMoreCommands() && (!this.machine.isContinueMode() || this.commandLine.hasQueuedStop())) {
             try {
-                var2 = this.cmd.runCommand(this.cmd.getNextCommand());
-                if (var2 != null) {
-                    if (var2.length() > 0) {
-                        Console.println(var2);
+                text = this.commandLine.runCommand(this.commandLine.getNextCommand());
+                if (text != null) {
+                    if (text.length() > 0) {
+                        Console.println(text);
                     }
                 } else {
                     this.gui.confirmExit();
                 }
-            } catch (ExceptionException var3) {
-                var3.showMessageDialog(this.getParent());
+            } catch (GenericException e) {
+                e.showMessageDialog(this.getParent());
             }
         }
 
@@ -100,11 +118,19 @@ public class CommandLinePanel extends JPanel implements ActionListener, Printabl
         this.textArea.setCaretPosition(this.textArea.getDocument().getLength());
     }
 
-    public void print(String var1) {
-        this.textArea.append(var1);
+    /**
+     * Print text to the command line
+     *
+     * @param text the text to be printed
+     */
+    public void print(String text) {
+        this.textArea.append(text);
     }
 
+    /**
+     * Reset the command line
+     */
     public void reset() {
-        this.cmd.reset();
+        this.commandLine.reset();
     }
 }

@@ -14,430 +14,435 @@ import java.util.ListIterator;
 import javax.swing.SwingUtilities;
 
 public class Machine implements Runnable {
-   private Memory memory;
-   private RegisterFile registers;
-   private BranchPredictor bpred;
-   private GUI gui = null;
-   private LinkedList NotifyOnStop;
-   private PrintWriter traceWriter = null;
-   private final Hashtable symbolTable = new Hashtable();
-   private final Hashtable inverseTable = new Hashtable();
-   private final Hashtable addrToInsnTable = new Hashtable();
-   public int CYCLE_COUNT = 0;
-   public int INSTRUCTION_COUNT = 0;
-   public int LOAD_STALL_COUNT = 0;
-   public int BRANCH_STALL_COUNT = 0;
-   public static final int NUM_CONTINUES = 400;
-   boolean stopImmediately = false;
-   private boolean continueMode = false;
 
-   public Machine() {
-      if (PennSim.isP37X()) {
-         (new P37X()).init();
-      } else if (PennSim.isLC3()) {
-         (new LC3()).init();
-      }
+    private static final int NUM_CONTINUES = 400;
+    private final Hashtable<String, Integer> symbolTable = new Hashtable<>();
+    private final Hashtable<Integer, String> inverseTable = new Hashtable<>();
+    private final Hashtable<Integer, Boolean> addressToInstructionTable = new Hashtable<>();
+    int cycleCount = 0;
+    int instructionCount = 0;
+    int loadStallCount = 0;
+    int branchStallCount = 0;
+    private Memory memory;
+    private RegisterFile registers;
+    private BranchPredictor branchPredictor;
+    private GUI gui = null;
+    private LinkedList<ActionListener> notifyOnStop;
+    private PrintWriter traceWriter = null;
+    private boolean stopImmediately = false;
+    private boolean continueMode = false;
 
-      this.memory = new Memory(this);
-      this.registers = new RegisterFile(this);
-      this.bpred = new BranchPredictor(this, 8);
-      this.NotifyOnStop = new LinkedList();
-   }
+    public Machine() {
+        if (PennSim.isP37X()) {
+            (new P37X()).init();
+        } else if (PennSim.isLC3()) {
+            (new LC3()).init();
+        }
 
-   public void setGUI(GUI var1) {
-      this.gui = var1;
-   }
+        this.memory = new Memory(this);
+        this.registers = new RegisterFile(this);
+        this.branchPredictor = new BranchPredictor(8);
+        this.notifyOnStop = new LinkedList<>();
+    }
 
-   public GUI getGUI() {
-      return this.gui;
-   }
+    GUI getGUI() {
+        return this.gui;
+    }
 
-   public void setStoppedListener(ActionListener var1) {
-      this.NotifyOnStop.add(var1);
-   }
+    void setGUI(GUI gui) {
+        this.gui = gui;
+    }
 
-   public void reset() {
-      this.symbolTable.clear();
-      this.inverseTable.clear();
-      this.addrToInsnTable.clear();
-      this.memory.reset();
-      this.registers.reset();
-      if (this.gui != null) {
-         this.gui.reset();
-      }
+    void setStoppedListener(ActionListener listener) {
+        this.notifyOnStop.add(listener);
+    }
 
-      if (this.isTraceEnabled()) {
-         this.disableTrace();
-      }
+    public void reset() {
+        this.symbolTable.clear();
+        this.inverseTable.clear();
+        this.addressToInstructionTable.clear();
+        this.memory.reset();
+        this.registers.reset();
+        if (this.gui != null) {
+            this.gui.reset();
+        }
 
-      this.CYCLE_COUNT = 0;
-      this.INSTRUCTION_COUNT = 0;
-      this.LOAD_STALL_COUNT = 0;
-      this.BRANCH_STALL_COUNT = 0;
-   }
+        if (this.isTraceEnabled()) {
+            this.disableTrace();
+        }
 
-   public void cleanup() {
-      ErrorLog.logClose();
-      if (this.isTraceEnabled()) {
-         this.disableTrace();
-      }
+        this.cycleCount = 0;
+        this.instructionCount = 0;
+        this.loadStallCount = 0;
+        this.branchStallCount = 0;
+    }
 
-   }
+    void cleanup() {
+        ErrorLog.logClose();
+        if (this.isTraceEnabled()) {
+            this.disableTrace();
+        }
 
-   public Memory getMemory() {
-      return this.memory;
-   }
+    }
 
-   public RegisterFile getRegisterFile() {
-      return this.registers;
-   }
+    public Memory getMemory() {
+        return this.memory;
+    }
 
-   public BranchPredictor getBranchPredictor() {
-      return this.bpred;
-   }
+    RegisterFile getRegisterFile() {
+        return this.registers;
+    }
 
-   public void setTraceWriter(PrintWriter var1) {
-      this.traceWriter = var1;
-   }
+    BranchPredictor getBranchPredictor() {
+        return this.branchPredictor;
+    }
 
-   public PrintWriter getTraceWriter() {
-      return this.traceWriter;
-   }
+    PrintWriter getTraceWriter() {
+        return this.traceWriter;
+    }
 
-   public boolean isTraceEnabled() {
-      return this.traceWriter != null;
-   }
+    void setTraceWriter(PrintWriter printWriter) {
+        this.traceWriter = printWriter;
+    }
 
-   public void disableTrace() {
-      this.traceWriter.close();
-      this.traceWriter = null;
-   }
+    boolean isTraceEnabled() {
+        return this.traceWriter != null;
+    }
 
-   public String loadSymbolTable(File var1) {
-      try {
-         BufferedReader var3 = new BufferedReader(new FileReader(var1));
-         int var4 = 0;
+    void disableTrace() {
+        this.traceWriter.close();
+        this.traceWriter = null;
+    }
 
-         while(var3.ready()) {
-            String var5 = var3.readLine();
-            ++var4;
-            if (var4 >= 5) {
-               String[] var6 = var5.split("\\s+");
-               if (var6.length >= 3) {
-                  int var7 = Word.parseNum("x" + var6[2]);
-                  if ("$".equals(var6[1])) {
-                     this.addrToInsnTable.put(var7, true);
-                  } else {
-                     this.symbolTable.put(var6[1].toLowerCase(), var7);
-                     this.inverseTable.put(var7, var6[1]);
-                  }
-               }
-            }
-         }
+    /**
+     * Function to load the symbol file (.sym) into the system
+     *
+     * @param file the symbol file
+     * @return a String confirming that the file was either loaded or was not loaded
+     */
+    private String loadSymbolTable(File file) {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            int count = 0;
 
-         String var2 = "Loaded symbol file '" + var1.getPath() + "'";
-         return var2;
-      } catch (IOException var8) {
-         return "Could not load symbol file '" + var1.getPath() + "'";
-      }
-   }
-
-   public boolean isContinueMode() {
-      return this.continueMode;
-   }
-
-   public void setContinueMode() {
-      this.continueMode = true;
-   }
-
-   public void clearContinueMode() {
-      this.continueMode = false;
-   }
-
-   public String loadObjectFile(File var1) {
-      byte[] var2 = new byte[2];
-      String var4 = var1.getPath();
-      if (!var4.endsWith(".obj")) {
-         return "Error: object filename '" + var4 + "' does not end with .obj";
-      } else {
-         String var3;
-         try {
-            FileInputStream var5 = new FileInputStream(var1);
-            var5.read(var2);
-            int var6 = Word.convertByteArray(var2[0], var2[1]);
-
-            while(true) {
-               if (var5.read(var2) != 2) {
-                  var5.close();
-                  var3 = "Loaded object file '" + var4 + "'";
-                  break;
-               }
-
-               Integer var7 = new Integer(var6);
-               if (this.symbolTable.contains(var7)) {
-                  String var8 = (String)this.inverseTable.get(var7);
-                  this.symbolTable.remove(var8.toLowerCase());
-                  this.inverseTable.remove(var7);
-               }
-
-               this.memory.write(var6, Word.convertByteArray(var2[0], var2[1]));
-               ++var6;
-            }
-         } catch (IOException var9) {
-            return "Error: Could not load object file '" + var4 + "'";
-         }
-
-         String var10 = var4;
-         if (var4.endsWith(".obj")) {
-            var10 = var4.substring(0, var4.length() - 4);
-         }
-
-         var10 = var10 + ".sym";
-         var3 = var3 + "\n" + this.loadSymbolTable(new File(var10));
-         return var3;
-      }
-   }
-
-   public String setKeyboardInputStream(File var1) {
-      String var2;
-      try {
-         this.memory.getKeyBoardDevice().setInputStream(new FileInputStream(var1));
-         this.memory.getKeyBoardDevice().setInputMode(KeyboardDevice.SCRIPT_MODE);
-         var2 = "Keyboard input file '" + var1.getPath() + "' enabled";
-         if (this.gui != null) {
-            this.gui.setTextConsoleEnabled(false);
-         }
-      } catch (FileNotFoundException var4) {
-         var2 = "Could not open keyboard input file '" + var1.getPath() + "'";
-         if (this.gui != null) {
-            this.gui.setTextConsoleEnabled(true);
-         }
-      }
-
-      return var2;
-   }
-
-   public void executeStep() throws ExceptionException {
-      this.registers.setClockMCR(true);
-      this.stopImmediately = false;
-      this.executePumpedContinues(1);
-      this.updateStatusLabel();
-      if (this.gui != null) {
-         this.gui.scrollToPC(0);
-      }
-
-   }
-
-   public void executeNext() throws ExceptionException {
-      if (ISA.isCall(this.memory.read(this.registers.getPC()))) {
-         this.memory.setNextBreakPoint((this.registers.getPC() + 1) % 65536);
-         this.executeMany();
-      } else {
-         this.executeStep();
-      }
-
-   }
-
-   public synchronized String stopExecution(boolean var1) {
-      return this.stopExecution(0, var1);
-   }
-
-   public synchronized String stopExecution(int var1, boolean var2) {
-      this.stopImmediately = true;
-      this.clearContinueMode();
-      this.updateStatusLabel();
-      if (this.gui != null) {
-         this.gui.scrollToPC(var1);
-      }
-
-      this.memory.fireTableDataChanged();
-      if (var2) {
-         ListIterator var3 = this.NotifyOnStop.listIterator(0);
-
-         while(var3.hasNext()) {
-            ActionListener var4 = (ActionListener)var3.next();
-            var4.actionPerformed(null);
-         }
-      }
-
-      return "Stopped at " + Word.toHex(this.registers.getPC());
-   }
-
-   public void executePumpedContinues() throws ExceptionException {
-      this.executePumpedContinues(400);
-   }
-
-   public void executePumpedContinues(int var1) throws ExceptionException {
-      int var2 = var1;
-      this.registers.setClockMCR(true);
-      if (this.gui != null) {
-         this.gui.setStatusLabelRunning();
-      }
-
-      while(!this.stopImmediately && var2 > 0) {
-         try {
-            int var3 = this.registers.getPC();
-            this.registers.checkAddr(var3);
-            Word var4 = this.memory.getInst(var3);
-            InstructionDef var5 = ISA.lookupTable[var4.getValue()];
-            if (var5 == null) {
-               throw new IllegalInstructionException("Undefined instruction:  " + var4.toHex());
+            while (reader.ready()) {
+                String line = reader.readLine();
+                ++count;
+                if (count >= 5) {
+                    String[] lineArr = line.split("\\s+");
+                    if (lineArr.length >= 3) {
+                        int value = Word.parseNum("x" + lineArr[2]);
+                        if ("$".equals(lineArr[1])) {
+                            this.addressToInstructionTable.put(value, true);
+                        } else {
+                            this.symbolTable.put(lineArr[1].toLowerCase(), value);
+                            this.inverseTable.put(value, lineArr[1]);
+                        }
+                    }
+                }
             }
 
-            int var6 = var5.execute(var4, var3, this.registers, this.memory, this);
-            this.registers.setPC(var6);
-            ++this.CYCLE_COUNT;
-            ++this.INSTRUCTION_COUNT;
-            int var7 = this.bpred.getPredictedPC(var3);
-            if (var6 != var7) {
-               this.CYCLE_COUNT += 2;
-               this.BRANCH_STALL_COUNT += 2;
-               this.bpred.update(var3, var6);
+            return "Loaded symbol file '" + file.getPath() + "'";
+        } catch (IOException e) {
+            return "Could not load symbol file '" + file.getPath() + "'";
+        }
+    }
+
+    boolean isContinueMode() {
+        return this.continueMode;
+    }
+
+    private void setContinueMode() {
+        this.continueMode = true;
+    }
+
+    private void clearContinueMode() {
+        this.continueMode = false;
+    }
+
+    String loadObjectFile(File file) {
+        byte[] bytes = new byte[2];
+        String inputFilePath = file.getPath();
+        if (!inputFilePath.endsWith(".obj")) {
+            return "Error: object filename '" + inputFilePath + "' does not end with .obj";
+        } else {
+            String result;
+            try {
+                FileInputStream inputStream = new FileInputStream(file);
+                inputStream.read(bytes);
+                int convertedByteArr = Word.convertByteArray(bytes[0], bytes[1]);
+
+                while (true) {
+                    if (inputStream.read(bytes) != 2) {
+                        inputStream.close();
+                        result = "Loaded object file '" + inputFilePath + "'";
+                        break;
+                    }
+
+                    if (this.symbolTable.contains(convertedByteArr)) {
+                        String var8 = this.inverseTable.get(convertedByteArr);
+                        this.symbolTable.remove(var8.toLowerCase());
+                        this.inverseTable.remove(convertedByteArr);
+                    }
+
+                    this.memory.write(convertedByteArr, Word.convertByteArray(bytes[0], bytes[1]));
+                    ++convertedByteArr;
+                }
+            } catch (IOException var9) {
+                return "Error: Could not load object file '" + inputFilePath + "'";
             }
 
-            if (var5.isLoad()) {
-               Word var8 = this.memory.getInst(var6);
-               InstructionDef var9 = ISA.lookupTable[var8.getValue()];
-               if (var9 == null) {
-                  throw new IllegalInstructionException("Undefined instruction:  " + var8.toHex());
-               }
-
-               if (!var9.isStore()) {
-                  int var10 = var5.getDestinationReg(var4);
-                  if (var10 >= 0 && (var10 == var9.getSourceReg1(var8) || var10 == var9.getSourceReg2(var8))) {
-                     ++this.CYCLE_COUNT;
-                     ++this.LOAD_STALL_COUNT;
-                  }
-               }
+            String filePath = inputFilePath;
+            if (inputFilePath.endsWith(".obj")) {
+                filePath = inputFilePath.substring(0, inputFilePath.length() - 4);
             }
 
-            if (this.isTraceEnabled()) {
-               this.generateTrace(var5, var3, var4);
+            filePath = filePath + ".sym";
+            result = result + "\n" + this.loadSymbolTable(new File(filePath));
+            return result;
+        }
+    }
+
+    String setKeyboardInputStream(File file) {
+        String response;
+        try {
+            this.memory.getKeyBoardDevice().setInputStream(new FileInputStream(file));
+            this.memory.getKeyBoardDevice().setInputMode(KeyboardDevice.SCRIPT_MODE);
+            response = "Keyboard input file '" + file.getPath() + "' enabled";
+            if (this.gui != null) {
+                this.gui.setTextConsoleEnabled(false);
             }
-
-            if (this.memory.isBreakPointSet(this.registers.getPC())) {
-               String var12 = "Hit breakpoint at " + Word.toHex(this.registers.getPC());
-               Console.println(var12);
-               this.stopExecution(true);
+        } catch (FileNotFoundException e) {
+            response = "Could not open keyboard input file '" + file.getPath() + "'";
+            if (this.gui != null) {
+                this.gui.setTextConsoleEnabled(true);
             }
+        }
 
-            if (this.memory.isNextBreakPointSet(this.registers.getPC())) {
-               this.stopExecution(true);
-               this.memory.clearNextBreakPoint(this.registers.getPC());
+        return response;
+    }
+
+    void executeStep() throws GenericException {
+        this.registers.setClockMCR(true);
+        this.stopImmediately = false;
+        this.executePumpedContinues(1);
+        this.updateStatusLabel();
+        if (this.gui != null) {
+            this.gui.scrollToPC(0);
+        }
+
+    }
+
+    void executeNext() throws GenericException {
+        if (ISA.isCall(this.memory.read(this.registers.getPC()))) {
+            this.memory.setNextBreakPoint((this.registers.getPC() + 1) % Memory.MEM_SIZE);
+            this.executeMany();
+        } else {
+            this.executeStep();
+        }
+
+    }
+
+    synchronized String stopExecution(boolean var1) {
+        return this.stopExecution(0, var1);
+    }
+
+    synchronized String stopExecution(int address, boolean var2) {
+        this.stopImmediately = true;
+        this.clearContinueMode();
+        this.updateStatusLabel();
+        if (this.gui != null) {
+            this.gui.scrollToPC(address);
+        }
+
+        this.memory.fireTableDataChanged();
+        if (var2) {
+            ListIterator iterator = this.notifyOnStop.listIterator(0);
+
+            while (iterator.hasNext()) {
+                ActionListener listener = (ActionListener) iterator.next();
+                listener.actionPerformed(null);
             }
+        }
 
-            --var2;
-         } catch (ExceptionException var11) {
-            this.stopExecution(true);
-            throw var11;
-         }
-      }
+        return "Stopped at " + Word.toHex(this.registers.getPC());
+    }
 
-      if (this.isContinueMode()) {
-         SwingUtilities.invokeLater(this);
-      }
+    private void executePumpedContinues() throws GenericException {
+        this.executePumpedContinues(NUM_CONTINUES);
+    }
 
-   }
-
-   public synchronized void executeMany() throws ExceptionException {
-      this.setContinueMode();
-      this.stopImmediately = false;
-
-      try {
-         this.executePumpedContinues();
-      } catch (ExceptionException var2) {
-         this.stopExecution(true);
-         throw var2;
-      }
-   }
-
-   public void generateTrace(InstructionDef var1, int var2, Word var3) throws IllegalMemAccessException {
-      if (this.isTraceEnabled()) {
-         PrintWriter var4 = this.getTraceWriter();
-         var4.print(Word.toHex(var2, false));
-         var4.print(" ");
-         var4.print(var3.toHex(false));
-         var4.print(" ");
-         if (this.registers.isDirty()) {
-            var4.print(Word.toHex(1, false));
-            var4.print(" ");
-            var4.print(Word.toHex(this.registers.getMostRecentlyWrittenValue(), false));
-         } else {
-            var4.print(Word.toHex(0, false));
-            var4.print(" ");
-            var4.print(Word.toHex(0, false));
-         }
-
-         var4.print(" ");
-         if (var1.isStore()) {
-            var4.print(Word.toHex(1, false));
-            var4.print(" ");
-            var4.print(Word.toHex(var1.getRefAddr(var3, var2, this.registers, this.memory), false));
-            var4.print(" ");
-            var4.print(Word.toHex(this.registers.getRegister(var1.getDReg(var3)), false));
-         } else {
-            var4.print(Word.toHex(0, false));
-            var4.print(" ");
-            var4.print(Word.toHex(0, false));
-            var4.print(" ");
-            var4.print(Word.toHex(0, false));
-         }
-
-         var4.println(" ");
-         var4.flush();
-      }
-
-   }
-
-   public String lookupSym(int var1) {
-      return (String)this.inverseTable.get(new Integer(var1));
-   }
-
-   public int lookupSym(String var1) {
-      Object var2 = this.symbolTable.get(var1.toLowerCase());
-      return var2 != null ? (Integer)var2 : Integer.MAX_VALUE;
-   }
-
-   public boolean lookupAddrToInsn(int var1) {
-      return this.addrToInsnTable.get(var1) != null;
-   }
-
-   public boolean existSym(String var1) {
-      return this.symbolTable.get(var1.toLowerCase()) != null;
-   }
-
-   public int getAddress(String var1) {
-      int var2 = Word.parseNum(var1);
-      if (var2 == Integer.MAX_VALUE) {
-         var2 = this.lookupSym(var1);
-      }
-
-      return var2;
-   }
-
-   public void run() {
-      try {
-         this.executePumpedContinues();
-      } catch (ExceptionException var2) {
-         if (this.gui != null) {
-            var2.showMessageDialog(null);
-         }
-
-         Console.println(var2.getMessage());
-      }
-
-   }
-
-   public void updateStatusLabel() {
-      if (this.gui != null) {
-         if (!this.registers.getClockMCR()) {
-            this.gui.setStatusLabelHalted();
-         } else if (this.isContinueMode()) {
+    private void executePumpedContinues(int var1) throws GenericException {
+        int var2 = var1;
+        this.registers.setClockMCR(true);
+        if (this.gui != null) {
             this.gui.setStatusLabelRunning();
-         } else {
-            this.gui.setStatusLabelSuspended();
-         }
-      }
+        }
 
-   }
+        while (!this.stopImmediately && var2 > 0) {
+            try {
+                int pc = this.registers.getPC();
+                this.registers.checkAddress(pc);
+                Word word = this.memory.getInstruction(pc);
+                InstructionDef instructionDef = ISA.lookupTable[word.getValue()];
+                if (instructionDef == null) {
+                    throw new IllegalInstructionException("Undefined instruction:  " + word.toHex());
+                }
+
+                int var6 = instructionDef.execute(word, pc, this.registers, this.memory, this);
+                this.registers.setPC(var6);
+                ++this.cycleCount;
+                ++this.instructionCount;
+                int var7 = this.branchPredictor.getPredictedPC(pc);
+                if (var6 != var7) {
+                    this.cycleCount += 2;
+                    this.branchStallCount += 2;
+                    this.branchPredictor.update(pc, var6);
+                }
+
+                if (instructionDef.isLoad()) {
+                    Word var8 = this.memory.getInstruction(var6);
+                    InstructionDef var9 = ISA.lookupTable[var8.getValue()];
+                    if (var9 == null) {
+                        throw new IllegalInstructionException("Undefined instruction:  " + var8.toHex());
+                    }
+
+                    if (!var9.isStore()) {
+                        int var10 = instructionDef.getDestinationReg(word);
+                        if (var10 >= 0 && (var10 == var9.getSourceReg1(var8) || var10 == var9.getSourceReg2(var8))) {
+                            ++this.cycleCount;
+                            ++this.loadStallCount;
+                        }
+                    }
+                }
+
+                if (this.isTraceEnabled()) {
+                    this.generateTrace(instructionDef, pc, word);
+                }
+
+                if (this.memory.isBreakPointSet(this.registers.getPC())) {
+                    String var12 = "Hit breakpoint at " + Word.toHex(this.registers.getPC());
+                    Console.println(var12);
+                    this.stopExecution(true);
+                }
+
+                if (this.memory.isNextBreakPointSet(this.registers.getPC())) {
+                    this.stopExecution(true);
+                    this.memory.clearNextBreakPoint(this.registers.getPC());
+                }
+
+                --var2;
+            } catch (GenericException var11) {
+                this.stopExecution(true);
+                throw var11;
+            }
+        }
+
+        if (this.isContinueMode()) {
+            SwingUtilities.invokeLater(this);
+        }
+
+    }
+
+    synchronized void executeMany() throws GenericException {
+        this.setContinueMode();
+        this.stopImmediately = false;
+
+        try {
+            this.executePumpedContinues();
+        } catch (GenericException e) {
+            this.stopExecution(true);
+            throw e;
+        }
+    }
+
+    void generateTrace(InstructionDef instructionDef, int address, Word word) throws IllegalMemoryAccessException {
+        if (this.isTraceEnabled()) {
+            PrintWriter writer = this.getTraceWriter();
+            writer.print(Word.toHex(address, false));
+            writer.print(" ");
+            writer.print(word.toHex(false));
+            writer.print(" ");
+            if (this.registers.isDirty()) {
+                writer.print(Word.toHex(1, false));
+                writer.print(" ");
+                writer.print(Word.toHex(this.registers.getMostRecentlyWrittenValue(), false));
+            } else {
+                writer.print(Word.toHex(0, false));
+                writer.print(" ");
+                writer.print(Word.toHex(0, false));
+            }
+
+            writer.print(" ");
+            if (instructionDef.isStore()) {
+                writer.print(Word.toHex(1, false));
+                writer.print(" ");
+                writer.print(Word.toHex(instructionDef.getRefAddress(word, address, this.registers, this.memory), false));
+                writer.print(" ");
+                writer.print(Word.toHex(this.registers.getRegister(instructionDef.getDReg(word)), false));
+            } else {
+                writer.print(Word.toHex(0, false));
+                writer.print(" ");
+                writer.print(Word.toHex(0, false));
+                writer.print(" ");
+                writer.print(Word.toHex(0, false));
+            }
+
+            writer.println(" ");
+            writer.flush();
+        }
+
+    }
+
+    String lookupSym(int address) {
+        return this.inverseTable.get(address);
+    }
+
+    int lookupSym(String symbol) {
+        Integer var2 = this.symbolTable.get(symbol.toLowerCase());
+        return var2 != null ? var2 : Integer.MAX_VALUE;
+    }
+
+    boolean lookupAddressToInstruction(int address) {
+        return this.addressToInstructionTable.get(address) != null;
+    }
+
+    boolean existSym(String symbol) {
+        return this.symbolTable.get(symbol.toLowerCase()) != null;
+    }
+
+    int getAddress(String address) {
+        int row = Word.parseNum(address);
+        if (row == Integer.MAX_VALUE) {
+            row = this.lookupSym(address);
+        }
+
+        return row;
+    }
+
+    public void run() {
+        try {
+            this.executePumpedContinues();
+        } catch (GenericException e) {
+            if (this.gui != null) {
+                e.showMessageDialog(null);
+            }
+
+            Console.println(e.getMessage());
+        }
+
+    }
+
+    void updateStatusLabel() {
+        if (this.gui != null) {
+            if (!this.registers.getClockMCR()) {
+                this.gui.setStatusLabelHalted();
+            } else if (this.isContinueMode()) {
+                this.gui.setStatusLabelRunning();
+            } else {
+                this.gui.setStatusLabelSuspended();
+            }
+        }
+
+    }
 }

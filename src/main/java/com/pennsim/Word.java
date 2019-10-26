@@ -3,6 +3,13 @@ package com.pennsim;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 
+/**
+ * This class was named 'Word' after the 2 Byte data type that exists in C/C++ and other
+ * low level programming languages.
+ *
+ * Functionality wise this class holds a value and is also  designed to be able to manipulate
+ * that value as it is used throughout this project.
+ */
 public class Word {
 
     private int value;
@@ -15,56 +22,92 @@ public class Word {
         this.value = 0;
     }
 
-    public static String toHex(int var0, boolean var1) {
-        String var2 = Integer.toHexString(var0 & '\uffff').toUpperCase();
-        if (var2.length() > 4) {
-            Console.println("Converting oversized value " + var2 + " to hex.");
+    /**
+     * Get the hex value of an integer
+     *
+     * @param value the number to be converted
+     * @param showPrefix option for whether or not to return the prefix of 'x'
+     * @return the hex value as a String
+     */
+    static String toHex(int value, boolean showPrefix) {
+        StringBuilder builder = new StringBuilder(Integer.toHexString(value & '\uffff').toUpperCase());
+        if (builder.length() > 4) {
+            Console.println("Converting oversized value " + builder + " to hex.");
         }
 
-        while (var2.length() < 4) {
-            var2 = "0" + var2;
+        while (builder.length() < 4) {
+            builder.insert(0, "0");
         }
 
-        return var1 ? "x" + var2 : var2;
+        return showPrefix ? "x" + builder : builder.toString();
     }
 
-    public static String toHex(int var0) {
-        return toHex(var0, true);
+    /**
+     * Get the hex value of an integer with the appropriate prefix
+     *
+     * @param value the number to be converted
+     * @return the hex value as a String
+     */
+    static String toHex(int value) {
+        return toHex(value, true);
     }
 
-    public static String toBinary(int var0, boolean var1) {
-        String var2 = Integer.toBinaryString(var0 & '\uffff').toUpperCase();
-        if (var2.length() > 16) {
-            Console.println("Converting oversized value " + var2 + " to binary.");
+    /**
+     * Get the binary value of an integer
+     *
+     * @param value the number to be converted
+     * @param showPrefix option for whether or not to return the prefix of 'b'
+     * @return the binary value as a String
+     */
+    private static String toBinary(int value, boolean showPrefix) {
+        StringBuilder builder = new StringBuilder(
+                Integer.toBinaryString(value & '\uffff').toUpperCase());
+        if (builder.length() > 16) {
+            Console.println("Converting oversized value " + builder + " to binary.");
         }
 
-        while (var2.length() < 16) {
-            var2 = "0" + var2;
+        while (builder.length() < 16) {
+            builder.insert(0, "0");
         }
 
-        return var1 ? "b" + var2 : var2;
+        return showPrefix ? "b" + builder : builder.toString();
     }
 
-    public static String toBinary(int var0) {
-        return toBinary(var0, true);
+    /**
+     * Get the binary value of an integer with the appropriate prefix
+     *
+     * @param value the number to be converted
+     * @return the binary value as a String
+     */
+    public static String toBinary(int value) {
+        return toBinary(value, true);
     }
 
-    public static int parseNum(String var0) {
-        int var1;
+    /**
+     * Function to convert binary or hex values to their appropriate Integer values
+     *
+     * @param value the value to be converted to an Integer
+     * @return the converted value as an Integer
+     */
+    static int parseNum(String value) {
+        int number;
         try {
-            if (var0.indexOf(120) == 0) {
-                var1 = Integer.parseInt(var0.replace('x', '0'), 16);
+            if (value.indexOf(120) == 0) {
+                number = Integer.parseInt(value.replace('x', '0'), 16);
             } else {
-                var1 = Integer.parseInt(var0);
+                number = Integer.parseInt(value);
             }
-        } catch (NumberFormatException | NullPointerException var3) {
-            var1 = Integer.MAX_VALUE;
+        } catch (NumberFormatException | NullPointerException e) {
+            number = Integer.MAX_VALUE;
         }
 
-        return var1;
+        return number;
     }
 
-    public static int convertByteArray(byte var0, byte var1) {
+    /**
+     * TODO: Study this function
+     */
+    static int convertByteArray(byte var0, byte var1) {
         byte var2 = 0;
         short var3 = 255;
         int var4 = var2 | var3 & var0;
@@ -73,46 +116,93 @@ public class Word {
         return var4;
     }
 
+    /**
+     * reset the value of this object to '0'
+     */
     public void reset() {
         this.value = 0;
     }
 
-    public String toHex() {
+    /**
+     * Convert the value of this object to hex
+     *
+     * @return the value of this object to hex
+     */
+    String toHex() {
         return toHex(this.value, true);
     }
 
-    public String toHex(boolean var1) {
-        return toHex(this.value, var1);
+
+    /**
+     * Convert the value of this object to hex with the option to include the prefix
+     *
+     * @return the value of this object to hex
+     */
+    String toHex(boolean showPrefix) {
+        return toHex(this.value, showPrefix);
     }
 
-    public String toBinary() {
+
+    /**
+     * Convert the value of this object to binary
+     *
+     * @return the value of this object to binary
+     */
+    String toBinary() {
         return toBinary(this.value, true);
     }
 
-    public String toBinary(boolean var1) {
-        return toBinary(this.value, var1);
+
+    /**
+     * Convert the value of this object to binary with the option to include the prefix
+     *
+     * @return the value of this object to binary
+     */
+    public String toBinary(boolean showPrefix) {
+        return toBinary(this.value, showPrefix);
     }
 
+    /**
+     * Get the value of this object as a string
+     *
+     * @return the value of this object as a string
+     */
     public String toString() {
         return Integer.toString(this.value);
     }
 
-    public int getValue() {
+    /**
+     * Get the value of this object
+     *
+     * @return the value of this object
+     */
+    int getValue() {
         return this.value;
     }
 
-    public void setValue(int var1) {
-        this.value = var1 & '\uffff';
+    /**
+     * Set the value of this object
+     *
+     * @param value the value of this object
+     */
+    void setValue(int value) {
+        this.value = value & '\uffff';
     }
 
-    void writeWordToFile(BufferedOutputStream var1) throws IOException {
+    /**
+     * TODO: Study this function
+     */
+    void writeWordToFile(BufferedOutputStream stream) throws IOException {
         byte var2 = (byte) (this.value >> 8 & 255);
         byte var3 = (byte) (this.value & 255);
-        var1.write(var2);
-        var1.write(var3);
+        stream.write(var2);
+        stream.write(var3);
     }
 
-    public int getZext(int var1, int var2) {
+    /**
+     * Get the Z-Extention of two values
+     */
+    int getZext(int var1, int var2) {
         int var3 = this.value;
         if (var2 > var1) {
             return this.getZext(var2, var1);
@@ -125,7 +215,10 @@ public class Word {
         }
     }
 
-    public int getSext(int var1, int var2) {
+    /**
+     * Get the S-Extention of two values
+     */
+    int getSext(int var1, int var2) {
         int var3 = this.value;
         if (var2 > var1) {
             return this.getSext(var2, var1);
@@ -144,10 +237,16 @@ public class Word {
         }
     }
 
-    public int getBit(int var1) {
-        return this.getZext(var1, var1);
+    /**
+     * TODO: Study this function
+     */
+    int getBit(int value) {
+        return this.getZext(value, value);
     }
 
+    /**
+     * TODO: Study this function
+     */
     private void setField(int var1, int var2, int var3) throws AsException {
         if (var3 > var2) {
             throw new AsException("Hi and lo bit operands reversed.");
@@ -162,7 +261,10 @@ public class Word {
         }
     }
 
-    public void setSignedField(int var1, int var2, int var3) throws AsException {
+    /**
+     * TODO: Study this function
+     */
+    void setSignedField(int var1, int var2, int var3) throws AsException {
         if (var3 > var2) {
             throw new AsException("Hi and lo bit operands reversed.");
         } else if (var2 <= 15 && var2 >= 0 && var3 <= 15 && var3 >= 0) {
@@ -178,7 +280,10 @@ public class Word {
         }
     }
 
-    public void setUnsignedField(int var1, int var2, int var3) throws AsException {
+    /**
+     * TODO: Study this function
+     */
+    void setUnsignedField(int var1, int var2, int var3) throws AsException {
         if (var3 > var2) {
             throw new AsException("Hi and lo bit operands reversed.");
         } else if (var2 <= 15 && var2 >= 0 && var3 <= 15 && var3 >= 0) {

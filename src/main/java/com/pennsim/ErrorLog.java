@@ -6,12 +6,18 @@ import java.io.PrintWriter;
 import java.util.Calendar;
 import java.util.Date;
 
+/**
+ * Logger class designed to output both messages or exceptions to a log
+ */
 public class ErrorLog {
 
     private static PrintWriter log;
-    private static String logDelim = "\n-----\n";
+    private static String logDeliminator = "\n-----\n";
     private static boolean logOpen = false;
 
+    /**
+     * Long the time before the message
+     */
     private static void logTimeStamp() {
         if (!logOpen) {
             logInit();
@@ -22,30 +28,43 @@ public class ErrorLog {
         }
     }
 
-    public static void logError(String var0) {
+    /**
+     * Log a message
+     *
+     * @param message the message to be logged
+     */
+    static void logError(String message) {
         if (!logOpen) {
             logInit();
         }
 
         if (log != null) {
             logTimeStamp();
-            log.write(var0);
-            log.write(logDelim);
+            log.write(message);
+            log.write(logDeliminator);
         }
     }
 
-    public static void logError(Exception var0) {
+    /**
+     * Log an exception
+     *
+     * @param e the exception to be logged
+     */
+    static void logError(Exception e) {
         if (!logOpen) {
             logInit();
         }
 
         if (log != null) {
             logTimeStamp();
-            var0.printStackTrace(log);
-            log.write(logDelim);
+            e.printStackTrace(log);
+            log.write(logDeliminator);
         }
     }
 
+    /**
+     * Initialize the logger
+     */
     private static void logInit() {
         if (!logOpen) {
             try {
@@ -57,7 +76,10 @@ public class ErrorLog {
 
     }
 
-    public static void logClose() {
+    /**
+     * Close the logger
+     */
+    static void logClose() {
         if (log != null) {
             log.close();
         }

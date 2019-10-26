@@ -1,12 +1,15 @@
 package com.pennsim;
 
-public class IllegalInstructionException extends ExceptionException {
+/**
+ * Exception which is thrown when the program comes upon an illegal instruction
+ */
+public class IllegalInstructionException extends GenericException {
 
-    public IllegalInstructionException(String var1) {
-        super(var1);
+    IllegalInstructionException(String message) {
+        super(message);
     }
 
     public String getExceptionDescription() {
-        return "com.pennsim.IllegalInstructionException: " + this.getMessage();
+        return "Illegal Instruction Exception: " + this.getMessage();
     }
 }

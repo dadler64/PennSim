@@ -1,26 +1,29 @@
 package com.pennsim;
 
+/**
+ * Custom exception class for when an exception is raised during assembly
+ */
 class AsException extends Exception {
 
-    public Instruction insn;
+    private Instruction instruction;
 
-    AsException(Instruction var1, String var2) {
-        super(var2);
-        this.insn = var1;
+    AsException(Instruction instruction, String message) {
+        super(message);
+        this.instruction = instruction;
     }
 
-    AsException(String var1) {
-        super(var1);
+    AsException(String message) {
+        super(message);
     }
 
     public String getMessage() {
-        String var1 = "Assembly error: ";
-        if (this.insn != null) {
-            var1 = var1 + "[line " + this.insn.getLineNumber() + ", '" + this.insn.getOriginalLine()
+        String message = "Assembly error: ";
+        if (this.instruction != null) {
+            message = message + "[line " + this.instruction.getLineNumber() + ", '" + this.instruction.getOriginalLine()
                     + "']: ";
         }
 
-        var1 = var1 + super.getMessage();
-        return var1;
+        message = message + super.getMessage();
+        return message;
     }
 }

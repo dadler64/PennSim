@@ -1,14 +1,17 @@
 package com.pennsim;
 
+/**
+ * Class used to assist in initializing the GUI
+ */
 class TempRun implements Runnable {
 
-    GUI ms;
+    private GUI gui;
 
-    public TempRun(GUI var1) {
-        this.ms = var1;
+    TempRun(GUI gui) {
+        this.gui = gui;
     }
 
     public void run() {
-        this.ms.setUpGUI();
+        this.gui.setUpGUI();
     }
 }

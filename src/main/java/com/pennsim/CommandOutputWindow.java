@@ -1,5 +1,8 @@
 package com.pennsim;
 
+import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED;
+import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
+
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -10,26 +13,34 @@ public class CommandOutputWindow extends JFrame implements PrintableConsole {
 
     private JTextArea textArea = new JTextArea();
 
-    public CommandOutputWindow(String var1) {
-        super(var1);
+    CommandOutputWindow(String text) {
+        super(text);
         this.textArea.setEditable(false);
         this.textArea.setLineWrap(true);
         this.textArea.setWrapStyleWord(true);
-        JScrollPane var2 = new JScrollPane(this.textArea, 22, 30);
-        this.getContentPane().add(var2);
+        JScrollPane scrollPane = new JScrollPane(this.textArea, VERTICAL_SCROLLBAR_ALWAYS, HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        this.getContentPane().add(scrollPane);
     }
 
-    public void print(String var1) {
-        this.textArea.append(var1);
+    /**
+     * Print a message to the output window
+     *
+     * @param text the text to be printed
+     */
+    public void print(String text) {
+        this.textArea.append(text);
     }
 
+    /**
+     * Clear the output window
+     */
     public void clear() {
-        Document var1 = this.textArea.getDocument();
+        Document document = this.textArea.getDocument();
 
         try {
-            var1.remove(0, var1.getLength());
-        } catch (BadLocationException var3) {
-            ErrorLog.logError(var3);
+            document.remove(0, document.getLength());
+        } catch (BadLocationException e) {
+            ErrorLog.logError(e);
         }
 
     }

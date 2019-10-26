@@ -1,287 +1,359 @@
 package com.pennsim;
 
-import javax.swing.table.AbstractTableModel;
+public class Memory extends TableModel {
 
-public class Memory extends AbstractTableModel {
-
-    public static final int MEM_SIZE = 65536;
-    public static final int BEGIN_DEVICE_REGISTERS = 65024;
-    public static final int KBSR = 65024;
-    public static final int KBDR = 65026;
-    public static final int DSR = 65028;
-    public static final int DDR = 65030;
-    public static final int TMR = 65032;
-    public static final int TMI = 65034;
-    public static final int DISABLE_TIMER = 0;
-    public static final int MANUAL_TIMER_MODE = 1;
-    public static final int MPR = 65042;
-    public static final int MCR = 65534;
-    public static final int BREAKPOINT_COLUMN = 0;
-    public static final int ADDRESS_COLUMN = 1;
-    public static final int VALUE_COLUMN = 2;
-    public static final int INSN_COLUMN = 3;
+    static final int MEM_SIZE = 65536;
+    private static final int DISABLE_TIMER = 0;
+    private static final int MANUAL_TIMER_MODE = 1;
+    private static final int BEGIN_DEVICE_REGISTERS = 65024;
+    private static final int KBSR = 65024;
+    private static final int KBDR = 65026;
+    private static final int DSR = 65028;
+    private static final int DDR = 65030;
+    private static final int TMR = 65032;
+    private static final int TMI = 65034;
+    private static final int MPR = 65042;
+    private static final int MCR = 65534;
+    private static final int BREAKPOINT_COLUMN = 0;
+    private static final int ADDRESS_COLUMN = 1;
+    private static final int VALUE_COLUMN = 2;
+    private static final int INSTRUCTION_COLUMN = 3;
     private final Machine machine;
-    private Word[] memArr = new Word[65536];
-    private String[] colNames = new String[]{"BP", "Address", "Value", "com.pennsim.Instruction"};
-    private boolean[] nextBreakPoints = new boolean[65536];
-    private boolean[] breakPoints = new boolean[65536];
-    private KeyboardDevice kbDevice = new KeyboardDevice();
-    private MonitorDevice monitorDevice = new MonitorDevice();
-    private TimerDevice timerDevice = new TimerDevice();
+    private Word[] memArr = new Word[MEM_SIZE];
+    private String[] colNames = new String[]{"BP", "Address", "Value", "Instruction"};
+    private boolean[] nextBreakPoints = new boolean[MEM_SIZE];
+    private boolean[] breakPoints = new boolean[MEM_SIZE];
+    private KeyboardDevice keyboard = new KeyboardDevice();
+    private MonitorDevice monitor = new MonitorDevice();
+    private TimerDevice timer = new TimerDevice();
 
-    public Memory(Machine var1) {
-        this.machine = var1;
+    Memory(Machine machine) {
+        this.machine = machine;
 
-        for (int var2 = 0; var2 < 65536; ++var2) {
-            this.memArr[var2] = new Word();
-            this.breakPoints[var2] = false;
+        for (int row = 0; row < MEM_SIZE; ++row) {
+            this.memArr[row] = new Word();
+            this.breakPoints[row] = false;
         }
 
-        this.timerDevice.setTimer();
+        this.timer.setTimer();
     }
 
-    public KeyboardDevice getKeyBoardDevice() {
-        return this.kbDevice;
+    /**
+     * Get the Keyboard Device being used
+     *
+     * @return KeyboardDevice object
+     */
+    KeyboardDevice getKeyBoardDevice() {
+        return this.keyboard;
     }
 
-    public MonitorDevice getMonitorDevice() {
-        return this.monitorDevice;
+    /**
+     * Returns the Monitor Device being used
+     *
+     * @return MonitorDevice object
+     */
+    MonitorDevice getMonitor() {
+        return this.monitor;
     }
 
+    /**
+     * Resets the following parts of the simulator:
+     * * Every row in the memory table
+     * * Keyboard device
+     * * Monitor device
+     * * Timer device
+     * * Clears all breakpoints
+     */
     public void reset() {
-        for (int var1 = 0; var1 < 65536; ++var1) {
-            this.memArr[var1].reset();
+        for (int row = 0; row < MEM_SIZE; ++row) {
+            this.memArr[row].reset();
         }
 
-        this.kbDevice.reset();
-        this.monitorDevice.reset();
-        this.timerDevice.reset();
+        this.keyboard.reset();
+        this.monitor.reset();
+        this.timer.reset();
         this.clearAllBreakPoints();
         this.fireTableDataChanged();
     }
 
+    /**
+     * Returns the amount of rows in the memory table
+     *
+     * @return number of memory rows
+     */
     public int getRowCount() {
         return this.memArr.length;
     }
 
+    /**
+     * Returns the amount of columns in the memory table
+     *
+     * @return number of memory columns
+     */
     public int getColumnCount() {
         return this.colNames.length;
     }
 
-    public String getColumnName(int var1) {
-        return this.colNames[var1];
+    /**
+     * Returns the amount of columns in the memory table
+     *
+     * @return number of memory columns
+     */
+    public String getColumnName(int column) {
+        return this.colNames[column];
     }
 
-    public boolean isCellEditable(int var1, int var2) {
-        return (var2 == 2 || var2 == 0) && var1 < 65024;
+    /**
+     * Figure out if a cell is editable in the memory table based off
+     * of the given row and column indexes
+     *
+     * @param row the row the cell you are looking for is in
+     * @param column the column the cell you are looking for is in
+     * @return if the cell is editable
+     */
+    public boolean isCellEditable(int row, int column) {
+        return (column == VALUE_COLUMN || column == BREAKPOINT_COLUMN) && row < BEGIN_DEVICE_REGISTERS;
     }
 
-    public boolean isBreakPointSet(int var1) {
-        return this.breakPoints[var1];
+    /**
+     * Check of a breakpoint is set in the given row
+     *
+     * @param row the row to check for a breakpoint in
+     * @return if the breakpoint is set
+     */
+    boolean isBreakPointSet(int row) {
+        return this.breakPoints[row];
     }
 
-    public String setBreakPoint(String var1) {
-        int var3 = this.machine.getAddress(var1);
-        String var2;
-        if (var3 != Integer.MAX_VALUE) {
-            var2 = this.setBreakPoint(var3);
-            if (this.machine.existSym(var1)) {
-                var2 = var2 + " ('" + var1 + "')";
+    /**
+     * Public function to set a breakpoint
+     *
+     * @param address row to set breakpoint
+     * @return either the address where the breakpoint was set or an error
+     */
+    String setBreakPoint(String address) {
+        int row = this.machine.getAddress(address);
+        String str;
+        if (row != Integer.MAX_VALUE) {
+            str = this.setBreakPoint(row);
+            if (this.machine.existSym(address)) {
+                str = str + " ('" + address + "')";
             }
         } else {
-            var2 = "Error: Invalid address or label ('" + var1 + "')";
+            str = "Error: Invalid address or label ('" + address + "')";
         }
 
-        return var2;
+        return str;
     }
 
-    public String setBreakPoint(int var1) {
-        if (var1 >= 0 && var1 < 65536) {
-            this.breakPoints[var1] = true;
-            this.fireTableCellUpdated(var1, -1);
-            return "Breakpoint set at " + Word.toHex(var1);
+    /**
+     * PRIVATE function to set a breakpoint
+     *
+     * @param row row to set breakpoint
+     * @return either the index where the breakpoint was set or an error
+     */
+    private String setBreakPoint(int row) {
+        if (row >= 0 && row < MEM_SIZE) {
+            this.breakPoints[row] = true;
+            this.fireTableCellUpdated(row, -1);
+            return "Breakpoint set at " + Word.toHex(row);
         } else {
             return "Error: Invalid address or label";
         }
     }
 
-    public String clearBreakPoint(String var1) {
-        int var3 = this.machine.getAddress(var1);
-        String var2;
-        if (var3 != Integer.MAX_VALUE) {
-            var2 = this.clearBreakPoint(var3);
-            if (this.machine.existSym(var1)) {
-                var2 = var2 + " ('" + var1 + "')";
+
+    /**
+     * PRIVATE function to clear a breakpoint
+     *
+     * @param address row to set breakpoint
+     * @return either the index where the breakpoint was set or an error
+     */
+    String clearBreakPoint(String address) {
+        int row = this.machine.getAddress(address);
+        String ret;
+        if (row != Integer.MAX_VALUE) {
+            ret = this.clearBreakPoint(row);
+            if (this.machine.existSym(address)) {
+                ret = ret + " ('" + address + "')";
             }
         } else {
-            var2 = "Error: Invalid address or label ('" + var1 + "')";
+            ret = "Error: Invalid address or label ('" + address + "')";
         }
 
-        return var2;
+        return ret;
     }
 
-    public String clearBreakPoint(int var1) {
-        if (var1 >= 0 && var1 < 65536) {
-            this.breakPoints[var1] = false;
-            this.fireTableCellUpdated(var1, -1);
-            return "Breakpoint cleared at " + Word.toHex(var1);
+    private String clearBreakPoint(int row) {
+        if (row >= 0 && row < MEM_SIZE) {
+            this.breakPoints[row] = false;
+            this.fireTableCellUpdated(row, -1);
+            return "Breakpoint cleared at " + Word.toHex(row);
         } else {
             return "Error: Invalid address or label";
         }
     }
 
-    public void clearAllBreakPoints() {
-        for (int var1 = 0; var1 < 65536; ++var1) {
-            this.breakPoints[var1] = false;
-            this.nextBreakPoints[var1] = false;
+    private void clearAllBreakPoints() {
+        for (int row = 0; row < MEM_SIZE; ++row) {
+            this.breakPoints[row] = false;
+            this.nextBreakPoints[row] = false;
         }
 
     }
 
-    public void setNextBreakPoint(int var1) {
-        assert 0 <= var1 && var1 < 65536;
+    void setNextBreakPoint(int row) {
+        assert 0 <= row && row < MEM_SIZE;
 
-        this.nextBreakPoints[var1] = true;
+        this.nextBreakPoints[row] = true;
     }
 
-    public boolean isNextBreakPointSet(int var1) {
-        assert 0 <= var1 && var1 < 65536;
+    boolean isNextBreakPointSet(int row) {
+        assert 0 <= row && row < MEM_SIZE;
 
-        return this.nextBreakPoints[var1];
+        return this.nextBreakPoints[row];
     }
 
-    public void clearNextBreakPoint(int var1) {
-        assert 0 <= var1 && var1 < 65536;
+    void clearNextBreakPoint(int row) {
+        assert 0 <= row && row < MEM_SIZE;
 
-        this.nextBreakPoints[var1] = false;
+        this.nextBreakPoints[row] = false;
     }
 
-    public Object getValueAt(int var1, int var2) {
-        Object var3 = null;
-        switch (var2) {
-            case 0:
-                var3 = new Boolean(this.isBreakPointSet(var1));
+    public Object getValueAt(int row, int column) {
+        Object value = null;
+        switch (column) {
+            case BREAKPOINT_COLUMN:
+                value = this.isBreakPointSet(row);
                 break;
-            case 1:
-                var3 = Word.toHex(var1);
-                String var4 = this.machine.lookupSym(var1);
-                if (var4 != null) {
-                    var3 = var3 + " " + var4;
+            case ADDRESS_COLUMN:
+                value = Word.toHex(row);
+                String symbol = this.machine.lookupSym(row);
+                if (symbol != null) {
+                    value += " " + symbol;
                 }
                 break;
-            case 2:
-                if (var1 < 65024) {
-                    var3 = this.memArr[var1].toHex();
+            case VALUE_COLUMN:
+                if (row < BEGIN_DEVICE_REGISTERS) {
+                    value = this.memArr[row].toHex();
                 } else {
-                    var3 = "???";
+                    value = "???";
                 }
                 break;
-            case 3:
-                if (var1 < 65024) {
-                    var3 = ISA.disassemble(this.memArr[var1], var1, this.machine);
+            case INSTRUCTION_COLUMN:
+                if (row < BEGIN_DEVICE_REGISTERS) {
+                    value = ISA.disassemble(this.memArr[row], row, this.machine);
                 } else {
-                    var3 = "Use 'list' to query";
+                    value = "Use 'list' to query";
                 }
         }
 
-        return var3;
+        return value;
     }
 
-    public Word getInst(int var1) {
-        return this.memArr[var1];
+    Word getInstruction(int row) {
+        return this.memArr[row];
     }
 
-    public Word checkAndRead(int var1) throws IllegalMemAccessException {
-        this.machine.getRegisterFile().checkAddr(var1);
-        return this.read(var1);
+    Word checkAndRead(int row) throws IllegalMemoryAccessException {
+        this.machine.getRegisterFile().checkAddress(row);
+        return this.read(row);
     }
 
-    public Word read(int var1) {
-        Word var2 = null;
-        switch (var1) {
-            case 65024:
-                var2 = this.kbDevice.status();
+    Word read(int row) {
+        Word word;
+        switch (row) {
+            case KBSR:
+                word = this.keyboard.status();
                 break;
-            case 65026:
-                var2 = this.kbDevice.read();
+            case KBDR:
+                word = this.keyboard.read();
                 break;
-            case 65028:
-                var2 = this.monitorDevice.status();
+            case DSR:
+                word = this.monitor.getStatus();
                 break;
-            case 65032:
-                var2 = this.timerDevice.status();
+            case TMR:
+                word = this.timer.status();
                 break;
-            case 65034:
-                var2 = new Word((int) this.timerDevice.getInterval());
+            case TMI:
+                word = new Word((int) this.timer.getInterval());
                 break;
-            case 65042:
-                var2 = new Word(this.machine.getRegisterFile().getMPR());
+            case MPR:
+                word = new Word(this.machine.getRegisterFile().getMPR());
                 break;
-            case 65534:
-                var2 = new Word(this.machine.getRegisterFile().getMCR());
+            case MCR:
+                word = new Word(this.machine.getRegisterFile().getMCR());
                 break;
             default:
-                if (var1 < 0 || var1 >= 65536) {
+                if (row < 0 || row >= MEM_SIZE) {
                     return null;
                 }
 
-                var2 = this.memArr[var1];
+                word = this.memArr[row];
         }
 
-        return var2;
+        return word;
     }
 
-    public void setValueAt(Object var1, int var2, int var3) {
-        if (var3 == 2) {
-            this.write(var2, Word.parseNum((String) var1));
-            this.fireTableCellUpdated(var2, var3);
+    /**
+     * Set the value of a specific cell
+     *
+     * @param value the data to be set which is either a String or a Boolean
+     * @param row row which cell resides in
+     * @param column column which cell resides in
+     */
+    public void setValueAt(Object value, int row, int column) {
+        if (column == VALUE_COLUMN) {
+            this.write(row, Word.parseNum((String) value));
+            this.fireTableCellUpdated(row, column);
         }
 
-        if (var3 == 0) {
-            if ((Boolean) var1) {
-                Console.println(this.setBreakPoint(var2));
+        if (column == BREAKPOINT_COLUMN) {
+            if ((Boolean) value) {
+                Console.println(this.setBreakPoint(row));
             } else {
-                Console.println(this.clearBreakPoint(var2));
+                Console.println(this.clearBreakPoint(row));
             }
 
         }
     }
 
-    public void checkAndWrite(int var1, int var2) throws IllegalMemAccessException {
-        this.machine.getRegisterFile().checkAddr(var1);
-        this.write(var1, var2);
+    void checkAndWrite(int row, int value) throws IllegalMemoryAccessException {
+        this.machine.getRegisterFile().checkAddress(row);
+        this.write(row, value);
     }
 
-    public void write(int var1, int var2) {
-        switch (var1) {
-            case 65030:
-                this.monitorDevice.write((char) var2);
-                this.fireTableCellUpdated(var1, 3);
+    void write(int row, int value) {
+        switch (row) {
+            case DDR:
+                this.monitor.write((char) value);
+                this.fireTableCellUpdated(row, 3);
                 break;
-            case 65034:
-                this.timerDevice.setTimer(var2);
-                if (var2 == 0) {
-                    this.timerDevice.setEnabled(false);
+            case TMI:
+                this.timer.setTimer(value);
+                if (value == DISABLE_TIMER) {
+                    this.timer.setEnabled(false);
                 } else {
-                    this.timerDevice.setEnabled(true);
-                    if (var2 == 1) {
-                        this.timerDevice.setTimer(this.kbDevice);
+                    this.timer.setEnabled(true);
+                    if (value == MANUAL_TIMER_MODE) {
+                        this.timer.setTimer(this.keyboard);
                     }
                 }
                 break;
-            case 65042:
-                this.machine.getRegisterFile().setMPR(var2);
+            case MPR:
+                this.machine.getRegisterFile().setMPR(value);
                 break;
-            case 65534:
-                this.machine.getRegisterFile().setMCR(var2);
-                if ((var2 & '耀') == 0) {
+            case MCR:
+                this.machine.getRegisterFile().setMCR(value);
+                // '耀' == 32768
+                if ((value & 32768) == 0) {
                     this.machine.stopExecution(1, true);
                 } else {
                     this.machine.updateStatusLabel();
                 }
         }
 
-        this.memArr[var1].setValue(var2);
-        this.fireTableCellUpdated(var1, 3);
+        this.memArr[row].setValue(value);
+        this.fireTableCellUpdated(row, INSTRUCTION_COLUMN);
     }
 }

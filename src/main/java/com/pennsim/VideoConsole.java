@@ -12,78 +12,78 @@ import javax.swing.event.TableModelListener;
 public class VideoConsole extends JPanel implements TableModelListener {
 
     private static final int START = 49152;
-    private static final int NROWS = 128;
-    private static final int NCOLS = 124;
+    private static final int NUMBER_OF_ROWS = 128;
+    private static final int NUMBER_OF_COLUMNS = 124;
     private static final int END = 65024;
     private static final int SCALING = 2;
     private static final int WIDTH = 256;
     private static final int HEIGHT = 248;
     private BufferedImage image;
-    private Machine mac;
+    private Machine machine;
 
-    public VideoConsole(Machine var1) {
-        Dimension var2 = new Dimension(256, 248);
-        this.setPreferredSize(var2);
-        this.setMinimumSize(var2);
-        this.setMaximumSize(var2);
-        this.mac = var1;
-        this.image = new BufferedImage(256, 248, 9);
-        Graphics2D var3 = this.image.createGraphics();
-        var3.setColor(Color.black);
-        var3.fillRect(0, 0, 256, 248);
+    VideoConsole(Machine machine) {
+        Dimension dimension = new Dimension(WIDTH, HEIGHT);
+        this.setPreferredSize(dimension);
+        this.setMinimumSize(dimension);
+        this.setMaximumSize(dimension);
+        this.machine = machine;
+        this.image = new BufferedImage(WIDTH, HEIGHT, 9);
+        Graphics2D graphics2D = this.image.createGraphics();
+        graphics2D.setColor(Color.black);
+        graphics2D.fillRect(0, 0, WIDTH, HEIGHT);
     }
 
-    private static int convertToRGB(Word var0) {
-        return (new Color(var0.getZext(14, 10) * 8, var0.getZext(9, 5) * 8, var0.getZext(4, 0) * 8))
-                .getRGB();
+    private static int convertToRGB(Word word) {
+        return (new Color(word.getZext(14, 10) * 8, word.getZext(9, 5) * 8, word.getZext(4, 0) * 8)).getRGB();
     }
 
     public void reset() {
-        Graphics2D var1 = this.image.createGraphics();
-        var1.setColor(Color.black);
-        var1.fillRect(0, 0, 256, 248);
+        Graphics2D graphics2D = this.image.createGraphics();
+        graphics2D.setColor(Color.black);
+        graphics2D.fillRect(0, 0, WIDTH, HEIGHT);
         this.repaint();
     }
 
-    public void tableChanged(TableModelEvent var1) {
-        int var2 = var1.getFirstRow();
-        int var3 = var1.getLastRow();
-        if (var2 == 0 && var3 == 65535) {
+    public void tableChanged(TableModelEvent tableModelEvent) {
+        int firstRow = tableModelEvent.getFirstRow();
+        int lastRow = tableModelEvent.getLastRow();
+        if (firstRow == 0 && lastRow == 65535) {
             this.reset();
         } else {
-            if (var2 < 49152 || var2 > 65024) {
+            if (firstRow < START || firstRow > END) {
                 return;
             }
 
-            byte var4 = 2;
-            int var5 = var2 - '쀀';
-            int var6 = var5 / 128 * var4;
-            int var7 = var5 % 128 * var4;
-            int var8 = convertToRGB(this.mac.getMemory().read(var2));
+            byte scaling = SCALING;
+//            int start = firstRow - '쀀';
+            int start = firstRow - START;
+            int yPos = start / NUMBER_OF_ROWS * scaling;
+            int xPos = start % NUMBER_OF_ROWS * scaling;
+            int rgb = convertToRGB(this.machine.getMemory().read(firstRow));
 
-            for (int var9 = 0; var9 < var4; ++var9) {
-                for (int var10 = 0; var10 < var4; ++var10) {
-                    this.image.setRGB(var7 + var10, var6 + var9, var8);
+            for (int i = 0; i < scaling; ++i) {
+                for (int j = 0; j < scaling; ++j) {
+                    this.image.setRGB(xPos + j, yPos + i, rgb);
                 }
             }
 
-            this.repaint(var7, var6, var4, var4);
+            this.repaint(xPos, yPos, scaling, scaling);
         }
 
     }
 
-    public void paintComponent(Graphics var1) {
-        super.paintComponent(var1);
-        Graphics2D var2 = (Graphics2D) var1;
+    public void paintComponent(Graphics graphics) {
+        super.paintComponent(graphics);
+        Graphics2D graphics2D = (Graphics2D) graphics;
         if (this.image == null) {
-            int var3 = this.getWidth();
-            int var4 = this.getHeight();
-            this.image = (BufferedImage) this.createImage(var3, var4);
-            Graphics2D var5 = this.image.createGraphics();
-            var5.setColor(Color.white);
-            var5.fillRect(0, 0, var3, var4);
+            int width = this.getWidth();
+            int height = this.getHeight();
+            this.image = (BufferedImage) this.createImage(width, height);
+            Graphics2D imageGraphics2D = this.image.createGraphics();
+            imageGraphics2D.setColor(Color.white);
+            imageGraphics2D.fillRect(0, 0, width, height);
         }
 
-        var2.drawImage(this.image, null, 0, 0);
+        graphics2D.drawImage(this.image, null, 0, 0);
     }
 }

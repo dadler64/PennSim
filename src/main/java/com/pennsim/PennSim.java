@@ -7,7 +7,7 @@ import javax.swing.SwingUtilities;
 
 public class PennSim {
 
-    static String version = "1.2.5 $Rev: 436 $";
+    static String version = "1.2.6";
     static boolean GRAPHICAL_MODE = true;
     private static boolean PIPELINE_MODE = false;
     private static boolean LC3 = true;
@@ -17,34 +17,62 @@ public class PennSim {
         return GRAPHICAL_MODE;
     }
 
+    /**
+     * Get if the simulated CPU is pipelined
+     *
+     * @return if the CPU is pipelined
+     */
     public static boolean isPipelined() {
         return PIPELINE_MODE;
     }
 
+    /**
+     * Get if the LC3 instruction set is being used
+     *
+     * @return whether or not LC3 is being used
+     */
     static boolean isLC3() {
         return LC3;
     }
 
+    /**
+     * Get if the P37X instruction set is being used
+     *
+     * @return whether or not P37X is being used
+     */
     static boolean isP37X() {
         return P37X;
     }
 
+    /**
+     * Get the instruction set architecture being used
+     *
+     * @return a string for either LC3 or P37X
+     */
     public static String getISA() {
         if (LC3) {
-            return "com.pennsim.LC3 com.pennsim.ISA";
+            return "LC3 ISA";
         } else {
-            return P37X ? "com.pennsim.P37X com.pennsim.ISA" : null;
+            return P37X ? "P37X ISA" : null;
         }
     }
 
+    /**
+     * Get the current version of PennSim
+     *
+     * @return the version as a String
+     */
     static String getVersion() {
-        return "com.pennsim.PennSim Version " + version;
+        return "PennSim Version " + version;
     }
 
+    /**
+     * Print out the usage of the command line functions for PennSim
+     */
     private static void printUsage() {
-        System.out.println("\nUsage: java LCFX [-lc3] [-p37x] [-pipeline] [-t] [-s script]");
-        System.out.println("\t-lc3 : simulate the LC-3 com.pennsim.ISA");
-        System.out.println("\t-p37x : simulate the com.pennsim.P37X com.pennsim.ISA");
+        System.out.println("\nUsage: java -jar PennSim [-lc3] [-p37x] [-pipeline] [-t] [-s script]");
+        System.out.println("\t-lc3 : simulate the LC-3 ISA");
+        System.out.println("\t-p37x : simulate the P37X ISA");
         System.out.println("\t-pipeline : simulate a 5-stage fully-bypassed pipeline");
         System.out.println("\t-t : start in command-line mode");
         System.out.println("\t-s script : run 'script' from a script file");
@@ -81,10 +109,10 @@ public class PennSim {
         }
 
         if (LC3 && P37X) {
-            System.err.println("Error: can't specify more than one com.pennsim.ISA");
+            System.err.println("Error: can't specify more than one ISA");
             printUsage();
         } else if (!LC3 && !P37X) {
-            System.err.println("Error: com.pennsim.ISA not specified");
+            System.err.println("Error: ISA not specified");
             printUsage();
         } else {
             System.out.println(getISA());
@@ -127,7 +155,7 @@ public class PennSim {
 
                             try {
                                 command = commandLine.runCommand(nextCommand);
-                            } catch (ExceptionException e) {
+                            } catch (GenericException e) {
                                 command = e.getExceptionDescription();
                             } catch (NumberFormatException e) {
                                 command = "NumberFormatException: " + e.getMessage();

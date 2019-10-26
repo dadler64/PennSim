@@ -14,32 +14,32 @@ import java.util.List;
 
 class Assembler {
 
-    String as(String[] var1) throws AsException {
-        String var3 = null;
-        SymTab var4 = new SymTab();
+    String as(String[] asArgs) throws AsException {
+        String arg = null;
+        SymbolTable symTab = new SymbolTable();
 
-        for (int var5 = 0; var5 < var1.length; ++var5) {
-            if (var1[var5].length() == 0) {
+        for (int i = 0; i < asArgs.length; ++i) {
+            if (asArgs[i].length() == 0) {
                 throw new AsException("Null arguments are not permitted.");
             }
 
-            var3 = var1[var5];
+            arg = asArgs[i];
         }
 
-        if (var3 != null && var3.length() != 0) {
-            String var6 = this.base_filename(var3);
-            List var2 = this.parse(var6);
-            var2 = this.pass_zero(var2);
-            this.pass_one(var4, var2);
-            this.pass_two(var4, var2, var6);
-            this.gen_sym(var4, var2, var6);
+        if (arg != null && arg.length() != 0) {
+            String filename = this.baseFilename(arg);
+            List<Instruction> instructions = this.parse(filename);
+            instructions = this.passZero(instructions);
+            this.passOne(symTab, instructions);
+            this.pass_two(symTab, instructions, filename);
+            this.gen_sym(symTab, instructions, filename);
             return "";
         } else {
             throw new AsException("No .asm file specified.");
         }
     }
 
-    String base_filename(String var1) throws AsException {
+    String baseFilename(String var1) throws AsException {
         if (!var1.endsWith(".asm")) {
             throw new AsException("Input file must have .asm suffix ('" + var1 + "')");
         } else {
@@ -47,13 +47,13 @@ class Assembler {
         }
     }
 
-    List parse(String var1) throws AsException {
-        String var2 = var1 + ".asm";
+    private List<Instruction> parse(String baseFilename) throws AsException {
+        String fullFilename = baseFilename + ".asm";
         ArrayList var5 = new ArrayList();
         int var6 = 1;
 
         try {
-            BufferedReader var4 = new BufferedReader(new FileReader(var2));
+            BufferedReader var4 = new BufferedReader(new FileReader(fullFilename));
 
             while (true) {
                 Instruction var7;
@@ -70,55 +70,50 @@ class Assembler {
                 var5.add(var7);
             }
         } catch (IOException var8) {
-            throw new AsException("Couldn't read file (" + var2 + ")");
+            throw new AsException("Couldn't read file (" + fullFilename + ")");
         }
     }
 
-    private List pass_zero(List var1) throws AsException {
-        ArrayList var2 = new ArrayList();
-        Iterator var3 = var1.iterator();
+    private List passZero(List<Instruction> instructions) throws AsException {
+        ArrayList<Instruction> newList = new ArrayList<>();
 
-        while (var3.hasNext()) {
-            Instruction var4 = (Instruction) var3.next();
-            var4.splitLabels(var2);
+        for (Instruction instruction : instructions) {
+            instruction.splitLabels(newList);
         }
 
-        return var2;
+        return newList;
     }
 
-    void pass_one(SymTab var1, List var2) throws AsException {
-        int var3 = -1;
-        Iterator var4 = var2.iterator();
+    private void passOne(SymbolTable symbolTable, List<Instruction> instructions) throws AsException {
+        int address = -1;
 
-        while (var4.hasNext()) {
-            Instruction var5 = (Instruction) var4.next();
-            if (var5.getLabel() != null) {
-                if (var5.getLabel().length() > 20) {
-                    var5.error("Labels can be no longer than 20 characters ('" + var5.getLabel()
-                            + "').");
+        for (Instruction instruction : instructions) {
+            if (instruction.getLabel() != null) {
+                if (instruction.getLabel().length() > 20) {
+                    instruction.error("Labels can be no longer than 20 characters ('" + instruction.getLabel() + "').");
                 }
 
-                if (var3 > 65535) {
-                    var5.error("Label cannot be represented in 16 bits (" + var3 + ")");
+                if (address > 65535) {
+                    instruction.error("Label cannot be represented in 16 bits (" + address + ")");
                 }
 
-                if (!var1.insert(var5.getLabel(), var3)) {
-                    var5.error("Duplicate label ('" + var5.getLabel() + "')");
+                if (!symbolTable.insert(instruction.getLabel(), address)) {
+                    instruction.error("Duplicate label ('" + instruction.getLabel() + "')");
                 }
             } else {
-                var5.setAddress(var3);
-                InstructionDef var6 = (InstructionDef) ISA.formatToDef.get(var5.getFormat());
-                if (var6 == null) {
-                    throw new AsException(var5, "Undefined opcode '" + var5.getOpcode() + "'");
+                instruction.setAddress(address);
+                InstructionDef instructionDef = ISA.formatToDef.get(instruction.getFormat());
+                if (instructionDef == null) {
+                    throw new AsException(instruction, "Undefined opcode '" + instruction.getOpcode() + "'");
                 }
 
-                var3 = var6.getNextAddress(var5);
+                address = instructionDef.getNextAddress(instruction);
             }
         }
 
     }
 
-    void pass_two(SymTab var1, List var2, String var3) throws AsException {
+    void pass_two(SymbolTable var1, List var2, String var3) throws AsException {
         ArrayList var4 = new ArrayList();
         Iterator var5 = var2.iterator();
 
@@ -130,7 +125,7 @@ class Assembler {
                     Console.println(var6.getOriginalLine());
                 }
 
-                InstructionDef var8 = (InstructionDef) ISA.formatToDef.get(var6.getFormat());
+                InstructionDef var8 = ISA.formatToDef.get(var6.getFormat());
                 if (var8 != null) {
                     var8.encode(var1, var6, var4);
                 }
@@ -154,7 +149,7 @@ class Assembler {
         }
     }
 
-    void gen_sym(SymTab var1, List var2, String var3) throws AsException {
+    void gen_sym(SymbolTable var1, List var2, String var3) throws AsException {
         String var4 = var3 + ".sym";
         Enumeration var6 = var1.get_labels();
 
@@ -184,7 +179,7 @@ class Assembler {
             while (var11.hasNext()) {
                 Instruction var12 = (Instruction) var11.next();
                 if (var12.getOpcode() != null) {
-                    InstructionDef var13 = (InstructionDef) ISA.formatToDef.get(var12.getFormat());
+                    InstructionDef var13 = ISA.formatToDef.get(var12.getFormat());
                     if (!var13.isDataDirective()) {
                         var5.write("//\t$               " + this.formatAddress(var12.getAddress())
                                 + "\n");

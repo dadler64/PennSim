@@ -2,7 +2,7 @@ package com.pennsim;
 
 public interface PrintableConsole {
 
-    void print(String var1);
+    void print(String text);
 
     void clear();
 }

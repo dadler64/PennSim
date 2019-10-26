@@ -1,5 +1,8 @@
 package com.pennsim;
 
+import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED;
+import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
+
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -19,84 +22,78 @@ import javax.swing.text.Document;
 public class TextConsolePanel extends JPanel implements KeyListener, FocusListener, ActionListener {
 
     private JTextArea screen = new JTextArea(5, 21);
-    private JScrollPane spane;
-    private KeyboardDevice kbd;
-    private MonitorDevice monitor;
-    private PipedInputStream kbin;
-    private PipedOutputStream kbout;
+    private PipedInputStream keyboardIn;
+    private PipedOutputStream keyboardOut;
 
-    TextConsolePanel(KeyboardDevice var1, MonitorDevice var2) {
+    TextConsolePanel(KeyboardDevice keyboardDevice, MonitorDevice monitorDevice) {
         this.screen.setEditable(false);
         this.screen.addKeyListener(this);
         this.screen.addFocusListener(this);
         this.screen.setLineWrap(true);
         this.screen.setWrapStyleWord(true);
-        this.spane = new JScrollPane(this.screen, 22, 30);
-        this.kbd = var1;
-        this.kbout = new PipedOutputStream();
+        JScrollPane scrollPane = new JScrollPane(this.screen, VERTICAL_SCROLLBAR_ALWAYS, HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        this.keyboardOut = new PipedOutputStream();
 
         try {
-            this.kbin = new PipedInputStream(this.kbout);
-        } catch (IOException var4) {
-            ErrorLog.logError(var4);
+            this.keyboardIn = new PipedInputStream(this.keyboardOut);
+        } catch (IOException e) {
+            ErrorLog.logError(e);
         }
 
-        var1.setInputStream(this.kbin);
-        var1.setDefaultInputStream();
-        var1.setInputMode(KeyboardDevice.INTERACTIVE_MODE);
-        var1.setDefaultInputMode();
-        this.monitor = var2;
-        var2.addActionListener(this);
-        this.add(this.spane);
+        keyboardDevice.setInputStream(this.keyboardIn);
+        keyboardDevice.setDefaultInputStream();
+        keyboardDevice.setInputMode(KeyboardDevice.INTERACTIVE_MODE);
+        keyboardDevice.setDefaultInputMode();
+        monitorDevice.addActionListener(this);
+        this.add(scrollPane);
     }
 
     // NOTE: Is triggered by the "reset" command
-    public void actionPerformed(ActionEvent var1) {
-        Object var2 = var1.getSource();
-        if (var2 instanceof Integer) {
-            Document var3 = this.screen.getDocument();
+    public void actionPerformed(ActionEvent event) {
+        Object source = event.getSource();
+        if (source instanceof Integer) {
+            Document document = this.screen.getDocument();
 
             try {
-                var3.remove(0, var3.getLength());
-            } catch (BadLocationException var5) {
-                Console.println(var5.getMessage());
+                document.remove(0, document.getLength());
+            } catch (BadLocationException e) {
+                Console.println(e.getMessage());
             }
         } else {
-            String var6 = (String) var1.getSource();
-            this.screen.append(var6);
+            String stringSource = (String) event.getSource();
+            this.screen.append(stringSource);
         }
-
     }
 
-    public void keyReleased(KeyEvent var1) {
+    public void keyReleased(KeyEvent event) {
     }
 
-    public void keyPressed(KeyEvent var1) {
+    public void keyPressed(KeyEvent event) {
     }
 
-    public void keyTyped(KeyEvent var1) {
-        char var2 = var1.getKeyChar();
+    public void keyTyped(KeyEvent event) {
+        char keyChar = event.getKeyChar();
 
         try {
-            this.kbout.write(var2);
-            this.kbout.flush();
-        } catch (IOException var4) {
-            ErrorLog.logError(var4);
+            this.keyboardOut.write(keyChar);
+            this.keyboardOut.flush();
+        } catch (IOException e) {
+            ErrorLog.logError(e);
         }
 
     }
 
-    public void focusGained(FocusEvent var1) {
+    public void focusGained(FocusEvent event) {
         this.screen.setBackground(Color.yellow);
     }
 
-    public void focusLost(FocusEvent var1) {
+    public void focusLost(FocusEvent event) {
         this.screen.setBackground(Color.white);
     }
 
-    public void setEnabled(boolean var1) {
-        this.screen.setEnabled(var1);
-        if (var1) {
+    public void setEnabled(boolean shouldEnable) {
+        this.screen.setEnabled(shouldEnable);
+        if (shouldEnable) {
             this.screen.setBackground(Color.white);
         } else {
             this.screen.setBackground(Color.gray);

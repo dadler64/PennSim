@@ -1,72 +1,80 @@
 package com.pennsim;
 
+/**
+ * Class designed to emulate the digital circuit Branch Predictor
+ *
+ * If you would like to learn more about how a Branch Predictors work
+ * you cna google it or check out this transcript of a talk on it at
+ * https://danluu.com/branch-prediction/
+ */
 public class BranchPredictor {
 
     private static final int TAG = 0;
     private static final int PREDICTION = 1;
     private int[][] predictor;
     private int indexMask = 0;
-    private Machine mac;
 
     public BranchPredictor() {
     }
 
-    public BranchPredictor(Machine var1, int var2) {
-        this.mac = var1;
-        int var3 = 0;
-        int var4 = var2;
-        byte var5 = 1;
+    BranchPredictor(int value) {
+        int tag = TAG;
+        int localValue = value;
+        byte prediction = PREDICTION;
 
-        for (int var6 = 0; var6 < 16; ++var6) {
-            if ((var4 & var5) == var5) {
-                ++var3;
+        for (int i = 0; i < 16; ++i) {
+            if ((localValue & prediction) == prediction) {
+                ++tag;
 
-                for (int var7 = 0; var7 < var6; ++var7) {
+                for (int j = 0; j < i; ++j) {
                     this.indexMask <<= 1;
                     this.indexMask |= 1;
                 }
             }
 
-            var4 >>= 1;
+            localValue >>= 1;
         }
 
-        if (var3 != 1) {
+        if (tag != PREDICTION) {
             throw new IllegalArgumentException("Branch predictor size must be a power of two.");
         } else {
-            this.predictor = new int[var2][2];
+            this.predictor = new int[value][2];
         }
     }
 
-    public int getPredictedPC(int var1) {
-        int var2 = var1 & this.indexMask;
-        int var3 = var1 + 1;
-        if (this.predictor[var2][0] == var1) {
-            var3 = this.predictor[var2][1];
+    int getPredictedPC(int value) {
+        int maskedValue = value & this.indexMask;
+        int var3 = value + 1;
+        if (this.predictor[maskedValue][TAG] == value) {
+            var3 = this.predictor[maskedValue][PREDICTION];
         }
 
         return var3;
     }
 
-    public void update(int var1, int var2) {
-        this.predictor[var1 & this.indexMask][0] = var1;
-        this.predictor[var1 & this.indexMask][1] = var2;
+    void update(int tagValue, int predictionValue) {
+        this.predictor[tagValue & this.indexMask][TAG] = tagValue;
+        this.predictor[tagValue & this.indexMask][PREDICTION] = predictionValue;
     }
 
     public String toString() {
-        String var1 = "";
+        StringBuilder builder = new StringBuilder();
 
-        for (int var2 = 0; var2 < this.predictor.length; ++var2) {
-            var1 = var1 + var2 + ":" + " tag: " + this.predictor[var2][0] + " pred: "
-                    + this.predictor[var2][1];
+        for (int i = 0; i < this.predictor.length; ++i) {
+            builder.append(i).append(":").append(" tag: ").append(this.predictor[i][TAG])
+                    .append(" pred: ").append(this.predictor[i][PREDICTION]);
         }
 
-        return var1;
+        return builder.toString();
     }
 
+    /**
+     * Reset the predictor
+     */
     public void reset() {
-        for (int var1 = 0; var1 < this.predictor.length; ++var1) {
-            this.predictor[var1][0] = 0;
-            this.predictor[var1][1] = 0;
+        for (int i = 0; i < this.predictor.length; ++i) {
+            this.predictor[i][TAG] = 0;
+            this.predictor[i][PREDICTION] = 0;
         }
 
     }

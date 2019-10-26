@@ -6,76 +6,96 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.LinkedList;
-import java.util.ListIterator;
 
+/**
+ * Class which controls the logic for the PennSim Monitor which
+ * outputs characters from programs onto a simulated computer monitor
+ */
 public class MonitorDevice {
 
     private static final Word MONITOR_READY = new Word(32768);
-    private static final Word MONITOR_NOTREADY = new Word(0);
-    private OutputStreamWriter dout;
-    private LinkedList mlist;
+    private static final Word MONITOR_NOT_READY = new Word(0);
+    private OutputStreamWriter writer;
+    private LinkedList<ActionListener> monitorList;
 
-    public MonitorDevice() {
+    MonitorDevice() {
         if (!PennSim.GRAPHICAL_MODE) {
-            this.dout = new OutputStreamWriter(System.out);
+            this.writer = new OutputStreamWriter(System.out);
         } else {
-            this.mlist = new LinkedList();
+            this.monitorList = new LinkedList<>();
         }
 
     }
 
-    public MonitorDevice(OutputStream var1) {
-        this.dout = new OutputStreamWriter(var1);
+    public MonitorDevice(OutputStream stream) {
+        this.writer = new OutputStreamWriter(stream);
     }
 
-    public void addActionListener(ActionListener var1) {
-        this.mlist.add(var1);
+    /**
+     * Add an action listener to the monitor list
+     *
+     * @param listener the action listener to be added
+     */
+    void addActionListener(ActionListener listener) {
+        this.monitorList.add(listener);
     }
 
-    public Word status() {
-        return this.ready() ? MONITOR_READY : MONITOR_NOTREADY;
+    /**
+     * Get the status of the monitor
+     *
+     * @return status of monitor
+     */
+    Word getStatus() {
+        return this.ready() ? MONITOR_READY : MONITOR_NOT_READY;
     }
 
-    public boolean ready() {
+    /**
+     * Check if the monitor is ready for usage
+     *
+     * @return if the monitor is ready
+     */
+    private boolean ready() {
         if (PennSim.GRAPHICAL_MODE) {
             return true;
         } else {
             try {
-                this.dout.flush();
+                this.writer.flush();
                 return true;
-            } catch (IOException var2) {
-                ErrorLog.logError(var2);
+            } catch (IOException e) {
+                ErrorLog.logError(e);
                 return false;
             }
         }
     }
 
+    /**
+     * Reset the monitor
+     */
     public void reset() {
         if (PennSim.GRAPHICAL_MODE) {
-            ListIterator var1 = this.mlist.listIterator();
-
-            while (var1.hasNext()) {
-                ActionListener var2 = (ActionListener) var1.next();
-                var2.actionPerformed(new ActionEvent(new Integer(1), 0, null));
+            for (ActionListener listener : this.monitorList) {
+                listener.actionPerformed(new ActionEvent(1, 0, null));
             }
         }
 
     }
 
-    public void write(char var1) {
+    /**
+     * Write a character to the monitor
+     *
+     * @param character the character to write to the monitor
+     */
+    void write(char character) {
         if (PennSim.GRAPHICAL_MODE) {
-            ListIterator var2 = this.mlist.listIterator();
-
-            while (var2.hasNext()) {
-                ActionListener var3 = (ActionListener) var2.next();
-                var3.actionPerformed(new ActionEvent(var1 + "", 0, null));
+            for (ActionListener listener : this.monitorList) {
+                listener.actionPerformed(new ActionEvent(character + "", 0, null));
             }
         } else {
             try {
-                this.dout.write(var1);
-                this.dout.flush();
-            } catch (IOException var4) {
-                ErrorLog.logError(var4);
+                this.writer.write(character);
+                this.writer.flush();
+            } catch (IOException e) {
+                ErrorLog.logError(e);
             }
         }
 

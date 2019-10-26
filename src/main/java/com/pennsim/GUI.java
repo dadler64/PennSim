@@ -29,6 +29,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.WindowConstants;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileFilter;
@@ -37,12 +38,17 @@ import javax.swing.table.TableColumn;
 
 public class GUI implements ActionListener, TableModelListener {
 
-    static final Color BreakPointColor = new Color(241, 103, 103);
-    private static final Color PCColor;
-    private static String LOOKANDFEEL = "Metal";
+    static final Color BREAK_POINT_COLOR = new Color(241, 103, 103);
+    private static final Color PC_COLOR;
+    // Various UI themes (WARNING: Some do not work well)
+    // TODO: Add option to change theming in the program
+    private static final String LOOKANDFEEL = "Metal";
+//   private static final String LOOKANDFEEL = "System";
+//   private static final String LOOKANDFEEL = "Motif";
+//   private static final String LOOKANDFEEL = "GTK+";
 
     static {
-        PCColor = Color.YELLOW;
+        PC_COLOR = Color.YELLOW;
     }
 
     private final JFileChooser fileChooser;
@@ -57,7 +63,6 @@ public class GUI implements ActionListener, TableModelListener {
     private final String quitActionCommand;
     private final String openCOWActionCommand;
     private final String versionActionCommand;
-    private final JPanel leftPanel;
     private final JPanel controlPanel;
     private final JButton nextButton;
     private final String nextButtonCommand;
@@ -81,16 +86,13 @@ public class GUI implements ActionListener, TableModelListener {
     private final JTable memTable;
     private final JScrollPane memScrollPane;
     private final Machine machine;
-    //   private static String LOOKANDFEEL = "System";
-//   private static String LOOKANDFEEL = "Motif";
-//   private static String LOOKANDFEEL = "GTK+";
     private final JFrame frame;
     private final JPanel devicePanel;
     private final JPanel registerPanel;
     private final TextConsolePanel ioPanel;
     private final VideoConsole video;
 
-    public GUI(final Machine machine, CommandLine var2) {
+    public GUI(final Machine machine, CommandLine commandLine) {
         this.frame = new JFrame("PennSim - " + PennSim.version + " - " + PennSim.getISA());
         this.fileChooser = new JFileChooser(".");
         this.menuBar = new JMenuBar();
@@ -104,7 +106,7 @@ public class GUI implements ActionListener, TableModelListener {
         this.quitActionCommand = "Quit";
         this.openCOWActionCommand = "OutputWindow";
         this.versionActionCommand = "Version";
-        this.leftPanel = new JPanel();
+//        JPanel leftPanel = new JPanel();
         this.controlPanel = new JPanel();
         this.nextButton = new JButton("Next");
         this.nextButtonCommand = "Next";
@@ -142,8 +144,8 @@ public class GUI implements ActionListener, TableModelListener {
                     if (row < 65024) {
                         if (GUI.this.machine.getMemory().isBreakPointSet(row)) {
                             checkBox.setSelected(true);
-                            checkBox.setBackground(GUI.BreakPointColor);
-                            checkBox.setForeground(GUI.BreakPointColor);
+                            checkBox.setBackground(GUI.BREAK_POINT_COLOR);
+                            checkBox.setForeground(GUI.BREAK_POINT_COLOR);
                         } else {
                             checkBox.setSelected(false);
                             checkBox.setBackground(this.getBackground());
@@ -156,9 +158,9 @@ public class GUI implements ActionListener, TableModelListener {
                     return checkBox;
                 } else {
                     if (row == GUI.this.machine.getRegisterFile().getPC()) {
-                        component.setBackground(GUI.PCColor);
+                        component.setBackground(GUI.PC_COLOR);
                     } else if (GUI.this.machine.getMemory().isBreakPointSet(row)) {
-                        component.setBackground(GUI.BreakPointColor);
+                        component.setBackground(GUI.BREAK_POINT_COLOR);
                     } else {
                         component.setBackground(this.getBackground());
                     }
@@ -189,7 +191,7 @@ public class GUI implements ActionListener, TableModelListener {
         column = this.memTable.getColumnModel().getColumn(2);
         column.setMinWidth(50);
         column.setMaxWidth(50);
-        this.commandPanel = new CommandLinePanel(machine, var2);
+        this.commandPanel = new CommandLinePanel(machine, commandLine);
         this.commandOutputWindow = new CommandOutputWindow("Command Output");
         WindowListener listener = new WindowListener() {
             public void windowActivated(WindowEvent event) {
@@ -219,14 +221,17 @@ public class GUI implements ActionListener, TableModelListener {
         Console.registerConsole(this.commandPanel);
         Console.registerConsole(this.commandOutputWindow);
         this.ioPanel = new TextConsolePanel(machine.getMemory().getKeyBoardDevice(),
-                machine.getMemory().getMonitorDevice());
+                machine.getMemory().getMonitor());
         this.ioPanel.setMinimumSize(new Dimension(256, 85));
         this.video = new VideoConsole(machine);
         this.commandPanel.setGUI(this);
     }
 
-    public static void initLookAndFeel() {
-        String theme = null;
+    /**
+     * Initialize the UI theme
+     */
+    static void initLookAndFeel() {
+        String theme;
         JFrame.setDefaultLookAndFeelDecorated(true);
         if (LOOKANDFEEL != null) {
             switch (LOOKANDFEEL) {
@@ -250,30 +255,30 @@ public class GUI implements ActionListener, TableModelListener {
 
             try {
                 UIManager.setLookAndFeel(theme);
-            } catch (ClassNotFoundException var2) {
+            } catch (ClassNotFoundException e) {
                 ErrorLog.logError("Couldn't find class for specified look and feel:" + theme);
                 ErrorLog.logError("Did you include the L&F library in the class path?");
                 ErrorLog.logError("Using the default look and feel.");
-            } catch (UnsupportedLookAndFeelException var3) {
-                ErrorLog.logError(
-                        "Can't use the specified look and feel (" + theme + ") on this platform.");
+            } catch (UnsupportedLookAndFeelException e) {
+                ErrorLog.logError("Can't use the specified look and feel (" + theme + ") on this platform.");
                 ErrorLog.logError("Using the default look and feel.");
-            } catch (Exception var4) {
-                ErrorLog.logError(
-                        "Couldn't get specified look and feel (" + theme + "), for some reason.");
+            } catch (Exception e) {
+                ErrorLog.logError("Couldn't get specified look and feel (" + theme + "), for some reason.");
                 ErrorLog.logError("Using the default look and feel.");
-                ErrorLog.logError(var4);
+                ErrorLog.logError(e);
             }
         }
 
     }
 
+    /**
+     * Set up the Memory Panel
+     */
     private void setupMemoryPanel() {
         this.memoryPanel.add(this.memScrollPane, "Center");
         this.memoryPanel.setMinimumSize(new Dimension(400, 100));
-        this.memoryPanel.setBorder(BorderFactory
-                .createCompoundBorder(BorderFactory.createTitledBorder("Memory"),
-                        BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        this.memoryPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Memory"),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         this.memTable.getModel().addTableModelListener(this);
         this.memTable.getModel().addTableModelListener(this.video);
         this.memTable.getModel().addTableModelListener(
@@ -281,81 +286,89 @@ public class GUI implements ActionListener, TableModelListener {
         this.memTable.setPreferredScrollableViewportSize(new Dimension(400, 460));
     }
 
+    /**
+     * Set up the Device Panel
+     */
     private void setupDevicePanel() {
         this.devicePanel.setLayout(new GridBagLayout());
-        GridBagConstraints var1 = new GridBagConstraints();
-        var1.fill = 10;
-        var1.gridx = 0;
-        var1.gridy = 0;
-        var1.weightx = 1.0D;
-        this.devicePanel.add(this.video, var1);
-        var1 = new GridBagConstraints();
-        var1.gridx = 0;
-        var1.gridy = 1;
-        var1.weightx = 1.0D;
-        var1.fill = 0;
-        this.devicePanel.add(this.ioPanel, var1);
-        this.devicePanel.setBorder(BorderFactory
-                .createCompoundBorder(BorderFactory.createTitledBorder("Devices"),
-                        BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.fill = 10;
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.weightx = 1.0D;
+        this.devicePanel.add(this.video, constraints);
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        constraints.weightx = 1.0D;
+        constraints.fill = 0;
+        this.devicePanel.add(this.ioPanel, constraints);
+        this.devicePanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Devices"),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         this.devicePanel.setVisible(true);
     }
 
+    /**
+     * Set up the Console Panel
+     */
     private void setupControlPanel() {
-        boolean var1 = true;
+        //TODO: Figure out why this boolean is here
+//        boolean var1 = true;
         this.controlPanel.setLayout(new GridBagLayout());
-        GridBagConstraints grid = new GridBagConstraints();
-        grid.fill = 2;
-        this.nextButton.setActionCommand("Next");
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.fill = 2;
+        this.nextButton.setActionCommand(nextButtonCommand);
         this.nextButton.addActionListener(this);
-        grid.weightx = 1.0D;
-        grid.gridx = 0;
-        grid.gridy = 0;
-        this.controlPanel.add(this.nextButton, grid);
-        this.stepButton.setActionCommand("Step");
+        constraints.weightx = 1.0D;
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        this.controlPanel.add(this.nextButton, constraints);
+        this.stepButton.setActionCommand(stepButtonCommand);
         this.stepButton.addActionListener(this);
-        grid.gridx = 1;
-        grid.gridy = 0;
-        this.controlPanel.add(this.stepButton, grid);
-        this.continueButton.setActionCommand("Continue");
+        constraints.gridx = 1;
+        constraints.gridy = 0;
+        this.controlPanel.add(this.stepButton, constraints);
+        this.continueButton.setActionCommand(continueButtonCommand);
         this.continueButton.addActionListener(this);
-        grid.gridx = 2;
-        grid.gridy = 0;
-        this.controlPanel.add(this.continueButton, grid);
-        this.stopButton.setActionCommand("Stop");
+        constraints.gridx = 2;
+        constraints.gridy = 0;
+        this.controlPanel.add(this.continueButton, constraints);
+        this.stopButton.setActionCommand(stopButtonCommand);
         this.stopButton.addActionListener(this);
-        grid.gridx = 3;
-        grid.gridy = 0;
-        this.controlPanel.add(this.stopButton, grid);
-        grid.gridx = 4;
-        grid.gridy = 0;
-        grid.fill = 0;
-        grid.anchor = 22;
+        constraints.gridx = 3;
+        constraints.gridy = 0;
+        this.controlPanel.add(this.stopButton, constraints);
+        constraints.gridx = 4;
+        constraints.gridy = 0;
+        constraints.fill = 0;
+        constraints.anchor = 22;
         this.setStatusLabelSuspended();
-        this.controlPanel.add(this.statusLabel, grid);
-        grid = new GridBagConstraints();
-        grid.gridx = 0;
-        grid.gridy = 1;
-        grid.gridwidth = 6;
-        this.controlPanel.add(Box.createRigidArea(new Dimension(5, 5)), grid);
-        grid = new GridBagConstraints();
-        grid.gridx = 0;
-        grid.gridy = 2;
-        grid.gridwidth = 6;
-        grid.gridheight = 1;
-        grid.ipady = 100;
-        grid.weightx = 1.0D;
-        grid.weighty = 1.0D;
-        grid.fill = 1;
-        this.controlPanel.add(this.commandPanel, grid);
+        this.controlPanel.add(this.statusLabel, constraints);
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        constraints.gridwidth = 6;
+        this.controlPanel.add(Box.createRigidArea(new Dimension(5, 5)), constraints);
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 2;
+        constraints.gridwidth = 6;
+        constraints.gridheight = 1;
+        constraints.ipady = 100;
+        constraints.weightx = 1.0D;
+        constraints.weighty = 1.0D;
+        constraints.fill = 1;
+        this.controlPanel.add(this.commandPanel, constraints);
         this.controlPanel.setMinimumSize(new Dimension(100, 150));
         this.controlPanel.setPreferredSize(new Dimension(100, 150));
-        this.controlPanel.setBorder(BorderFactory
-                .createCompoundBorder(BorderFactory.createTitledBorder("Controls"),
-                        BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        this.controlPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Controls"),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         this.controlPanel.setVisible(true);
     }
 
+    /**
+     * Set up the Register Panel
+     */
     private void setupRegisterPanel() {
         this.registerPanel.setLayout(new GridBagLayout());
         GridBagConstraints grid = new GridBagConstraints();
@@ -370,6 +383,9 @@ public class GUI implements ActionListener, TableModelListener {
         this.registerPanel.setVisible(true);
     }
 
+    /**
+     * Set up the overall GUI
+     */
     void setUpGUI() {
         initLookAndFeel();
         JFrame.setDefaultLookAndFeelDecorated(true);
@@ -444,17 +460,25 @@ public class GUI implements ActionListener, TableModelListener {
         grid.weightx = 1.0D;
         this.frame.getContentPane().add(this.memoryPanel, grid);
         this.frame.setSize(new Dimension(700, 725));
-        this.frame.setDefaultCloseOperation(3);
+        this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.frame.pack();
         this.frame.setVisible(true);
         this.scrollToPC();
         this.commandPanel.actionPerformed(null);
     }
 
+    /**
+     * Scroll the Memory Panel to a specific row
+     *
+     * @param row the row to scroll to
+     */
     void scrollToIndex(int row) {
         this.memTable.scrollRectToVisible(this.memTable.getCellRect(row, 0, true));
     }
 
+    /**
+     * Scroll the Memory Panel to the row defined by the PC
+     */
     void scrollToPC() {
         this.scrollToPC(0);
     }
@@ -464,17 +488,24 @@ public class GUI implements ActionListener, TableModelListener {
         this.memTable.scrollRectToVisible(this.memTable.getCellRect(var2, 0, true));
     }
 
+    /**
+     * TODO: Figure out if there is a use for this
+     *
+     * @param event table model event??
+     */
     public void tableChanged(TableModelEvent event) {
         if (!this.machine.isContinueMode()) {
         }
-
     }
 
+    /**
+     * Confirm exit when exiting the program
+     */
     void confirmExit() {
         Object[] obj = new Object[]{"Yes", "No"};
         int optionDialog = JOptionPane
                 .showOptionDialog(this.frame, "Are you sure you want to quit?", "Quit verification",
-                        0, 3,
+                        JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
                         null, obj, obj[1]);
         if (optionDialog == 0) {
             this.machine.cleanup();
@@ -483,30 +514,36 @@ public class GUI implements ActionListener, TableModelListener {
 
     }
 
+    /**
+     * Function to handle each event button in the GUI
+     *
+     * @param event the event to be handled
+     */
     public void actionPerformed(ActionEvent event) {
         try {
-            int var2;
+            int index;
             try {
-                var2 = Integer.parseInt(event.getActionCommand());
-                this.scrollToIndex(var2);
+                index = Integer.parseInt(event.getActionCommand());
+                this.scrollToIndex(index);
             } catch (NumberFormatException var4) {
-                if ("Next".equals(event.getActionCommand())) {
+                if (nextButtonCommand.equals(event.getActionCommand())) {
                     this.machine.executeNext();
-                } else if ("Step".equals(event.getActionCommand())) {
+                } else if (stopButtonCommand.equals(event.getActionCommand())) {
                     this.machine.executeStep();
-                } else if ("Continue".equals(event.getActionCommand())) {
+                } else if (continueButtonCommand.equals(event.getActionCommand())) {
                     this.machine.executeMany();
-                } else if ("Quit".equals(event.getActionCommand())) {
+                } else if (quitActionCommand.equals(event.getActionCommand())) {
                     this.confirmExit();
-                } else if ("Stop".equals(event.getActionCommand())) {
+                } else if (stopButtonCommand.equals(event.getActionCommand())) {
                     Console.println(this.machine.stopExecution(true));
-                } else if ("OutputWindow".equals(event.getActionCommand())) {
+                } else if (openCOWActionCommand.equals(event.getActionCommand())) {
                     this.commandOutputWindow.setVisible(true);
-                } else if ("Version".equals(event.getActionCommand())) {
-                    JOptionPane.showMessageDialog(this.frame, PennSim.getVersion(), "Version", 1);
-                } else if ("Open".equals(event.getActionCommand())) {
-                    var2 = this.fileChooser.showOpenDialog(this.frame);
-                    if (var2 == 0) {
+                } else if (versionActionCommand.equals(event.getActionCommand())) {
+                    JOptionPane.showMessageDialog(this.frame, PennSim.getVersion(),
+                            "Version", JOptionPane.INFORMATION_MESSAGE);
+                } else if (openActionCommand.equals(event.getActionCommand())) {
+                    index = this.fileChooser.showOpenDialog(this.frame);
+                    if (index == 0) {
                         File file = this.fileChooser.getSelectedFile();
                         Console.println(this.machine.loadObjectFile(file));
                     } else {
@@ -514,33 +551,51 @@ public class GUI implements ActionListener, TableModelListener {
                     }
                 }
             }
-        } catch (ExceptionException e) {
+        } catch (GenericException e) {
             e.showMessageDialog(this.frame);
         }
 
     }
 
+    /**
+     * Get this JFrame
+     *
+     * @return the current JFrame
+     */
     public JFrame getFrame() {
         return this.frame;
     }
 
+    /**
+     * Set the status label as "Running"
+     */
     void setStatusLabelRunning() {
-        this.statusLabel.setText("    Running ");
+        this.statusLabel.setText(statusLabelRunning);
         this.statusLabel.setForeground(this.runningColor);
     }
 
+    /**
+     * Set the status label as "Suspended"
+     */
     void setStatusLabelSuspended() {
-        this.statusLabel.setText("Suspended ");
+        this.statusLabel.setText(statusLabelSuspended);
         this.statusLabel.setForeground(this.suspendedColor);
     }
 
+    /**
+     * Set the status label as "Halted"
+     */
     void setStatusLabelHalted() {
-        this.statusLabel.setText("       Halted ");
+        this.statusLabel.setText(statusLabelHalted);
         this.statusLabel.setForeground(this.haltedColor);
     }
 
-    public void setStatusLabel(boolean var1) {
-        if (var1) {
+    /**
+     * Set the status label as either "Suspended" or
+     * "Running" based on the boolean input
+     */
+    public void setStatusLabel(boolean isSuspended) {
+        if (isSuspended) {
             this.setStatusLabelSuspended();
         } else {
             this.setStatusLabelHalted();
@@ -552,6 +607,9 @@ public class GUI implements ActionListener, TableModelListener {
         this.ioPanel.setEnabled(enabled);
     }
 
+    /**
+     * Reset the GUI
+     */
     public void reset() {
         this.setTextConsoleEnabled(true);
         this.commandPanel.reset();

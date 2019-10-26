@@ -1,8 +1,11 @@
 package com.pennsim;
 
+/**
+ * Simple exception Class to handle Internal Exceptions
+ */
 class InternalException extends RuntimeException {
 
-    InternalException(String var1) {
-        super("Internal Error: " + var1);
+    InternalException(String message) {
+        super("Internal Error: " + message);
     }
 }

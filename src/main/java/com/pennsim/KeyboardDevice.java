@@ -90,7 +90,7 @@ public class KeyboardDevice {
         return new Word(this.current);
     }
 
-    public boolean hasTimerTick() {
+    boolean hasTimerTick() {
         try {
             this.kbin.mark(1);
             if (this.kbin.ready()) {

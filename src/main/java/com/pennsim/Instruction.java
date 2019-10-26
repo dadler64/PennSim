@@ -7,97 +7,102 @@ import java.util.regex.Pattern;
 
 class Instruction {
 
-    private String originalLine;
-    private String format = "";
     private int address;
-    private String opcode;
+    private int lineNumber;
+    private Integer offsetImmediate;
     private String label;
-    private String label_ref;
-    private Vector regs = new Vector();
+    private String labelRef;
+    private String opcode;
+    private String originalLine;
     private String stringz;
-    private Integer offset_immediate;
-    private int line_number = 0;
+    private StringBuilder builder = new StringBuilder();
+    private Vector<Integer> regs = new Vector<>();
 
-    Instruction(String var1, int var2) throws AsException {
-        this.line_number = var2;
-        this.originalLine = var1;
-        int var3 = var1.indexOf(59);
+    Instruction(String label, int lineNumber) throws AsException {
+        this.lineNumber = lineNumber;
+        this.originalLine = label;
+        int var3 = label.indexOf(59);
         if (var3 != -1) {
-            var1 = var1.substring(0, var3);
+            label = label.substring(0, var3);
         }
 
-        var1 = var1.replace("\\\"", "\u0000");
-        Matcher var4 = Pattern.compile("([^\"]*)[\"]([^\"]*)[\"](.*)").matcher(var1);
-        if (var4.matches()) {
-            this.stringz = var4.group(2);
+        label = label.replace("\\\"", "\u0000");
+        Matcher matcher = Pattern.compile("([^\"]*)[\"]([^\"]*)[\"](.*)").matcher(label);
+        if (matcher.matches()) {
+            this.stringz = matcher.group(2);
             this.stringz = this.stringz.replace("\u0000", "\"");
             this.stringz = this.stringz.replace("\\n", "\n");
             this.stringz = this.stringz.replace("\\t", "\t");
             this.stringz = this.stringz.replace("\\0", "\u0000");
-            var1 = var4.group(1) + " " + var4.group(3);
+            label = matcher.group(1) + " " + matcher.group(3);
         }
 
-        var1 = var1.toUpperCase();
-        var1 = var1.replace(",", " ");
-        var1 = var1.trim();
-        if (var1.length() != 0) {
-            String[] var5 = var1.split("[\\s]+");
+        label = label.toUpperCase();
+        label = label.replace(",", " ");
+        label = label.trim();
+        if (label.length() != 0) {
+            String[] words = label.split("[\\s]+");
 
-            for (int var6 = 0; var6 < var5.length; ++var6) {
-                String var7 = var5[var6];
-                if (ISA.isOpcode(var7)) {
-                    this.opcode = var7;
-                    this.format = this.format + var7 + " ";
-                } else if (var7.matches("[#]?[-]?[\\d]+")) {
-                    var7 = var7.replace("#", "");
-                    this.offset_immediate = Integer.parseInt(var7, 10);
-                    this.format = this.format + "Num ";
-                } else if (var7.matches("[B][01]+")) {
-                    var7 = var7.replace("B", "");
-                    this.offset_immediate = Integer.parseInt(var7, 2);
-                    this.format = this.format + "Num ";
-                } else if (var7.matches("[0]?[X][ABCDEF\\d]+")) {
-                    var7 = var7.replace("0X", "");
-                    var7 = var7.replace("X", "");
-                    this.offset_immediate = Integer.parseInt(var7, 16);
-                    this.format = this.format + "Num ";
-                } else if (var7.matches("R[\\d]+")) {
-                    var7 = var7.replace("R", "");
-                    this.regs.add(new Integer(Integer.parseInt(var7, 10)));
-                    this.format = this.format + "Reg ";
-                } else if (var6 == 0 && var7.matches("[\\w_][\\w_\\d]*[:]?")) {
-                    var7 = var7.replace(":", "");
-                    this.label = var7;
+            for (int i = 0; i < words.length; ++i) {
+                String token = words[i];
+                if (ISA.isOpcode(token)) {
+                    this.opcode = token;
+                    this.builder.append(token);
+                    this.builder.append(" ");
+                    // For a numerical
+                } else if (token.matches("[#]?[-]?[\\d]+")) {
+                    token = token.replace("#", "");
+                    this.offsetImmediate = Integer.parseInt(token, 10);
+                    this.builder.append("Num ");
+                    // For binary values
+                } else if (token.matches("[B][01]+")) {
+                    token = token.replace("B", "");
+                    this.offsetImmediate = Integer.parseInt(token, 2);
+                    this.builder.append("Num ");
+                    // For hexadecimal values
+                } else if (token.matches("[0]?[X][ABCDEF\\d]+")) {
+                    token = token.replace("0X", "");
+                    token = token.replace("X", "");
+                    this.offsetImmediate = Integer.parseInt(token, 16);
+                    this.builder.append("Num ");
+                } else if (token.matches("R[\\d]+")) {
+                    token = token.replace("R", "");
+                    this.regs.add(Integer.parseInt(token, 10));
+                    this.builder.append("Reg ");
+                } else if (i == 0 && token.matches("[\\w_][\\w_\\d]*[:]?")) {
+                    token = token.replace(":", "");
+                    this.label = token;
                 } else {
-                    if (var6 == 0 || !var7.matches("[\\w_][\\w_\\d]*")) {
+                    if (i == 0 || !token.matches("[\\w_][\\w_\\d]*")) {
                         throw new AsException(this,
-                                "Unrecognizable token: `" + var7 + "` on line  " + var2 + "(" + var6
+                                "Unrecognizable token: `" + token + "` on line  " + lineNumber + "(" + i
                                         + " " + this.originalLine + ")\n");
                     }
 
-                    this.label_ref = var7;
-                    this.format = this.format + "Label ";
+                    this.labelRef = token;
+                    this.builder.append("Label ");
                 }
             }
 
             if (this.stringz != null) {
-                this.format = this.format + "String";
+                this.builder.append("String");
             }
 
-            this.format = this.format.trim();
+            String format = this.builder.toString();
+            format = format.trim();
             if (this.opcode == null) {
-                if (this.format.length() != 0) {
+                if (format.length() != 0) {
                     throw new AsException(this, "Unexpected instruction format");
                 }
             } else {
-                ISA.checkFormat(this, this.line_number);
+                ISA.checkFormat(this, this.lineNumber);
             }
 
         }
     }
 
-    public String getFormat() {
-        return this.format;
+    String getFormat() {
+        return this.builder.toString();
     }
 
     public int getAddress() {
@@ -108,15 +113,15 @@ class Instruction {
         this.address = var1;
     }
 
-    public String getOriginalLine() {
+    String getOriginalLine() {
         return this.originalLine;
     }
 
-    public int getLineNumber() {
-        return this.line_number;
+    int getLineNumber() {
+        return this.lineNumber;
     }
 
-    public String getOpcode() {
+    String getOpcode() {
         return this.opcode;
     }
 
@@ -124,42 +129,47 @@ class Instruction {
         return this.label;
     }
 
-    public String getLabelRef() {
-        return this.label_ref;
+    String getLabelRef() {
+        return this.labelRef;
     }
 
-    public int getRegs(int var1) {
-        return (Integer) this.regs.get(var1);
+    int getRegs(int var1) {
+        return this.regs.get(var1);
     }
 
-    public String getStringz() {
+    String getStringz() {
         return this.stringz;
     }
 
-    public int getOffsetImmediate() throws AsException {
-        if (this.offset_immediate == null) {
+    int getOffsetImmediate() throws AsException {
+        if (this.offsetImmediate == null) {
             throw new AsException(this, "Internal error: no offset/immediate when expected");
         } else {
-            return this.offset_immediate;
+            return this.offsetImmediate;
         }
     }
 
-    public void setOffsetImmediate(int var1) {
-        this.offset_immediate = new Integer(var1);
+    void setOffsetImmediate(int offsetImmediate) {
+        this.offsetImmediate = offsetImmediate;
     }
 
-    public void error(String var1) throws AsException {
-        throw new AsException(this, var1);
+    /**
+     * Throw an assembly error
+     *
+     * @param message the error message to pass along
+     */
+    public void error(String message) throws AsException {
+        throw new AsException(this, message);
     }
 
-    public void splitLabels(List var1) throws AsException {
+    void splitLabels(List<Instruction> instructions) throws AsException {
         if (this.opcode != null || this.label != null) {
             if (this.opcode != null && this.label != null) {
-                var1.add(new Instruction(this.label, this.line_number));
+                instructions.add(new Instruction(this.label, this.lineNumber));
                 this.label = null;
-                var1.add(this);
+                instructions.add(this);
             } else {
-                var1.add(this);
+                instructions.add(this);
             }
         }
 
