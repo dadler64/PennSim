@@ -9,7 +9,7 @@
 
   <groupId>com.pennsim</groupId>
   <artifactId>PennSim</artifactId>
-  <version>1.2.5</version>
+  <version>1.2.6</version>
 
   <name>PennSim</name>
   <description>Decompiled source code for PennSim LC3/P37X simulator.</description>
@@ -24,7 +24,6 @@
 
   <properties>
     <icon.windows>src/main/resources/PennSimIcon.ico</icon.windows>
-    <kotlin.version>1.3.50</kotlin.version>
     <main.class>com.pennsim.PennSim</main.class>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
