@@ -124,9 +124,9 @@ public class ISA {
         opcodeSet.add(instructionDef.getOpcode().toUpperCase());
     }
 
-    public static void check(boolean var0, String var1) {
+    public static void check(boolean var0, String message) {
         if (!var0) {
-            throw new InternalException(var1);
+            throw new InternalException(message);
         }
     }
 
@@ -208,9 +208,9 @@ public class ISA {
             }
         });
         createDef(".STRINGZ", "xxxx zzzzzzzzzzzz", new InstructionDef() {
-            public void encode(SymbolTable symbolTable, Instruction instruction, List words) throws AsException {
-                for (int var4 = 0; var4 < instruction.getStringz().length(); ++var4) {
-                    words.add(new Word(instruction.getStringz().charAt(var4)));
+            public void encode(SymbolTable symbolTable, Instruction instruction, List<Word> words) {
+                for (int i = 0; i < instruction.getStringz().length(); ++i) {
+                    words.add(new Word(instruction.getStringz().charAt(i)));
                 }
 
                 words.add(new Word(0));

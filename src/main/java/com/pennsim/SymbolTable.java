@@ -10,21 +10,27 @@ class SymbolTable {
     /**
      * Insert data into the symbol table
      */
-    boolean insert(String var1, int var2) {
-        if (this.lookup(var1) != -1) {
+    boolean insert(String symbol, int address) {
+        if (this.lookup(symbol) != -1) {
             return false;
         } else {
-            this.table.put(var1, var2);
+            this.table.put(symbol, address);
             return true;
         }
     }
 
-    int lookup(String label) {
-        Integer var2 = this.table.get(label);
-        return var2 == null ? -1 : var2;
+    /**
+     * Get the address of a symbol in the table
+     */
+    int lookup(String symbol) {
+        Integer address = this.table.get(symbol);
+        return address == null ? -1 : address;
     }
 
-    Enumeration get_labels() {
+    /**
+     * Get an enumeration of all of the symbols
+     */
+    Enumeration getSymbols() {
         return this.table.keys();
     }
 }
