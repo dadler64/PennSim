@@ -1,5 +1,7 @@
 package com.pennsim;
 
+import com.pennsim.exception.AsException;
+import com.pennsim.gui.Console;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -9,7 +11,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
 
 class Assembler {
@@ -18,63 +19,63 @@ class Assembler {
         String arg = null;
         SymbolTable symTab = new SymbolTable();
 
-        for (int i = 0; i < asArgs.length; ++i) {
-            if (asArgs[i].length() == 0) {
+        for (String asArg : asArgs) {
+            if (asArg.length() == 0) {
                 throw new AsException("Null arguments are not permitted.");
             }
 
-            arg = asArgs[i];
+            arg = asArg;
         }
 
-        if (arg != null && arg.length() != 0) {
+        if (arg != null) {
             String filename = this.baseFilename(arg);
             List<Instruction> instructions = this.parse(filename);
             instructions = this.passZero(instructions);
             this.passOne(symTab, instructions);
-            this.pass_two(symTab, instructions, filename);
-            this.gen_sym(symTab, instructions, filename);
+            this.passTwo(symTab, instructions, filename);
+            this.generateSymbolFile(symTab, instructions, filename);
             return "";
         } else {
             throw new AsException("No .asm file specified.");
         }
     }
 
-    String baseFilename(String var1) throws AsException {
-        if (!var1.endsWith(".asm")) {
-            throw new AsException("Input file must have .asm suffix ('" + var1 + "')");
+    private String baseFilename(String filename) throws AsException {
+        if (!filename.endsWith(".asm")) {
+            throw new AsException("Input file must have .asm suffix ('" + filename + "')");
         } else {
-            return var1.substring(0, var1.length() - 4);
+            return filename.substring(0, filename.length() - 4);
         }
     }
 
     private List<Instruction> parse(String baseFilename) throws AsException {
-        String fullFilename = baseFilename + ".asm";
-        ArrayList var5 = new ArrayList();
-        int var6 = 1;
+        String asmFilename = baseFilename + ".asm";
+        ArrayList<Instruction> instructions = new ArrayList<>();
+        int lineNumber = 1;
 
         try {
-            BufferedReader var4 = new BufferedReader(new FileReader(fullFilename));
+            BufferedReader reader = new BufferedReader(new FileReader(asmFilename));
 
             while (true) {
-                Instruction var7;
+                Instruction instruction;
                 do {
-                    String var3;
-                    if ((var3 = var4.readLine()) == null) {
-                        var4.close();
-                        return var5;
+                    String line;
+                    if ((line = reader.readLine()) == null) {
+                        reader.close();
+                        return instructions;
                     }
 
-                    var7 = new Instruction(var3, var6++);
-                } while (var7.getOpcode() == null && var7.getLabel() == null);
+                    instruction = new Instruction(line, lineNumber++);
+                } while (instruction.getOpcode() == null && instruction.getLabel() == null);
 
-                var5.add(var7);
+                instructions.add(instruction);
             }
-        } catch (IOException var8) {
-            throw new AsException("Couldn't read file (" + fullFilename + ")");
+        } catch (IOException e) {
+            throw new AsException("Couldn't read file (" + asmFilename + ")");
         }
     }
 
-    private List passZero(List<Instruction> instructions) throws AsException {
+    private List<Instruction> passZero(List<Instruction> instructions) throws AsException {
         ArrayList<Instruction> newList = new ArrayList<>();
 
         for (Instruction instruction : instructions) {
@@ -102,7 +103,7 @@ class Assembler {
                 }
             } else {
                 instruction.setAddress(address);
-                InstructionDef instructionDef = ISA.formatToDef.get(instruction.getFormat());
+                InstructionDefinition instructionDef = ISA.formatToDefinition.get(instruction.getFormat());
                 if (instructionDef == null) {
                     throw new AsException(instruction, "Undefined opcode '" + instruction.getOpcode() + "'");
                 }
@@ -113,89 +114,81 @@ class Assembler {
 
     }
 
-    void pass_two(SymbolTable var1, List var2, String var3) throws AsException {
-        ArrayList var4 = new ArrayList();
-        Iterator var5 = var2.iterator();
+    private void passTwo(SymbolTable symbolTable, List<Instruction> Instructions, String baseFilename) throws AsException {
+        ArrayList<Word> words = new ArrayList<>();
 
-        while (var5.hasNext()) {
-            Instruction var6 = (Instruction) var5.next();
-            if (var6.getLabel() == null) {
-                String var7 = var6.getOpcode();
-                if (var7 == null) {
-                    Console.println(var6.getOriginalLine());
+        for (Instruction instruction: Instructions) {
+            if (instruction.getLabel() == null) {
+                String opcode = instruction.getOpcode();
+                if (opcode == null) {
+                    Console.println(instruction.getOriginalLine());
                 }
 
-                InstructionDef var8 = ISA.formatToDef.get(var6.getFormat());
-                if (var8 != null) {
-                    var8.encode(var1, var6, var4);
+                InstructionDefinition definition = ISA.formatToDefinition.get(instruction.getFormat());
+                if (definition != null) {
+                    definition.encode(symbolTable, instruction, words);
                 }
             }
         }
 
-        String var10 = var3 + ".obj";
+        String objectFilename = baseFilename + ".obj";
 
         try {
-            BufferedOutputStream var11 = new BufferedOutputStream(new FileOutputStream(var10));
-            Iterator var12 = var4.iterator();
+            BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(new FileOutputStream(objectFilename));
 
-            while (var12.hasNext()) {
-                Word var13 = (Word) var12.next();
-                var13.writeWordToFile(var11);
+            for (Word word : words) {
+                word.writeWordToFile(bufferedOutputStream);
             }
 
-            var11.close();
-        } catch (IOException var9) {
-            throw new AsException("Couldn't write file (" + var10 + ")");
+            bufferedOutputStream.close();
+        } catch (IOException e) {
+            throw new AsException("Couldn't write file (" + objectFilename + ")");
         }
     }
 
-    void gen_sym(SymbolTable var1, List var2, String var3) throws AsException {
-        String var4 = var3 + ".sym";
-        Enumeration var6 = var1.get_labels();
+    private void generateSymbolFile(SymbolTable symbolTable, List<Instruction> instructions, String baseFilename) throws AsException {
+        String symbolFilename = baseFilename + ".sym";
+        Enumeration enumeration = symbolTable.getLabels();
 
         try {
-            BufferedWriter var5 = new BufferedWriter(new FileWriter(var4));
-            var5.write("// Symbol table\n");
-            var5.write("// Scope level 0:\n");
-            var5.write("//\tSymbol Name       Page Address\n");
-            var5.write("//\t----------------  ------------\n");
+            BufferedWriter writer = new BufferedWriter(new FileWriter(symbolFilename));
+            writer.write("// Symbol table\n");
+            writer.write("// Scope level 0:\n");
+            writer.write("//\tSymbol Name       Page Address\n");
+            writer.write("//\t----------------  ------------\n");
 
-            while (var6.hasMoreElements()) {
-                String var7 = (String) var6.nextElement();
-                var5.write("//\t" + var7);
+            while (enumeration.hasMoreElements()) {
+                String label = (String) enumeration.nextElement();
+                writer.write("//\t" + label);
 
-                int var8;
-                for (var8 = 0; var8 < 16 - var7.length(); ++var8) {
-                    var5.write(" ");
+                int index;
+                for (index = 0; index < 16 - label.length(); ++index) {
+                    writer.write(" ");
                 }
 
-                var8 = var1.lookup(var7);
-                String var9 = this.formatAddress(var8);
-                var5.write("  " + var9 + "\n");
+                index = symbolTable.lookup(label);
+                String address = this.formatAddress(index);
+                writer.write("  " + address + "\n");
             }
 
-            Iterator var11 = var2.iterator();
-
-            while (var11.hasNext()) {
-                Instruction var12 = (Instruction) var11.next();
-                if (var12.getOpcode() != null) {
-                    InstructionDef var13 = ISA.formatToDef.get(var12.getFormat());
-                    if (!var13.isDataDirective()) {
-                        var5.write("//\t$               " + this.formatAddress(var12.getAddress())
-                                + "\n");
+            for (Instruction instruction : instructions) {
+                if (instruction.getOpcode() != null) {
+                    InstructionDefinition definition = ISA.formatToDefinition.get(instruction.getFormat());
+                    if (!definition.isDataDirective()) {
+                        writer.write("//\t$               " + this.formatAddress(instruction.getAddress()) + "\n");
                     }
                 }
             }
 
-            var5.newLine();
-            var5.close();
-        } catch (IOException var10) {
-            throw new AsException("Couldn't write file (" + var4 + ")");
+            writer.newLine();
+            writer.close();
+        } catch (IOException e) {
+            throw new AsException("Couldn't write file (" + symbolFilename + ")");
         }
     }
 
-    private String formatAddress(int var1) {
-        String var2 = "0000" + Integer.toHexString(var1).toUpperCase();
-        return var2.substring(var2.length() - 4);
+    private String formatAddress(int address) {
+        String formattedAddress = "0000" + Integer.toHexString(address).toUpperCase();
+        return formattedAddress.substring(formattedAddress.length() - 4);
     }
 }
