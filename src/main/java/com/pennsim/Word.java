@@ -193,7 +193,7 @@ public class Word {
     }
 
     /**
-     * TODO: Study this function
+     * Function to write the binary value of each word the the file
      */
     public void writeWordToFile(BufferedOutputStream stream) throws IOException {
         byte var2 = (byte) (this.value >> 8 & 255);
