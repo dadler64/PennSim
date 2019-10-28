@@ -1,5 +1,12 @@
-package com.pennsim;
+package com.pennsim.gui;
 
+import com.pennsim.CommandLine;
+import com.pennsim.util.ErrorLog;
+import com.pennsim.exception.GenericException;
+import com.pennsim.Machine;
+import com.pennsim.Memory;
+import com.pennsim.PennSim;
+import com.pennsim.RegisterFile;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -93,7 +100,7 @@ public class GUI implements ActionListener, TableModelListener {
     private final VideoConsole video;
 
     public GUI(final Machine machine, CommandLine commandLine) {
-        this.frame = new JFrame("PennSim - " + PennSim.version + " - " + PennSim.getISA());
+        this.frame = new JFrame("PennSim - " + PennSim.VERSION + " - " + PennSim.getISA());
         this.fileChooser = new JFileChooser(".");
         this.menuBar = new JMenuBar();
         this.fileMenu = new JMenu("File");
@@ -220,8 +227,7 @@ public class GUI implements ActionListener, TableModelListener {
         this.commandOutputWindow.setSize(700, 600);
         Console.registerConsole(this.commandPanel);
         Console.registerConsole(this.commandOutputWindow);
-        this.ioPanel = new TextConsolePanel(machine.getMemory().getKeyBoardDevice(),
-                machine.getMemory().getMonitor());
+        this.ioPanel = new TextConsolePanel(machine.getMemory().getKeyBoardDevice(), machine.getMemory().getMonitor());
         this.ioPanel.setMinimumSize(new Dimension(256, 85));
         this.video = new VideoConsole(machine);
         this.commandPanel.setGUI(this);
@@ -230,7 +236,7 @@ public class GUI implements ActionListener, TableModelListener {
     /**
      * Initialize the UI theme
      */
-    static void initLookAndFeel() {
+    public static void initLookAndFeel() {
         String theme;
         JFrame.setDefaultLookAndFeelDecorated(true);
         if (LOOKANDFEEL != null) {
@@ -377,16 +383,15 @@ public class GUI implements ActionListener, TableModelListener {
         grid.weightx = 1.0D;
         grid.fill = 2;
         this.registerPanel.add(this.regTable, grid);
-        this.registerPanel.setBorder(BorderFactory
-                .createCompoundBorder(BorderFactory.createTitledBorder("Registers"),
-                        BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        this.registerPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Registers"),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         this.registerPanel.setVisible(true);
     }
 
     /**
      * Set up the overall GUI
      */
-    void setUpGUI() {
+    public void setUpGUI() {
         initLookAndFeel();
         JFrame.setDefaultLookAndFeelDecorated(true);
         this.machine.setStoppedListener(this.commandPanel);
@@ -472,46 +477,38 @@ public class GUI implements ActionListener, TableModelListener {
      *
      * @param row the row to scroll to
      */
-    void scrollToIndex(int row) {
+    public void scrollToIndex(int row) {
         this.memTable.scrollRectToVisible(this.memTable.getCellRect(row, 0, true));
     }
 
     /**
      * Scroll the Memory Panel to the row defined by the PC
      */
-    void scrollToPC() {
+    public void scrollToPC() {
         this.scrollToPC(0);
     }
 
-    void scrollToPC(int pc) {
-        int var2 = this.machine.getRegisterFile().getPC() + pc;
-        this.memTable.scrollRectToVisible(this.memTable.getCellRect(var2, 0, true));
+    public void scrollToPC(int row) {
+        int address = this.machine.getRegisterFile().getPC() + row;
+        this.memTable.scrollRectToVisible(this.memTable.getCellRect(address, 0, true));
     }
 
-    /**
-     * TODO: Figure out if there is a use for this
-     *
-     * @param event table model event??
-     */
-    public void tableChanged(TableModelEvent event) {
-        if (!this.machine.isContinueMode()) {
-        }
-    }
+    @Deprecated
+    public void tableChanged(TableModelEvent event) { }
 
     /**
      * Confirm exit when exiting the program
      */
     void confirmExit() {
-        Object[] obj = new Object[]{"Yes", "No"};
-        int optionDialog = JOptionPane
-                .showOptionDialog(this.frame, "Are you sure you want to quit?", "Quit verification",
-                        JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
-                        null, obj, obj[1]);
+        Object[] options = new Object[]{"Yes", "No"};
+        int optionDialog = JOptionPane.showOptionDialog(this.frame, "Are you sure you want to quit?",
+                "Quit verification", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
         if (optionDialog == 0) {
             this.machine.cleanup();
+            this.frame.setVisible(false);
+            this.frame.dispose();
             System.exit(0);
         }
-
     }
 
     /**
@@ -569,7 +566,7 @@ public class GUI implements ActionListener, TableModelListener {
     /**
      * Set the status label as "Running"
      */
-    void setStatusLabelRunning() {
+    public void setStatusLabelRunning() {
         this.statusLabel.setText(statusLabelRunning);
         this.statusLabel.setForeground(this.runningColor);
     }
@@ -577,7 +574,7 @@ public class GUI implements ActionListener, TableModelListener {
     /**
      * Set the status label as "Suspended"
      */
-    void setStatusLabelSuspended() {
+    public void setStatusLabelSuspended() {
         this.statusLabel.setText(statusLabelSuspended);
         this.statusLabel.setForeground(this.suspendedColor);
     }
@@ -585,7 +582,7 @@ public class GUI implements ActionListener, TableModelListener {
     /**
      * Set the status label as "Halted"
      */
-    void setStatusLabelHalted() {
+    public void setStatusLabelHalted() {
         this.statusLabel.setText(statusLabelHalted);
         this.statusLabel.setForeground(this.haltedColor);
     }
@@ -603,7 +600,7 @@ public class GUI implements ActionListener, TableModelListener {
 
     }
 
-    void setTextConsoleEnabled(boolean enabled) {
+    public void setTextConsoleEnabled(boolean enabled) {
         this.ioPanel.setEnabled(enabled);
     }
 

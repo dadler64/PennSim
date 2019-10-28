@@ -1,4 +1,7 @@
-package com.pennsim;
+package com.pennsim.util;
+
+import com.pennsim.KeyboardDevice;
+import com.pennsim.Word;
 
 public class TimerDevice {
 
@@ -13,7 +16,7 @@ public class TimerDevice {
     private long interval;
     private KeyboardDevice keyboardDevice = null;
 
-    TimerDevice() {
+    public TimerDevice() {
         this.mode = AUTOMATIC_TIMER;
         this.enabled = true;
     }
@@ -22,27 +25,27 @@ public class TimerDevice {
         return this.enabled;
     }
 
-    void setEnabled(boolean shouldSet) {
+    public void setEnabled(boolean shouldSet) {
         this.enabled = shouldSet;
     }
 
-    long getInterval() {
+    public long getInterval() {
         return this.interval;
     }
 
-    void setTimer() {
+    public void setTimer() {
         this.mode = AUTOMATIC_TIMER;
         this.interval = TIMER_INTERVAL;
         this.lastTime = System.currentTimeMillis();
     }
 
-    void setTimer(long interval) {
+    public void setTimer(long interval) {
         this.mode = AUTOMATIC_TIMER;
         this.interval = interval;
         this.lastTime = System.currentTimeMillis();
     }
 
-    void setTimer(KeyboardDevice keyboardDevice) {
+    public void setTimer(KeyboardDevice keyboardDevice) {
         this.mode = MANUAL_TIMER;
         this.interval = 1L;
         this.keyboardDevice = keyboardDevice;
@@ -53,7 +56,7 @@ public class TimerDevice {
         this.setTimer(TIMER_INTERVAL);
     }
 
-    Word status() {
+    public Word status() {
         return this.hasGoneOff() ? TIMER_SET : TIMER_UNSET;
     }
 

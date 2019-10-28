@@ -1,11 +1,11 @@
-package com.pennsim;
+package com.pennsim.exception;
 
 /**
  * Exception which is thrown when the program comes upon an illegal instruction
  */
 public class IllegalInstructionException extends GenericException {
 
-    IllegalInstructionException(String message) {
+    public IllegalInstructionException(String message) {
         super(message);
     }
 

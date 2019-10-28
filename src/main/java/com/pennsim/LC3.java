@@ -1,10 +1,13 @@
 package com.pennsim;
 
+import com.pennsim.exception.IllegalInstructionException;
+import com.pennsim.exception.IllegalMemoryAccessException;
+
 public class LC3 extends ISA {
 
     public void init() {
         super.init();
-        createDef("ADD", "0001 ddd sss 0 00 ttt", new InstructionDef() {
+        createDef("ADD", "0001 ddd sss 0 00 ttt", new InstructionDefinition() {
             public int execute(Word word, int registerValue, RegisterFile registerFile, Memory memory, Machine machine) {
                 int value = registerFile.getRegister(this.getSReg(word)) + registerFile.getRegister(this.getTReg(word));
                 registerFile.setRegister(this.getDReg(word), value);
@@ -12,7 +15,7 @@ public class LC3 extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("SUB", "0001 ddd sss 0 10 ttt", new InstructionDef() {
+        createDef("SUB", "0001 ddd sss 0 10 ttt", new InstructionDefinition() {
             public int execute(Word word, int registerValue, RegisterFile registerFile, Memory memory, Machine machine) {
                 int value = registerFile.getRegister(this.getSReg(word)) - registerFile.getRegister(this.getTReg(word));
                 registerFile.setRegister(this.getDReg(word), value);
@@ -20,7 +23,7 @@ public class LC3 extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("ADD", "0001 ddd sss 1 iiiii", new InstructionDef() {
+        createDef("ADD", "0001 ddd sss 1 iiiii", new InstructionDefinition() {
             public int execute(Word word, int registerValue, RegisterFile registerFile, Memory memory, Machine machine) {
                 int value = registerFile.getRegister(this.getSReg(word)) + this.getSignedImmediate(word);
                 registerFile.setRegister(this.getDReg(word), value);
@@ -28,7 +31,7 @@ public class LC3 extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("AND", "0101 ddd sss 0 00 ttt", new InstructionDef() {
+        createDef("AND", "0101 ddd sss 0 00 ttt", new InstructionDefinition() {
             public int execute(Word word, int registerValue, RegisterFile registerFile, Memory memory, Machine machine) {
                 int value =
                         registerFile.getRegister(this.getSReg(word)) & registerFile.getRegister(this.getTReg(word));
@@ -37,7 +40,7 @@ public class LC3 extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("AND", "0101 ddd sss 1 iiiii", new InstructionDef() {
+        createDef("AND", "0101 ddd sss 1 iiiii", new InstructionDefinition() {
             public int execute(Word word, int registerValue, RegisterFile registerFile, Memory memory, Machine machine) {
                 int value = registerFile.getRegister(this.getSReg(word)) & this.getSignedImmediate(word);
                 registerFile.setRegister(this.getDReg(word), value);
@@ -53,29 +56,29 @@ public class LC3 extends ISA {
         createDef("BRn", "0000 100 ppppppppp", new BranchDef());
         createDef("BRnp", "0000 101 ppppppppp", new BranchDef());
         createDef("BRnz", "0000 110 ppppppppp", new BranchDef());
-        createDef("RET", "1100 000 111 000000", new InstructionDef() {
+        createDef("RET", "1100 000 111 000000", new InstructionDefinition() {
             public int execute(Word word, int registerValue, RegisterFile registerFile, Memory memory, Machine machine) {
                 return registerFile.getRegister(7);
             }
         });
-        createDef("JMP", "1100 000 ddd 000000", new InstructionDef() {
+        createDef("JMP", "1100 000 ddd 000000", new InstructionDefinition() {
             public int execute(Word word, int registerValue, RegisterFile registerFile, Memory memory, Machine machine) {
                 return registerFile.getRegister(this.getDReg(word));
             }
         });
-        createDef("RTT", "1100 000 111 000001", new InstructionDef() {
+        createDef("RTT", "1100 000 111 000001", new InstructionDefinition() {
             public int execute(Word word, int registerValue, RegisterFile registerFile, Memory memory, Machine machine) {
                 registerFile.setPrivMode(false);
                 return registerFile.getRegister(7);
             }
         });
-        createDef("JMPT", "1100 000 ddd 000001", new InstructionDef() {
+        createDef("JMPT", "1100 000 ddd 000001", new InstructionDefinition() {
             public int execute(Word word, int registerValue, RegisterFile registerFile, Memory memory, Machine machine) {
                 registerFile.setPrivMode(false);
                 return registerFile.getRegister(this.getDReg(word));
             }
         });
-        createDef("JSR", "0100 1 ppppppppppp", new InstructionDef() {
+        createDef("JSR", "0100 1 ppppppppppp", new InstructionDefinition() {
             public boolean isCall() {
                 return true;
             }
@@ -85,7 +88,7 @@ public class LC3 extends ISA {
                 return registerValue + 1 + this.getPCOffset(word);
             }
         });
-        createDef("JSRR", "0100 000 ddd 000000", new InstructionDef() {
+        createDef("JSRR", "0100 000 ddd 000000", new InstructionDefinition() {
             public boolean isCall() {
                 return true;
             }
@@ -96,7 +99,7 @@ public class LC3 extends ISA {
                 return value;
             }
         });
-        createDef("LD", "0010 ddd ppppppppp", new InstructionDef() {
+        createDef("LD", "0010 ddd ppppppppp", new InstructionDefinition() {
             public boolean isLoad() {
                 return true;
             }
@@ -113,7 +116,7 @@ public class LC3 extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("LDI", "1010 ddd ppppppppp", new InstructionDef() {
+        createDef("LDI", "1010 ddd ppppppppp", new InstructionDefinition() {
             public boolean isLoad() {
                 return true;
             }
@@ -132,7 +135,7 @@ public class LC3 extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("LDR", "0110 ddd sss iiiiii", new InstructionDef() {
+        createDef("LDR", "0110 ddd sss iiiiii", new InstructionDefinition() {
             public boolean isLoad() {
                 return true;
             }
@@ -151,14 +154,14 @@ public class LC3 extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("LEA", "1110 ddd ppppppppp", new InstructionDef() {
+        createDef("LEA", "1110 ddd ppppppppp", new InstructionDefinition() {
             public int execute(Word word, int registerValue, RegisterFile registerFile, Memory memory, Machine machine) {
                 registerFile.setRegister(this.getDReg(word), registerValue + 1 + this.getPCOffset(word));
                 registerFile.setNZP(registerValue + 1 + this.getPCOffset(word));
                 return registerValue + 1;
             }
         });
-        createDef("ST", "0011 ddd ppppppppp", new InstructionDef() {
+        createDef("ST", "0011 ddd ppppppppp", new InstructionDefinition() {
             public boolean isStore() {
                 return true;
             }
@@ -174,7 +177,7 @@ public class LC3 extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("STI", "1011 ddd ppppppppp", new InstructionDef() {
+        createDef("STI", "1011 ddd ppppppppp", new InstructionDefinition() {
             public boolean isStore() {
                 return true;
             }
@@ -192,7 +195,7 @@ public class LC3 extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("STR", "0111 ddd sss iiiiii", new InstructionDef() {
+        createDef("STR", "0111 ddd sss iiiiii", new InstructionDefinition() {
             public boolean isStore() {
                 return true;
             }
@@ -209,7 +212,7 @@ public class LC3 extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("NOT", "1001 ddd sss 111111", new InstructionDef() {
+        createDef("NOT", "1001 ddd sss 111111", new InstructionDefinition() {
             public int execute(Word word, int registerValue, RegisterFile registerFile, Memory memory, Machine machine) {
                 int value = ~registerFile.getRegister(this.getSReg(word));
                 registerFile.setRegister(this.getDReg(word), value);
@@ -217,7 +220,7 @@ public class LC3 extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("MUL", "1101 ddd sss 0 00 ttt", new InstructionDef() {
+        createDef("MUL", "1101 ddd sss 0 00 ttt", new InstructionDefinition() {
             public int execute(Word word, int registerValue, RegisterFile registerFile, Memory memory, Machine machine) {
                 int value = registerFile.getRegister(this.getSReg(word)) * registerFile.getRegister(this.getTReg(word));
                 registerFile.setRegister(this.getDReg(word), value);
@@ -225,7 +228,7 @@ public class LC3 extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("MUL", "1101 ddd sss 1 iiiii", new InstructionDef() {
+        createDef("MUL", "1101 ddd sss 1 iiiii", new InstructionDefinition() {
             public int execute(Word word, int registerValue, RegisterFile registerFile, Memory memory, Machine machine) {
                 int value = registerFile.getRegister(this.getSReg(word)) * this.getSignedImmediate(word);
                 registerFile.setRegister(this.getDReg(word), value);
@@ -233,7 +236,7 @@ public class LC3 extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("RTI", "1000 000000000000", new InstructionDef() {
+        createDef("RTI", "1000 000000000000", new InstructionDefinition() {
             public int execute(Word word, int registerValue, RegisterFile registerFile, Memory memory, Machine machine)
                     throws IllegalInstructionException {
                 if (registerFile.getPrivMode()) {
@@ -257,7 +260,7 @@ public class LC3 extends ISA {
         createDef("TRAP", "1111 0000 uuuuuuuu", new TrapDef());
     }
 
-    private static class TrapDef extends InstructionDef {
+    private static class TrapDef extends InstructionDefinition {
 
         private TrapDef() {
         }
@@ -278,7 +281,7 @@ public class LC3 extends ISA {
         }
     }
 
-    private static class BranchDef extends InstructionDef {
+    private static class BranchDef extends InstructionDefinition {
 
         private BranchDef() {
         }

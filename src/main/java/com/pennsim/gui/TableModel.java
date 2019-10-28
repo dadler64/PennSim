@@ -1,5 +1,6 @@
-package com.pennsim;
+package com.pennsim.gui;
 
+import com.pennsim.PennSim;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 

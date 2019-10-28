@@ -1,5 +1,7 @@
-package com.pennsim;
+package com.pennsim.gui;
 
+import com.pennsim.Machine;
+import com.pennsim.Word;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -55,7 +57,6 @@ public class VideoConsole extends JPanel implements TableModelListener {
             }
 
             byte scaling = SCALING;
-//            int start = firstRow - '쀀';
             int start = firstRow - START;
             int yPos = start / NUMBER_OF_ROWS * scaling;
             int xPos = start % NUMBER_OF_ROWS * scaling;

@@ -1,5 +1,9 @@
-package com.pennsim;
+package com.pennsim.util;
 
+import com.pennsim.ISA;
+import com.pennsim.InstructionDefinition;
+import com.pennsim.P37X;
+import com.pennsim.Word;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -24,7 +28,7 @@ public class RandomCodeGenerator {
         if (args.length != 2) {
             System.out.println("Usage: <number of instructions to generate> <filename>");
         } else {
-            int instructionsToGenerate = -1;
+            int instructionsToGenerate;
 
             try {
                 instructionsToGenerate = Integer.parseInt(args[0]);
@@ -78,7 +82,7 @@ public class RandomCodeGenerator {
                         case 0:
                         case 1:
                             index = memoryInstructionIndices.elementAt(random.nextInt(memoryInstructionSize));
-                            InstructionDef instructionDef = ISA.lookupTable[index];
+                            InstructionDefinition instructionDef = ISA.lookupTable[index];
                             if (!instructionDef.getOpcode().equalsIgnoreCase("LDR")) {
                                 int pcOffset = instructionDef.getPCOffset(new Word(index));
                                 if (pcOffset + i < 0) {
@@ -94,7 +98,7 @@ public class RandomCodeGenerator {
                             index = otherInstructionIndices.elementAt(random.nextInt(otherInstructionSize));
                     }
 
-//                    InstructionDef instructionDef = ISA.lookupTable[index];
+//                    InstructionDefinition instructionDef = ISA.lookupTable[index];
                     Word word = new Word(index);
                     word.writeWordToFile(outputStream);
                 }
@@ -127,7 +131,7 @@ public class RandomCodeGenerator {
 
     private static void populateValidP37XInstructionList() {
         for (int i = 0; i < ISA.lookupTable.length; ++i) {
-            InstructionDef instructionDef = ISA.lookupTable[i];
+            InstructionDefinition instructionDef = ISA.lookupTable[i];
             Word word = new Word(i);
             if (instructionDef != null && !instructionDef.isDataDirective() && !instructionDef.getOpcode()
                     .equalsIgnoreCase("NOOP")) {

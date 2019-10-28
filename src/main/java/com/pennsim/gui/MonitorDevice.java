@@ -1,5 +1,8 @@
-package com.pennsim;
+package com.pennsim.gui;
 
+import com.pennsim.util.ErrorLog;
+import com.pennsim.PennSim;
+import com.pennsim.Word;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -18,7 +21,7 @@ public class MonitorDevice {
     private OutputStreamWriter writer;
     private LinkedList<ActionListener> monitorList;
 
-    MonitorDevice() {
+    public MonitorDevice() {
         if (!PennSim.GRAPHICAL_MODE) {
             this.writer = new OutputStreamWriter(System.out);
         } else {
@@ -45,7 +48,7 @@ public class MonitorDevice {
      *
      * @return status of monitor
      */
-    Word getStatus() {
+    public Word getStatus() {
         return this.ready() ? MONITOR_READY : MONITOR_NOT_READY;
     }
 
@@ -85,7 +88,7 @@ public class MonitorDevice {
      *
      * @param character the character to write to the monitor
      */
-    void write(char character) {
+    public void write(char character) {
         if (PennSim.GRAPHICAL_MODE) {
             for (ActionListener listener : this.monitorList) {
                 listener.actionPerformed(new ActionEvent(character + "", 0, null));

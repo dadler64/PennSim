@@ -1,4 +1,4 @@
-package com.pennsim;
+package com.pennsim.util;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -33,7 +33,7 @@ public class ErrorLog {
      *
      * @param message the message to be logged
      */
-    static void logError(String message) {
+    public static void logError(String message) {
         if (!logOpen) {
             logInit();
         }
@@ -50,7 +50,7 @@ public class ErrorLog {
      *
      * @param e the exception to be logged
      */
-    static void logError(Exception e) {
+    public static void logError(Exception e) {
         if (!logOpen) {
             logInit();
         }
@@ -79,7 +79,7 @@ public class ErrorLog {
     /**
      * Close the logger
      */
-    static void logClose() {
+    public static void logClose() {
         if (log != null) {
             log.close();
         }

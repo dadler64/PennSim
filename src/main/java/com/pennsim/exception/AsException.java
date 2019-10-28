@@ -1,18 +1,20 @@
-package com.pennsim;
+package com.pennsim.exception;
+
+import com.pennsim.Instruction;
 
 /**
  * Custom exception class for when an exception is raised during assembly
  */
-class AsException extends Exception {
+public class AsException extends Exception {
 
     private Instruction instruction;
 
-    AsException(Instruction instruction, String message) {
+    public AsException(Instruction instruction, String message) {
         super(message);
         this.instruction = instruction;
     }
 
-    AsException(String message) {
+    public AsException(String message) {
         super(message);
     }
 

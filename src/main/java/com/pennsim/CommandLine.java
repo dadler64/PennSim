@@ -1,5 +1,11 @@
 package com.pennsim;
 
+import com.pennsim.exception.AsException;
+import com.pennsim.exception.GenericException;
+import com.pennsim.gui.Console;
+import com.pennsim.gui.GUI;
+import com.pennsim.util.Assembler;
+import com.pennsim.util.ErrorLog;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -26,7 +32,7 @@ public class CommandLine {
     }
 
     private Machine mac;
-    private GUI GUI;
+    private com.pennsim.gui.GUI GUI;
     private LinkedList<String> commandQueue;
     private Stack<String> prevHistoryStack;
     private Stack<String> nextHistoryStack;
@@ -68,7 +74,7 @@ public class CommandLine {
      *
      * @param command the command to be scheduled
      */
-    void scheduleCommand(String command) {
+    public void scheduleCommand(String command) {
         if (command.equalsIgnoreCase("stop")) {
             this.commandQueue.addFirst(command);
         } else {
@@ -97,7 +103,7 @@ public class CommandLine {
      *
      * @return if the command queue has more commands
      */
-    boolean hasMoreCommands() {
+    public boolean hasMoreCommands() {
         return this.commandQueue.size() != 0;
     }
 
@@ -106,7 +112,7 @@ public class CommandLine {
      *
      * @return the next command in the command queue
      */
-    String getNextCommand() {
+    public String getNextCommand() {
         return this.commandQueue.removeFirst();
     }
 
@@ -115,7 +121,7 @@ public class CommandLine {
      *
      * @return if the stop command has been queued
      */
-    boolean hasQueuedStop() {
+    public boolean hasQueuedStop() {
         return (this.commandQueue.getFirst()).equalsIgnoreCase("stop");
     }
 
@@ -138,7 +144,7 @@ public class CommandLine {
      *
      * @return the top command on the command previous history stack
      */
-    String getPrevHistory() {
+    public String getPrevHistory() {
         if (this.prevHistoryStack.empty()) {
             return null;
         } else {
@@ -154,7 +160,7 @@ public class CommandLine {
      *
      * @return the top command on the command next history stack
      */
-    String getNextHistory() {
+    public String getNextHistory() {
         if (this.nextHistoryStack.empty()) {
             return null;
         } else {
@@ -423,22 +429,13 @@ public class CommandLine {
             }
 
             public String getHelp() {
-                String helpText =
-                        "Verifies that a particular value resides in a register or in a memory location, or that a condition code is set.\n"
-                                + "Samples:\n"
-                                + "'check PC LABEL' checks if the PC points to wherever LABEL points.\n"
-                                + "'check LABEL VALUE' checks if the value stored in memory at the location pointed to by LABEL is equal to VALUE.\n"
-                                + "'check VALUE LABEL' checks if the value stored in memory at VALUE is equal to the location pointed to by LABEL (probably not very useful). To find out where a label points, use 'list' instead.\n";
-                return helpText;
+                return "Verifies that a particular value resides in a register or in a memory location, or that a condition code is set.\n"
+                        + "Samples:\n"
+                        + "'check PC LABEL' checks if the PC points to wherever LABEL points.\n"
+                        + "'check LABEL VALUE' checks if the value stored in memory at the location pointed to by LABEL is equal to VALUE.\n"
+                        + "'check VALUE LABEL' checks if the value stored in memory at VALUE is equal to the location pointed to by LABEL (probably not very useful). To find out where a label points, use 'list' instead.\n";
             }
 
-            /**
-             * TODO: Research how this function works
-             * @param expectedResult
-             * @param argArray
-             * @param value
-             * @return
-             */
             private String check(boolean expectedResult, String[] argArray, String value) {
                 StringBuilder builder = new StringBuilder("(");
 
@@ -869,11 +866,11 @@ public class CommandLine {
                             StringBuffer var5 = new StringBuffer();
 
                             for (int var6 = var3; var6 <= var4; ++var6) {
-                                var5.append(
-                                        Word.toHex(var6) + " : " + CommandLine.this.mac.getMemory()
-                                                .read(var6).toHex() + " : " + ISA.disassemble(
-                                                CommandLine.this.mac.getMemory().read(var6), var6,
-                                                CommandLine.this.mac));
+                                var5.append(Word.toHex(var6)).append(" : ")
+                                        .append(CommandLine.this.mac.getMemory().read(var6).toHex())
+                                        .append(" : ")
+                                        .append(ISA.disassemble(CommandLine.this.mac.getMemory()
+                                                .read(var6), var6, CommandLine.this.mac));
                                 if (var6 != var4) {
                                     var5.append("\n");
                                 }
@@ -988,9 +985,7 @@ public class CommandLine {
                         if (var5 >= 0) {
                             String[] var8 = new String[var5];
 
-                            for (int var7 = 0; var7 < var5; ++var7) {
-                                var8[var7] = var2[var7];
-                            }
+                            System.arraycopy(var2, 0, var8, 0, var5);
 
                             var2 = var8;
                             var3 = var8.length;
@@ -1005,14 +1000,14 @@ public class CommandLine {
         }
     }
 
-    public void scrollToPC() {
+    private void scrollToPC() {
         if (PennSim.GRAPHICAL_MODE) {
             this.GUI.scrollToPC();
         }
 
     }
 
-    public String setRegister(String var1, int var2) {
+    private String setRegister(String var1, int var2) {
         String var3 = "Register " + var1.toUpperCase() + " updated to value " + Word.toHex(var2);
         if (var1.equalsIgnoreCase("pc")) {
             this.mac.getRegisterFile().setPC(var2);
@@ -1024,7 +1019,7 @@ public class CommandLine {
             this.mac.getMemory();
             var10000.write(65042, var2);
         } else if ((var1.startsWith("r") || var1.startsWith("R")) && var1.length() == 2) {
-            Integer var4 = new Integer(var1.substring(1, 2));
+            int var4 = Integer.parseInt(var1.substring(1, 2));
             this.mac.getRegisterFile().setRegister(var4, var2);
         } else {
             var3 = null;
@@ -1096,7 +1091,7 @@ public class CommandLine {
         this.checksFailed = 0;
     }
 
-    void setGUI(GUI gui) {
+    public void setGUI(GUI gui) {
         this.GUI = gui;
     }
 

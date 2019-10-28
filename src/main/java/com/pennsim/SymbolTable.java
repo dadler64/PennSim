@@ -3,28 +3,28 @@ package com.pennsim;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-class SymbolTable {
+public class SymbolTable {
 
     private Hashtable<String, Integer> table = new Hashtable<>();
 
     /**
      * Insert data into the symbol table
      */
-    boolean insert(String var1, int var2) {
-        if (this.lookup(var1) != -1) {
+    public boolean insert(String label, int address) {
+        if (this.lookup(label) != -1) {
             return false;
         } else {
-            this.table.put(var1, var2);
+            this.table.put(label, address);
             return true;
         }
     }
 
-    int lookup(String label) {
-        Integer var2 = this.table.get(label);
-        return var2 == null ? -1 : var2;
+    public int lookup(String label) {
+        Integer address = this.table.get(label);
+        return address == null ? -1 : address;
     }
 
-    Enumeration get_labels() {
+    public Enumeration getLabels() {
         return this.table.keys();
     }
 }

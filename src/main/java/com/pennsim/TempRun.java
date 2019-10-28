@@ -1,5 +1,7 @@
 package com.pennsim;
 
+import com.pennsim.gui.GUI;
+
 /**
  * Class used to assist in initializing the GUI
  */

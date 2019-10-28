@@ -1,8 +1,13 @@
-package com.pennsim;
+package com.pennsim.gui;
 
 import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED;
 import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
 
+import com.pennsim.CommandLine;
+import com.pennsim.util.ErrorLog;
+import com.pennsim.exception.GenericException;
+import com.pennsim.Machine;
+import com.pennsim.PrintableConsole;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -90,7 +95,7 @@ public class CommandLinePanel extends JPanel implements ActionListener, Printabl
     /**
      * Execute the action based in the command inputted into the command line
      *
-     * @param event ex
+     * @param event event to be performed
      */
     public void actionPerformed(ActionEvent event) {
         String text;

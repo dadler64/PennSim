@@ -1,5 +1,6 @@
-package com.pennsim;
+package com.pennsim.exception;
 
+import com.pennsim.gui.Console;
 import java.awt.Container;
 import javax.swing.JOptionPane;
 
@@ -19,7 +20,7 @@ public abstract class GenericException extends Exception {
         return "Generic Exception: " + this.getMessage();
     }
 
-    void showMessageDialog(Container container) {
+    public void showMessageDialog(Container container) {
         JOptionPane.showMessageDialog(container, this.getExceptionDescription());
         Console.println("Exception: " + this.getExceptionDescription());
     }

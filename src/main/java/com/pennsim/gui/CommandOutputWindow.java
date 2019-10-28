@@ -1,8 +1,10 @@
-package com.pennsim;
+package com.pennsim.gui;
 
 import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED;
 import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
 
+import com.pennsim.util.ErrorLog;
+import com.pennsim.PrintableConsole;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;

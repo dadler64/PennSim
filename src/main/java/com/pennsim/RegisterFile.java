@@ -1,5 +1,9 @@
 package com.pennsim;
 
+import com.pennsim.exception.IllegalMemoryAccessException;
+import com.pennsim.gui.Console;
+import com.pennsim.gui.TableModel;
+
 public class RegisterFile extends TableModel {
 
     private static final int NUM_REGISTERS = 8;
@@ -153,7 +157,7 @@ public class RegisterFile extends TableModel {
         return this.mostRecentlyWrittenValue;
     }
 
-    int getPC() {
+    public int getPC() {
         return this.PC.getValue();
     }
 

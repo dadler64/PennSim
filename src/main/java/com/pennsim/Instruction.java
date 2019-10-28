@@ -1,11 +1,12 @@
 package com.pennsim;
 
+import com.pennsim.exception.AsException;
 import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class Instruction {
+public class Instruction {
 
     private int address;
     private int lineNumber;
@@ -15,10 +16,10 @@ class Instruction {
     private String opcode;
     private String originalLine;
     private String stringz;
-    private StringBuilder builder = new StringBuilder();
+    private String format = "";
     private Vector<Integer> regs = new Vector<>();
 
-    Instruction(String label, int lineNumber) throws AsException {
+    public Instruction(String label, int lineNumber) throws AsException {
         this.lineNumber = lineNumber;
         this.originalLine = label;
         int var3 = label.indexOf(59);
@@ -41,57 +42,52 @@ class Instruction {
         label = label.replace(",", " ");
         label = label.trim();
         if (label.length() != 0) {
-            String[] words = label.split("[\\s]+");
+            String[] parts = label.split("[\\s]+");
 
-            for (int i = 0; i < words.length; ++i) {
-                String token = words[i];
+            for (int index = 0; index < parts.length; ++index) {
+                String token = parts[index];
                 if (ISA.isOpcode(token)) {
                     this.opcode = token;
-                    this.builder.append(token);
-                    this.builder.append(" ");
-                    // For a numerical
+                    this.format += token + " ";
                 } else if (token.matches("[#]?[-]?[\\d]+")) {
                     token = token.replace("#", "");
                     this.offsetImmediate = Integer.parseInt(token, 10);
-                    this.builder.append("Num ");
-                    // For binary values
+                    this.format += "Num ";
                 } else if (token.matches("[B][01]+")) {
                     token = token.replace("B", "");
                     this.offsetImmediate = Integer.parseInt(token, 2);
-                    this.builder.append("Num ");
-                    // For hexadecimal values
+                    this.format += "Num ";
                 } else if (token.matches("[0]?[X][ABCDEF\\d]+")) {
                     token = token.replace("0X", "");
                     token = token.replace("X", "");
                     this.offsetImmediate = Integer.parseInt(token, 16);
-                    this.builder.append("Num ");
+                    this.format += "Num ";
                 } else if (token.matches("R[\\d]+")) {
                     token = token.replace("R", "");
                     this.regs.add(Integer.parseInt(token, 10));
-                    this.builder.append("Reg ");
-                } else if (i == 0 && token.matches("[\\w_][\\w_\\d]*[:]?")) {
+                    this.format += "Reg ";
+                } else if (index == 0 && token.matches("[\\w_][\\w_\\d]*[:]?")) {
                     token = token.replace(":", "");
                     this.label = token;
                 } else {
-                    if (i == 0 || !token.matches("[\\w_][\\w_\\d]*")) {
+                    if (index == 0 || !token.matches("[\\w_][\\w_\\d]*")) {
                         throw new AsException(this,
-                                "Unrecognizable token: `" + token + "` on line  " + lineNumber + "(" + i
+                                "Unrecognizable token: `" + token + "` on line  " + lineNumber + "(" + index
                                         + " " + this.originalLine + ")\n");
                     }
 
                     this.labelRef = token;
-                    this.builder.append("Label ");
+                    this.format += "Label ";
                 }
             }
 
             if (this.stringz != null) {
-                this.builder.append("String");
+                this.format += "String";
             }
 
-            String format = this.builder.toString();
-            format = format.trim();
+            this.format = this.format.trim();
             if (this.opcode == null) {
-                if (format.length() != 0) {
+                if (this.format.length() != 0) {
                     throw new AsException(this, "Unexpected instruction format");
                 }
             } else {
@@ -101,8 +97,8 @@ class Instruction {
         }
     }
 
-    String getFormat() {
-        return this.builder.toString();
+    public String getFormat() {
+        return this.format;
     }
 
     public int getAddress() {
@@ -113,15 +109,15 @@ class Instruction {
         this.address = var1;
     }
 
-    String getOriginalLine() {
+    public String getOriginalLine() {
         return this.originalLine;
     }
 
-    int getLineNumber() {
+    public int getLineNumber() {
         return this.lineNumber;
     }
 
-    String getOpcode() {
+    public String getOpcode() {
         return this.opcode;
     }
 
@@ -153,16 +149,11 @@ class Instruction {
         this.offsetImmediate = offsetImmediate;
     }
 
-    /**
-     * Throw an assembly error
-     *
-     * @param message the error message to pass along
-     */
     public void error(String message) throws AsException {
         throw new AsException(this, message);
     }
 
-    void splitLabels(List<Instruction> instructions) throws AsException {
+    public void splitLabels(List<Instruction> instructions) throws AsException {
         if (this.opcode != null || this.label != null) {
             if (this.opcode != null && this.label != null) {
                 instructions.add(new Instruction(this.label, this.lineNumber));

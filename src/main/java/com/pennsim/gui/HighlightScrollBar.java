@@ -1,5 +1,6 @@
-package com.pennsim;
+package com.pennsim.gui;
 
+import com.pennsim.Machine;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.util.Hashtable;

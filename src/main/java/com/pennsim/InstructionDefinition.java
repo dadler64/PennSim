@@ -1,15 +1,18 @@
 package com.pennsim;
 
+import com.pennsim.exception.AsException;
+import com.pennsim.exception.IllegalInstructionException;
+import com.pennsim.exception.IllegalMemoryAccessException;
 import java.util.List;
 
-public abstract class InstructionDef {
+public abstract class InstructionDefinition {
 
-    private InstructionDef.Location dReg = new Location();
-    private InstructionDef.Location sReg = new Location();
-    private InstructionDef.Location tReg = new Location();
-    private InstructionDef.Location signedImmediate = new Location();
-    private InstructionDef.Location pcOffset = new Location();
-    private InstructionDef.Location unsignedImmediate = new Location();
+    private InstructionDefinition.Location dReg = new Location();
+    private InstructionDefinition.Location sReg = new Location();
+    private InstructionDefinition.Location tReg = new Location();
+    private InstructionDefinition.Location signedImmediate = new Location();
+    private InstructionDefinition.Location pcOffset = new Location();
+    private InstructionDefinition.Location unsignedImmediate = new Location();
     private String opcode = null;
     private String format = "";
     private int mask = 0;
@@ -45,7 +48,7 @@ public abstract class InstructionDef {
         return 0;
     }
 
-    final String getOpcode() {
+    public final String getOpcode() {
         return this.opcode;
     }
 
@@ -92,7 +95,7 @@ public abstract class InstructionDef {
         return word.getSext(this.signedImmediate.start, this.signedImmediate.end);
     }
 
-    final int getPCOffset(Word word) {
+    public final int getPCOffset(Word word) {
         return word.getSext(this.pcOffset.start, this.pcOffset.end);
     }
 
@@ -241,7 +244,7 @@ public abstract class InstructionDef {
     }
 
 
-    private String encodeField(String encoding, char encodeChar, String encodingType, InstructionDef.Location location) {
+    private String encodeField(String encoding, char encodeChar, String encodingType, InstructionDefinition.Location location) {
         int firstIndex = encoding.indexOf(encodeChar);
         int lastIndex = encoding.lastIndexOf(encodeChar);
         if (firstIndex != -1 && lastIndex != -1) {
@@ -284,7 +287,6 @@ public abstract class InstructionDef {
     }
 
     static class Location {
-
         public int start = -1;
         public int end = -1;
         boolean valid = false;

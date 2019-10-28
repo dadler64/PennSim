@@ -1,10 +1,12 @@
 package com.pennsim;
 
+import com.pennsim.exception.IllegalMemoryAccessException;
+
 public class P37X extends ISA {
 
     public void init() {
         super.init();
-        createDef("ADD", "0000 ddd sss ttt 100", new InstructionDef() {
+        createDef("ADD", "0000 ddd sss ttt 100", new InstructionDefinition() {
             public int getDestinationReg(Word word) {
                 return this.getDReg(word);
             }
@@ -24,7 +26,7 @@ public class P37X extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("SUB", "0000 ddd sss ttt 101", new InstructionDef() {
+        createDef("SUB", "0000 ddd sss ttt 101", new InstructionDefinition() {
             public int getDestinationReg(Word word) {
                 return this.getDReg(word);
             }
@@ -44,7 +46,7 @@ public class P37X extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("MUL", "0000 ddd sss ttt 110", new InstructionDef() {
+        createDef("MUL", "0000 ddd sss ttt 110", new InstructionDefinition() {
             public int getDestinationReg(Word word) {
                 return this.getDReg(word);
             }
@@ -64,7 +66,7 @@ public class P37X extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("OR", "0001 ddd sss ttt 000", new InstructionDef() {
+        createDef("OR", "0001 ddd sss ttt 000", new InstructionDefinition() {
             public int getDestinationReg(Word word) {
                 return this.getDReg(word);
             }
@@ -84,7 +86,7 @@ public class P37X extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("NOT", "0001 ddd sss xxx 001", new InstructionDef() {
+        createDef("NOT", "0001 ddd sss xxx 001", new InstructionDefinition() {
             public int getDestinationReg(Word word) {
                 return this.getDReg(word);
             }
@@ -99,7 +101,7 @@ public class P37X extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("AND", "0001 ddd sss ttt 010", new InstructionDef() {
+        createDef("AND", "0001 ddd sss ttt 010", new InstructionDefinition() {
             public int getDestinationReg(Word word) {
                 return this.getDReg(word);
             }
@@ -119,7 +121,7 @@ public class P37X extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("XOR", "0001 ddd sss ttt 011", new InstructionDef() {
+        createDef("XOR", "0001 ddd sss ttt 011", new InstructionDefinition() {
             public int getDestinationReg(Word word) {
                 return this.getDReg(word);
             }
@@ -139,7 +141,7 @@ public class P37X extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("SLL", "0001 ddd sss ttt 100", new InstructionDef() {
+        createDef("SLL", "0001 ddd sss ttt 100", new InstructionDefinition() {
             public int getDestinationReg(Word word) {
                 return this.getDReg(word);
             }
@@ -159,7 +161,7 @@ public class P37X extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("SRL", "0001 ddd sss ttt 101", new InstructionDef() {
+        createDef("SRL", "0001 ddd sss ttt 101", new InstructionDefinition() {
             public int getDestinationReg(Word word) {
                 return this.getDReg(word);
             }
@@ -179,7 +181,7 @@ public class P37X extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("SRA", "0001 ddd sss ttt 110", new InstructionDef() {
+        createDef("SRA", "0001 ddd sss ttt 110", new InstructionDefinition() {
             public int getDestinationReg(Word word) {
                 return this.getDReg(word);
             }
@@ -205,7 +207,7 @@ public class P37X extends ISA {
         createDef("EGETC", "0010 0000 00100011", new P37X.TrapDef());
         createDef("HALT", "0010 0000 00100101", new P37X.TrapDef());
         createDef("TRAP", "0010 0000 uuuuuuuu", new P37X.TrapDef());
-        createDef("RTT", "0011 ddd xxxxxxxxx", new InstructionDef() {
+        createDef("RTT", "0011 ddd xxxxxxxxx", new InstructionDefinition() {
             public int getSourceReg1(Word word) {
                 return this.getDReg(word);
             }
@@ -215,12 +217,12 @@ public class P37X extends ISA {
                 return registerFile.getRegister(this.getDReg(word));
             }
         });
-        createDef("JUMP", "0100 pppppppppppp", new InstructionDef() {
+        createDef("JUMP", "0100 pppppppppppp", new InstructionDefinition() {
             public int execute(Word word, int registerValue, RegisterFile registerFile, Memory memory, Machine machine) {
                 return registerValue + 1 + this.getPCOffset(word);
             }
         });
-        createDef("JUMPR", "0101 ddd xxxxxxxxx", new InstructionDef() {
+        createDef("JUMPR", "0101 ddd xxxxxxxxx", new InstructionDefinition() {
             public int getSourceReg1(Word word) {
                 return this.getDReg(word);
             }
@@ -229,7 +231,7 @@ public class P37X extends ISA {
                 return registerFile.getRegister(this.getDReg(word));
             }
         });
-        createDef("JSR", "0110 pppppppppppp", new InstructionDef() {
+        createDef("JSR", "0110 pppppppppppp", new InstructionDefinition() {
             public int getDestinationReg(Word word) {
                 return 7;
             }
@@ -243,7 +245,7 @@ public class P37X extends ISA {
                 return registerValue + 1 + this.getPCOffset(word);
             }
         });
-        createDef("JSRR", "0111 ddd xxxxxxxxx", new InstructionDef() {
+        createDef("JSRR", "0111 ddd xxxxxxxxx", new InstructionDefinition() {
             public int getDestinationReg(Word word) {
                 return 7;
             }
@@ -262,12 +264,12 @@ public class P37X extends ISA {
                 return var6;
             }
         });
-        createDef("NOOP", "1000 xxx 000 xxxxxx", new InstructionDef() {
+        createDef("NOOP", "1000 xxx 000 xxxxxx", new InstructionDefinition() {
             public int execute(Word word, int registerValue, RegisterFile registerFile, Memory memory, Machine machine) {
                 return registerValue + 1;
             }
         });
-        createDef("BRP", "1000 ddd 001 pppppp", new InstructionDef() {
+        createDef("BRP", "1000 ddd 001 pppppp", new InstructionDefinition() {
             public boolean isBranch() {
                 return true;
             }
@@ -282,7 +284,7 @@ public class P37X extends ISA {
                         : registerValue + 1;
             }
         });
-        createDef("BRZ", "1000 ddd 010 pppppp", new InstructionDef() {
+        createDef("BRZ", "1000 ddd 010 pppppp", new InstructionDefinition() {
             public boolean isBranch() {
                 return true;
             }
@@ -296,7 +298,7 @@ public class P37X extends ISA {
                 return var6 == 0 ? registerValue + 1 + this.getPCOffset(word) : registerValue + 1;
             }
         });
-        createDef("BRZP", "1000 ddd 011 pppppp", new InstructionDef() {
+        createDef("BRZP", "1000 ddd 011 pppppp", new InstructionDefinition() {
             public boolean isBranch() {
                 return true;
             }
@@ -311,7 +313,7 @@ public class P37X extends ISA {
                         : registerValue + 1 + this.getPCOffset(word);
             }
         });
-        createDef("BRN", "1000 ddd 100 pppppp", new InstructionDef() {
+        createDef("BRN", "1000 ddd 100 pppppp", new InstructionDefinition() {
             public boolean isBranch() {
                 return true;
             }
@@ -326,7 +328,7 @@ public class P37X extends ISA {
                         + 1;
             }
         });
-        createDef("BRNP", "1000 ddd 101 pppppp", new InstructionDef() {
+        createDef("BRNP", "1000 ddd 101 pppppp", new InstructionDefinition() {
             public boolean isBranch() {
                 return true;
             }
@@ -340,7 +342,7 @@ public class P37X extends ISA {
                 return var6 != 0 ? registerValue + 1 + this.getPCOffset(word) : registerValue + 1;
             }
         });
-        createDef("BRNZ", "1000 ddd 110 pppppp", new InstructionDef() {
+        createDef("BRNZ", "1000 ddd 110 pppppp", new InstructionDefinition() {
             public boolean isBranch() {
                 return true;
             }
@@ -355,7 +357,7 @@ public class P37X extends ISA {
                         : registerValue + 1 + this.getPCOffset(word);
             }
         });
-        createDef("BRNZP", "1000 ddd 111 pppppp", new InstructionDef() {
+        createDef("BRNZP", "1000 ddd 111 pppppp", new InstructionDefinition() {
             public boolean isBranch() {
                 return true;
             }
@@ -368,7 +370,7 @@ public class P37X extends ISA {
                 return registerValue + 1 + this.getPCOffset(word);
             }
         });
-        createDef("CONST", "1001 ddd iiiiiiiii", new InstructionDef() {
+        createDef("CONST", "1001 ddd iiiiiiiii", new InstructionDefinition() {
             public int getDestinationReg(Word word) {
                 return this.getDReg(word);
             }
@@ -378,7 +380,7 @@ public class P37X extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("INC", "1010 ddd iiiiiiiii", new InstructionDef() {
+        createDef("INC", "1010 ddd iiiiiiiii", new InstructionDefinition() {
             public int getDestinationReg(Word word) {
                 return this.getDReg(word);
             }
@@ -393,7 +395,7 @@ public class P37X extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("LEA", "1011 ddd ppppppppp", new InstructionDef() {
+        createDef("LEA", "1011 ddd ppppppppp", new InstructionDefinition() {
             public int getDestinationReg(Word word) {
                 return this.getDReg(word);
             }
@@ -403,7 +405,7 @@ public class P37X extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("LDR", "1100 ddd sss iiiiii", new InstructionDef() {
+        createDef("LDR", "1100 ddd sss iiiiii", new InstructionDefinition() {
             public boolean isLoad() {
                 return true;
             }
@@ -430,7 +432,7 @@ public class P37X extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("STR", "1101 ddd sss iiiiii", new InstructionDef() {
+        createDef("STR", "1101 ddd sss iiiiii", new InstructionDefinition() {
             public boolean isStore() {
                 return true;
             }
@@ -456,7 +458,7 @@ public class P37X extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("LD", "1110 ddd ppppppppp", new InstructionDef() {
+        createDef("LD", "1110 ddd ppppppppp", new InstructionDefinition() {
             public boolean isLoad() {
                 return true;
             }
@@ -477,7 +479,7 @@ public class P37X extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("ST", "1111 ddd ppppppppp", new InstructionDef() {
+        createDef("ST", "1111 ddd ppppppppp", new InstructionDefinition() {
             public boolean isStore() {
                 return true;
             }
@@ -500,7 +502,7 @@ public class P37X extends ISA {
         });
     }
 
-    private class TrapDef extends InstructionDef {
+    private class TrapDef extends InstructionDefinition {
 
         private TrapDef() {
         }

@@ -1,5 +1,7 @@
-package com.pennsim;
+package com.pennsim.gui;
 
+import com.pennsim.PennSim;
+import com.pennsim.PrintableConsole;
 import java.util.LinkedList;
 import java.util.List;
 
