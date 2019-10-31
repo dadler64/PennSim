@@ -4,7 +4,6 @@ import com.pennsim.exception.AsException;
 import com.pennsim.exception.GenericException;
 import com.pennsim.gui.Console;
 import com.pennsim.gui.GUI;
-import com.pennsim.util.Assembler;
 import com.pennsim.util.ErrorLog;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -640,6 +639,7 @@ public class CommandLine {
                                             break;
                                         default:
                                             assert false : "Invalid flag to `dump' command: " + argArray[1];
+                                            break;
                                     }
                                 }
 
@@ -950,53 +950,52 @@ public class CommandLine {
         });
     }
 
-    public String runCommand(String var1) throws GenericException, NumberFormatException {
-        if (var1 == null) {
-            return "";
-        } else {
-            if (!var1.startsWith("@")) {
+    public String runCommand(String input) throws GenericException, NumberFormatException {
+        if (input != null) {
+            if (!input.startsWith("@")) {
                 this.resetHistoryStack();
-                this.addToHistory(var1);
+                this.addToHistory(input);
             } else {
-                var1 = var1.replaceFirst("^@", "");
+                input = input.replaceFirst("^@", "");
             }
 
-            String[] var2 = var1.split("\\s+");
-            int var3 = var2.length;
-            if (var3 == 0) {
+            String[] tokens = input.split("\\s+");
+            int size = tokens.length;
+            if (size == 0) {
                 return "";
             } else {
-                String var4 = var2[0].toLowerCase();
-                if (var4.equals("")) {
+                String token = tokens[0].toLowerCase();
+                if (token.equals("")) {
                     return "";
                 } else {
-                    int var5 = -1;
+                    int tokenNum = -1;
 
-                    for (int var6 = 0; var6 < var2.length; ++var6) {
-                        if (var2[var6].startsWith("#")) {
-                            var5 = var6;
+                    for (int i = 0; i < tokens.length; ++i) {
+                        if (tokens[i].startsWith("#")) {
+                            tokenNum = i;
                             break;
                         }
                     }
 
-                    if (var5 == 0) {
+                    if (tokenNum == 0) {
                         return "";
                     } else {
-                        if (var5 >= 0) {
-                            String[] var8 = new String[var5];
+                        if (tokenNum >= 0) {
+                            String[] newTokens = new String[tokenNum];
 
-                            System.arraycopy(var2, 0, var8, 0, var5);
+                            System.arraycopy(tokens, 0, newTokens, 0, tokenNum);
 
-                            var2 = var8;
-                            var3 = var8.length;
+                            tokens = newTokens;
+                            size = newTokens.length;
                         }
 
-                        CommandLine.Command var9 = this.commands.get(var4);
-                        return var9 == null ? "Unknown command: " + var4
-                                : var9.doCommand(var2, var3);
+                        Command command = this.commands.get(token);
+                        return command == null ? "Unknown command: " + token : command.doCommand(tokens, size);
                     }
                 }
             }
+        } else {
+            return "";
         }
     }
 
@@ -1007,25 +1006,24 @@ public class CommandLine {
 
     }
 
-    private String setRegister(String var1, int var2) {
-        String var3 = "Register " + var1.toUpperCase() + " updated to value " + Word.toHex(var2);
-        if (var1.equalsIgnoreCase("pc")) {
-            this.mac.getRegisterFile().setPC(var2);
+    private String setRegister(String register, int value) {
+        String output = "Register " + register.toUpperCase() + " updated to value " + Word.toHex(value);
+        if (register.equalsIgnoreCase("pc")) {
+            this.mac.getRegisterFile().setPC(value);
             this.scrollToPC();
-        } else if (var1.equalsIgnoreCase("psr")) {
-            this.mac.getRegisterFile().setPSR(var2);
-        } else if (var1.equalsIgnoreCase("mpr")) {
-            Memory var10000 = this.mac.getMemory();
-            this.mac.getMemory();
-            var10000.write(65042, var2);
-        } else if ((var1.startsWith("r") || var1.startsWith("R")) && var1.length() == 2) {
-            int var4 = Integer.parseInt(var1.substring(1, 2));
-            this.mac.getRegisterFile().setRegister(var4, var2);
+        } else if (register.equalsIgnoreCase("psr")) {
+            this.mac.getRegisterFile().setPSR(value);
+        } else if (register.equalsIgnoreCase("mpr")) {
+            Memory memory = this.mac.getMemory();
+            memory.write(65042, value);
+        } else if ((register.startsWith("r") || register.startsWith("R")) && register.length() == 2) {
+            int registerValue = Integer.parseInt(register.substring(1, 2));
+            this.mac.getRegisterFile().setRegister(registerValue, value);
         } else {
-            var3 = null;
+            output = null;
         }
 
-        return var3;
+        return output;
     }
 
     /**

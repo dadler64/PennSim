@@ -252,6 +252,9 @@ public class Memory extends TableModel {
                 } else {
                     value = "Use 'list' to query";
                 }
+                break;
+            default:
+                break;
         }
 
         return value;
@@ -356,6 +359,7 @@ public class Memory extends TableModel {
                 } else {
                     this.machine.updateStatusLabel();
                 }
+                break;
         }
 
         this.memArr[row].setValue(value);

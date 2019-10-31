@@ -18,31 +18,33 @@ public class Instruction {
     private String stringz;
     private String format = "";
     private Vector<Integer> regs = new Vector<>();
+    private static final char COMMENT_SYMBOL = ';';
 
-    public Instruction(String label, int lineNumber) throws AsException {
+
+    Instruction(String line, int lineNumber) throws AsException {
         this.lineNumber = lineNumber;
-        this.originalLine = label;
-        int var3 = label.indexOf(59);
-        if (var3 != -1) {
-            label = label.substring(0, var3);
+        this.originalLine = line;
+        int commentIndex = line.indexOf(COMMENT_SYMBOL); // Look for the start of the comment
+        if (commentIndex != -1) {
+            line = line.substring(0, commentIndex);
         }
 
-        label = label.replace("\\\"", "\u0000");
-        Matcher matcher = Pattern.compile("([^\"]*)[\"]([^\"]*)[\"](.*)").matcher(label);
+        line = line.replace("\\\"", "\u0000");
+        Matcher matcher = Pattern.compile("([^\"]*)[\"]([^\"]*)[\"](.*)").matcher(line);
         if (matcher.matches()) {
             this.stringz = matcher.group(2);
             this.stringz = this.stringz.replace("\u0000", "\"");
             this.stringz = this.stringz.replace("\\n", "\n");
             this.stringz = this.stringz.replace("\\t", "\t");
             this.stringz = this.stringz.replace("\\0", "\u0000");
-            label = matcher.group(1) + " " + matcher.group(3);
+            line = matcher.group(1) + " " + matcher.group(3);
         }
 
-        label = label.toUpperCase();
-        label = label.replace(",", " ");
-        label = label.trim();
-        if (label.length() != 0) {
-            String[] parts = label.split("[\\s]+");
+        line = line.toUpperCase();
+        line = line.replace(",", " ");
+        line = line.trim();
+        if (line.length() != 0) {
+            String[] parts = line.split("[\\s]+");
 
             for (int index = 0; index < parts.length; ++index) {
                 String token = parts[index];

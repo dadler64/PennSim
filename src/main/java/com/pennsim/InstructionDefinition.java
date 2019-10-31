@@ -103,37 +103,38 @@ public abstract class InstructionDefinition {
         return word.getZext(this.unsignedImmediate.start, this.unsignedImmediate.end);
     }
 
+    // TODO: Simplify method to decrease "NPath Complexity". Currently has a complexity of 2187.
     String disassemble(Word word, int address, Machine machine) {
         boolean isMultipleOpcodes = true;
         String opcode = this.getOpcode();
         if (this.dReg.valid) {
             if (isMultipleOpcodes) {
-                opcode = opcode + " ";
+                opcode += " ";
                 isMultipleOpcodes = false;
             } else {
-                opcode = opcode + ", ";
+                opcode += ", ";
             }
 
-            opcode = opcode + "R" + this.getDReg(word);
+            opcode += "R" + this.getDReg(word);
         }
 
         if (this.sReg.valid) {
             if (isMultipleOpcodes) {
-                opcode = opcode + " ";
+                opcode += " ";
                 isMultipleOpcodes = false;
             } else {
-                opcode = opcode + ", ";
+                opcode += ", ";
             }
 
-            opcode = opcode + "R" + this.getSReg(word);
+            opcode += "R" + this.getSReg(word);
         }
 
         if (this.tReg.valid) {
             if (isMultipleOpcodes) {
-                opcode = opcode + " ";
+                opcode += " ";
                 isMultipleOpcodes = false;
             } else {
-                opcode = opcode + ", ";
+                opcode += ", ";
             }
 
             opcode = opcode + "R" + this.getTReg(word);
@@ -141,21 +142,21 @@ public abstract class InstructionDefinition {
 
         if (this.signedImmediate.valid) {
             if (isMultipleOpcodes) {
-                opcode = opcode + " ";
+                opcode += " ";
                 isMultipleOpcodes = false;
             } else {
-                opcode = opcode + ", ";
+                opcode += ", ";
             }
 
-            opcode = opcode + "#" + this.getSignedImmediate(word);
+            opcode += "#" + this.getSignedImmediate(word);
         }
 
         if (this.pcOffset.valid) {
             if (isMultipleOpcodes) {
-                opcode = opcode + " ";
+                opcode += " ";
                 isMultipleOpcodes = false;
             } else {
-                opcode = opcode + ", ";
+                opcode += ", ";
             }
 
             int row = address + this.getPCOffset(word) + 1;
@@ -165,21 +166,21 @@ public abstract class InstructionDefinition {
             }
 
             if (symbol != null) {
-                opcode = opcode + symbol;
+                opcode += symbol;
             } else {
-                opcode = opcode + Word.toHex(row);
+                opcode += Word.toHex(row);
             }
         }
 
         if (this.unsignedImmediate.valid) {
             if (isMultipleOpcodes) {
-                opcode = opcode + " ";
+                opcode += " ";
                 isMultipleOpcodes = false;
             } else {
-                opcode = opcode + ", ";
+                opcode += ", ";
             }
 
-            opcode = opcode + "x" + Integer.toHexString(this.getUnsignedImmediate(word)).toUpperCase();
+            opcode += "x" + Integer.toHexString(this.getUnsignedImmediate(word)).toUpperCase();
         }
 
         return opcode;

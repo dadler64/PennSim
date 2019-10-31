@@ -4,6 +4,8 @@ import com.pennsim.exception.IllegalMemoryAccessException;
 
 public class P37X extends ISA {
 
+
+    // TODO: Simplify method to decrease "NPath Complexity". Currently has a complexity of 512.
     public void init() {
         super.init();
         createDef("ADD", "0000 ddd sss ttt 100", new InstructionDefinition() {
@@ -201,12 +203,12 @@ public class P37X extends ISA {
                 return registerValue + 1;
             }
         });
-        createDef("GETC", "0010 0000 00100000", new P37X.TrapDef());
-        createDef("PUTC", "0010 0000 00100001", new P37X.TrapDef());
-        createDef("PUTS", "0010 0000 00100010", new P37X.TrapDef());
-        createDef("EGETC", "0010 0000 00100011", new P37X.TrapDef());
-        createDef("HALT", "0010 0000 00100101", new P37X.TrapDef());
-        createDef("TRAP", "0010 0000 uuuuuuuu", new P37X.TrapDef());
+        createDef("GETC", "0010 0000 00100000", new TrapDef());
+        createDef("PUTC", "0010 0000 00100001", new TrapDef());
+        createDef("PUTS", "0010 0000 00100010", new TrapDef());
+        createDef("EGETC", "0010 0000 00100011", new TrapDef());
+        createDef("HALT", "0010 0000 00100101", new TrapDef());
+        createDef("TRAP", "0010 0000 uuuuuuuu", new TrapDef());
         createDef("RTT", "0011 ddd xxxxxxxxx", new InstructionDefinition() {
             public int getSourceReg1(Word word) {
                 return this.getDReg(word);
@@ -467,8 +469,7 @@ public class P37X extends ISA {
                 return this.getDReg(word);
             }
 
-            public int getRefAddress(Word word, int position, RegisterFile registerFile, Memory memory)
-                    throws IllegalMemoryAccessException {
+            public int getRefAddress(Word word, int position, RegisterFile registerFile, Memory memory) {
                 return position + 1 + this.getPCOffset(word);
             }
 
@@ -488,8 +489,7 @@ public class P37X extends ISA {
                 return this.getDReg(word);
             }
 
-            public int getRefAddress(Word word, int position, RegisterFile registerFile, Memory memory)
-                    throws IllegalMemoryAccessException {
+            public int getRefAddress(Word word, int position, RegisterFile registerFile, Memory memory) {
                 return position + 1 + this.getPCOffset(word);
             }
 
@@ -502,15 +502,15 @@ public class P37X extends ISA {
         });
     }
 
-    private class TrapDef extends InstructionDefinition {
+    private static class TrapDef extends InstructionDefinition {
 
         private TrapDef() {
         }
 
         // $FF: synthetic method
-        TrapDef(Object var2) {
-            this();
-        }
+//        TrapDef(Object var2) {
+//            this();
+//        }
 
         public boolean isCall() {
             return true;

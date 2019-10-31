@@ -74,26 +74,30 @@ public class ISA {
         return opcodeSet.contains(opcode.toUpperCase());
     }
 
-    static void checkFormat(Instruction instruction, int var1) throws AsException {
+    static void checkFormat(Instruction instruction, int lineNumber) throws AsException {
         if (formatToDefinition.get(instruction.getFormat()) == null) {
             throw new AsException(instruction,
                     "Unexpected instruction format: actual: '" + instruction.getFormat() + "'");
+        }
+
+        if (lineNumber < 1) {
+            throw new AsException("Location of instruction [" + instruction.getOpcode() + "] is incorrect.");
         }
     }
 
     public static void encode(Instruction instruction, List var1) throws AsException {
         String instructionFormat = instruction.getFormat();
-        InstructionDefinition instructionDef = formatToDefinition.get(instructionFormat);
-        if (instructionDef == null) {
+        InstructionDefinition definition = formatToDefinition.get(instructionFormat);
+        if (definition == null) {
             instruction.error("Unknown instruction format: " + instructionFormat);
         }
 
     }
 
     static boolean isCall(Word word) throws IllegalInstructionException {
-        InstructionDefinition instructionDef = lookupTable[word.getValue()];
-        if (instructionDef != null) {
-            return instructionDef.isCall();
+        InstructionDefinition definition = lookupTable[word.getValue()];
+        if (definition != null) {
+            return definition.isCall();
         } else {
             throw new IllegalInstructionException("Undefined instruction:  " + word.toHex());
         }
@@ -135,9 +139,9 @@ public class ISA {
 
     public static void labelRefToPCOffset(SymbolTable symbolTable, Instruction instruction, int jumpOffset)
             throws AsException {
-        int var3 = instruction.getAddress() + 1;
+        int address = instruction.getAddress() + 1;
         int var4 = symbolTable.lookup(instruction.getLabelRef());
-        int var5 = var4 - var3;
+        int var5 = var4 - address;
         if (var4 == -1) {
             throw new AsException(instruction, "Undeclared label '" + instruction.getLabelRef() + "'");
         } else if (var5 >= -(1 << jumpOffset - 1) && var5 <= 1 << jumpOffset - 1) {

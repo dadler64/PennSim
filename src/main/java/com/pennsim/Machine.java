@@ -278,6 +278,7 @@ public class Machine implements Runnable {
         this.executePumpedContinues(NUM_CONTINUES);
     }
 
+    // TODO: Simplify method to decrease "NPath Complexity". Currently has a complexity of 1420.
     private void executePumpedContinues(int var1) throws GenericException {
         int var2 = var1;
         this.registers.setClockMCR(true);

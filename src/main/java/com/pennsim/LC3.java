@@ -266,9 +266,9 @@ public class LC3 extends ISA {
         }
 
         // $FF: synthetic method
-        TrapDef(Object obj) {
-            this();
-        }
+//        TrapDef(Object obj) {
+//            this();
+//        }
 
         public boolean isCall() {
             return true;
@@ -287,9 +287,9 @@ public class LC3 extends ISA {
         }
 
         // $FF: synthetic method
-        BranchDef(Object obj) {
-            this();
-        }
+//        BranchDef(Object obj) {
+//            this();
+//        }
 
         public boolean isBranch() {
             return true;

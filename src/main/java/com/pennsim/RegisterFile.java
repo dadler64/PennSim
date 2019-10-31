@@ -27,9 +27,7 @@ public class RegisterFile extends TableModel {
 
     RegisterFile(Machine machine) {
         this.machine = machine;
-        if (!PennSim.isLC3()) {
-            indNames[CC_ROW] = "";
-        }
+        removeCC();
 
         for (int register = 0; register < NUM_REGISTERS; ++register) {
             this.registerArr[register] = new Word();
@@ -40,6 +38,15 @@ public class RegisterFile extends TableModel {
         this.MCR = new Word();
         this.PSR = new Word();
         this.reset();
+    }
+
+    /**
+     * Static method to r emove the CC if LC3 is not being used
+     */
+    private static void removeCC() {
+        if (!PennSim.isLC3()) {
+            indNames[CC_ROW] = "";
+        }
     }
 
     public static boolean isLegalRegister(int register) {
@@ -286,8 +293,8 @@ public class RegisterFile extends TableModel {
         this.setPSR(psrValue);
     }
 
-    private void setNZP(String conditionCode) {
-        conditionCode = conditionCode.toLowerCase().trim();
+    private void setNZP(String inputConditionCode) {
+        String conditionCode = inputConditionCode.toLowerCase().trim();
         if (!conditionCode.equals("n") && !conditionCode.equals("z") && !conditionCode.equals("p")) {
             Console.println("Condition codes must be set as one of `n', `z' or `p'");
         } else {
