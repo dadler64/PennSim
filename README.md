@@ -47,7 +47,7 @@
 
   It is recommended that you import the project into an IDE such as IntelliJ and build it in there.
 
-  Once you get the project running (or have acquired the [PennSim-x.x.x.jar](https://github.com/dadler64/PennSim/releases/)) give [[A Gentle Guide to Using PennSim]] on the wiki a read to learn the basics of PennSim and the LC3 architecture.
+  Once you get the project running (or have acquired the [PennSim-x.x.x.jar](https://github.com/dadler64/PennSim/releases/)) give [A Gentle Guide to Using PennSim](https://github.com/dadler64/PennSim/wiki/A-Gentle-Guide-to-Using-PennSim) on the wiki a read to learn the basics of PennSim and the LC3 architecture.
 
 ## Contributing
 
