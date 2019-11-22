@@ -948,6 +948,20 @@ public class CommandLine {
                 }
             }
         });
+        this.commands.put("loadassembly", new CommandLine.Command() {
+            public String getUsage() {
+                return "l[oa]da[ssembly] [-warn] <filename>";
+            }
+
+            public String getHelp() {
+                return "Assembles <filename> showing errors and (optionally) warnings, and then loads the .obj file into memory.";
+            }
+
+            public String doCommand(String[] argArray, int argSize) {
+                return "Error: This command has not been setup.";
+            }
+        });
+        this.commands.put("lda", this.commands.get("loadassembly"));
     }
 
     public String runCommand(String input) throws GenericException, NumberFormatException {
