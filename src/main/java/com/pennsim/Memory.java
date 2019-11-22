@@ -1,5 +1,11 @@
 package com.pennsim;
 
+import com.pennsim.exception.IllegalMemoryAccessException;
+import com.pennsim.gui.Console;
+import com.pennsim.gui.MonitorDevice;
+import com.pennsim.gui.TableModel;
+import com.pennsim.util.TimerDevice;
+
 public class Memory extends TableModel {
 
     static final int MEM_SIZE = 65536;
@@ -43,7 +49,7 @@ public class Memory extends TableModel {
      *
      * @return KeyboardDevice object
      */
-    KeyboardDevice getKeyBoardDevice() {
+    public KeyboardDevice getKeyBoardDevice() {
         return this.keyboard;
     }
 
@@ -52,7 +58,7 @@ public class Memory extends TableModel {
      *
      * @return MonitorDevice object
      */
-    MonitorDevice getMonitor() {
+    public MonitorDevice getMonitor() {
         return this.monitor;
     }
 
@@ -121,7 +127,7 @@ public class Memory extends TableModel {
      * @param row the row to check for a breakpoint in
      * @return if the breakpoint is set
      */
-    boolean isBreakPointSet(int row) {
+    public boolean isBreakPointSet(int row) {
         return this.breakPoints[row];
     }
 
@@ -246,6 +252,9 @@ public class Memory extends TableModel {
                 } else {
                     value = "Use 'list' to query";
                 }
+                break;
+            default:
+                break;
         }
 
         return value;
@@ -260,7 +269,7 @@ public class Memory extends TableModel {
         return this.read(row);
     }
 
-    Word read(int row) {
+    public Word read(int row) {
         Word word;
         switch (row) {
             case KBSR:
@@ -345,12 +354,12 @@ public class Memory extends TableModel {
                 break;
             case MCR:
                 this.machine.getRegisterFile().setMCR(value);
-                // '耀' == 32768
                 if ((value & 32768) == 0) {
                     this.machine.stopExecution(1, true);
                 } else {
                     this.machine.updateStatusLabel();
                 }
+                break;
         }
 
         this.memArr[row].setValue(value);

@@ -14,8 +14,7 @@ public class BranchPredictor {
     private int[][] predictor;
     private int indexMask = 0;
 
-    public BranchPredictor() {
-    }
+    public BranchPredictor() { }
 
     BranchPredictor(int value) {
         int tag = TAG;
@@ -44,12 +43,12 @@ public class BranchPredictor {
 
     int getPredictedPC(int value) {
         int maskedValue = value & this.indexMask;
-        int var3 = value + 1;
+        int predictedValue = value + 1;
         if (this.predictor[maskedValue][TAG] == value) {
-            var3 = this.predictor[maskedValue][PREDICTION];
+            predictedValue = this.predictor[maskedValue][PREDICTION];
         }
 
-        return var3;
+        return predictedValue;
     }
 
     void update(int tagValue, int predictionValue) {
@@ -61,8 +60,12 @@ public class BranchPredictor {
         StringBuilder builder = new StringBuilder();
 
         for (int i = 0; i < this.predictor.length; ++i) {
-            builder.append(i).append(":").append(" tag: ").append(this.predictor[i][TAG])
-                    .append(" pred: ").append(this.predictor[i][PREDICTION]);
+            builder.append(i)
+                    .append(":")
+                    .append(" tag: ")
+                    .append(this.predictor[i][TAG])
+                    .append(" pred: ")
+                    .append(this.predictor[i][PREDICTION]);
         }
 
         return builder.toString();

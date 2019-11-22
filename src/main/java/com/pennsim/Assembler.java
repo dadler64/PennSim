@@ -1,5 +1,7 @@
 package com.pennsim;
 
+import com.pennsim.exception.AsException;
+import com.pennsim.gui.Console;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -11,10 +13,11 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
-class Assembler {    
+class Assembler {
+
     String as(String[] asArgs) throws AsException {
         String arg = null;
-        SymbolTable symbolTable = new SymbolTable();
+        SymbolTable symTab = new SymbolTable();
 
         for (String asArg : asArgs) {
             if (asArg.length() == 0) {
@@ -24,13 +27,13 @@ class Assembler {
             arg = asArg;
         }
 
-        if (arg != null && arg.length() != 0) {
+        if (arg != null) {
             String filename = this.baseFilename(arg);
             List<Instruction> instructions = this.parse(filename);
             instructions = this.passZero(instructions);
-            this.passOne(symbolTable, instructions);
-            this.passTwo(symbolTable, instructions, filename);
-            this.generateSymbols(symbolTable, instructions, filename);
+            this.passOne(symTab, instructions);
+            this.passTwo(symTab, instructions, filename);
+            this.generateSymbolFile(symTab, instructions, filename);
             return "";
         } else {
             throw new AsException("No .asm file specified.");
@@ -46,12 +49,12 @@ class Assembler {
     }
 
     private List<Instruction> parse(String baseFilename) throws AsException {
-        String assemblyFilename = baseFilename + ".asm";
-        ArrayList<Instruction> instructionList = new ArrayList<>();
+        String asmFilename = baseFilename + ".asm";
+        ArrayList<Instruction> instructions = new ArrayList<>();
         int lineNumber = 1;
 
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(assemblyFilename));
+            BufferedReader reader = new BufferedReader(new FileReader(asmFilename));
 
             while (true) {
                 Instruction instruction;
@@ -59,27 +62,27 @@ class Assembler {
                     String line;
                     if ((line = reader.readLine()) == null) {
                         reader.close();
-                        return instructionList;
+                        return instructions;
                     }
 
                     instruction = new Instruction(line, lineNumber++);
                 } while (instruction.getOpcode() == null && instruction.getLabel() == null);
 
-                instructionList.add(instruction);
+                instructions.add(instruction);
             }
         } catch (IOException e) {
-            throw new AsException("Couldn't read file (" + assemblyFilename + ")");
+            throw new AsException("Couldn't read file (" + asmFilename + ")");
         }
     }
 
     private List<Instruction> passZero(List<Instruction> instructions) throws AsException {
-        ArrayList<Instruction> instructionList = new ArrayList<>();
+        ArrayList<Instruction> newList = new ArrayList<>();
 
         for (Instruction instruction : instructions) {
-            instruction.splitLabels(instructionList);
+            instruction.splitLabels(newList);
         }
 
-        return instructionList;
+        return newList;
     }
 
     private void passOne(SymbolTable symbolTable, List<Instruction> instructions) throws AsException {
@@ -88,21 +91,21 @@ class Assembler {
         for (Instruction instruction : instructions) {
             if (instruction.getLabel() != null) {
                 if (instruction.getLabel().length() > 20) {
-                    instruction.error("Labels can be no longer than 20 characters ('" + instruction.getLabel() + "') at line: " + instruction.getLineNumber());
+                    instruction.error("Labels can be no longer than 20 characters ('" + instruction.getLabel() + "').");
                 }
 
                 if (address > 65535) {
-                    instruction.error("Label cannot be represented in 16 bits (" + address + ") at line: " + instruction.getLineNumber());
+                    instruction.error("Label cannot be represented in 16 bits (" + address + ")");
                 }
 
                 if (!symbolTable.insert(instruction.getLabel(), address)) {
-                    instruction.error("Duplicate label ('" + instruction.getLabel() + "') at line: " + instruction.getLineNumber());
+                    instruction.error("Duplicate label ('" + instruction.getLabel() + "')");
                 }
             } else {
                 instruction.setAddress(address);
-                InstructionDef instructionDef = ISA.formatToDef.get(instruction.getFormat());
+                InstructionDefinition instructionDef = ISA.formatToDefinition.get(instruction.getFormat());
                 if (instructionDef == null) {
-                    throw new AsException(instruction, "Undefined opcode '" + instruction.getOpcode() + "' at line: " + instruction.getLineNumber());
+                    throw new AsException(instruction, "Undefined opcode '" + instruction.getOpcode() + "'");
                 }
 
                 address = instructionDef.getNextAddress(instruction);
@@ -111,41 +114,41 @@ class Assembler {
 
     }
 
-    private void passTwo(SymbolTable symbolTable, List<Instruction> instructions, String baseFilename) throws AsException {
+    private void passTwo(SymbolTable symbolTable, List<Instruction> Instructions, String baseFilename) throws AsException {
         ArrayList<Word> words = new ArrayList<>();
 
-        for (Instruction instruction : instructions) {
+        for (Instruction instruction: Instructions) {
             if (instruction.getLabel() == null) {
                 String opcode = instruction.getOpcode();
                 if (opcode == null) {
                     Console.println(instruction.getOriginalLine());
                 }
 
-                InstructionDef instructionDef = ISA.formatToDef.get(instruction.getFormat());
-                if (instructionDef != null) {
-                    instructionDef.encode(symbolTable, instruction, words);
+                InstructionDefinition definition = ISA.formatToDefinition.get(instruction.getFormat());
+                if (definition != null) {
+                    definition.encode(symbolTable, instruction, words);
                 }
             }
         }
 
-        String filename = baseFilename + ".obj";
+        String objectFilename = baseFilename + ".obj";
 
         try {
-            BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(filename));
+            BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(new FileOutputStream(objectFilename));
 
             for (Word word : words) {
-                word.writeWordToFile(outputStream);
+                word.writeWordToFile(bufferedOutputStream);
             }
 
-            outputStream.close();
+            bufferedOutputStream.close();
         } catch (IOException e) {
-            throw new AsException("Couldn't write file (" + filename + ")");
+            throw new AsException("Couldn't write file (" + objectFilename + ")");
         }
     }
 
-    private void generateSymbols(SymbolTable symbolTable, List<Instruction> instructions, String baseFilename) throws AsException {
+    private void generateSymbolFile(SymbolTable symbolTable, List<Instruction> instructions, String baseFilename) throws AsException {
         String symbolFilename = baseFilename + ".sym";
-        Enumeration enumeration = symbolTable.getSymbols();
+        Enumeration enumeration = symbolTable.getLabels();
 
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(symbolFilename));
@@ -155,23 +158,23 @@ class Assembler {
             writer.write("//\t----------------  ------------\n");
 
             while (enumeration.hasMoreElements()) {
-                String symbol = (String) enumeration.nextElement();
-                writer.write("//\t" + symbol);
+                String label = (String) enumeration.nextElement();
+                writer.write("//\t" + label);
 
                 int index;
-                for (index = 0; index < 16 - symbol.length(); ++index) {
+                for (index = 0; index < 16 - label.length(); ++index) {
                     writer.write(" ");
                 }
 
-                index = symbolTable.lookup(symbol);
+                index = symbolTable.lookup(label);
                 String address = this.formatAddress(index);
                 writer.write("  " + address + "\n");
             }
 
             for (Instruction instruction : instructions) {
                 if (instruction.getOpcode() != null) {
-                    InstructionDef instructionDef = ISA.formatToDef.get(instruction.getFormat());
-                    if (!instructionDef.isDataDirective()) {
+                    InstructionDefinition definition = ISA.formatToDefinition.get(instruction.getFormat());
+                    if (!definition.isDataDirective()) {
                         writer.write("//\t$               " + this.formatAddress(instruction.getAddress()) + "\n");
                     }
                 }
@@ -184,8 +187,8 @@ class Assembler {
         }
     }
 
-    private String formatAddress(int inputAddress) {
-        String address = "0000" + Integer.toHexString(inputAddress).toUpperCase();
-        return address.substring(address.length() - 4);
+    private String formatAddress(int address) {
+        String formattedAddress = "0000" + Integer.toHexString(address).toUpperCase();
+        return formattedAddress.substring(formattedAddress.length() - 4);
     }
 }

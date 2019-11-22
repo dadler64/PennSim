@@ -1,24 +1,27 @@
 package com.pennsim;
 
+import com.pennsim.exception.AsException;
+import com.pennsim.exception.IllegalInstructionException;
+import com.pennsim.exception.IllegalMemoryAccessException;
+import com.pennsim.exception.InternalException;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 
+
 public class ISA {
 
-    static InstructionDef[] lookupTable = new InstructionDef[Memory.MEM_SIZE];
-    static Hashtable<String, InstructionDef> formatToDef = new Hashtable<>();
+    public static InstructionDefinition[] lookupTable = new InstructionDefinition[Memory.MEM_SIZE];
+    public static Hashtable<String, InstructionDefinition> formatToDefinition = new Hashtable<>();
     private static HashSet<String> opcodeSet = new HashSet<>();
 
-    /**
-     * @deprecated
-     */
+    @Deprecated
     public static void execute(RegisterFile registerFile, Memory memory, Machine machine)
             throws IllegalMemoryAccessException, IllegalInstructionException {
         int pc = registerFile.getPC();
         registerFile.checkAddress(pc);
         Word word = memory.getInstruction(pc);
-        InstructionDef instructionDef = lookupTable[word.getValue()];
+        InstructionDefinition instructionDef = lookupTable[word.getValue()];
         if (instructionDef == null) {
             throw new IllegalInstructionException("Undefined instruction:  " + word.toHex());
         } else {
@@ -35,7 +38,7 @@ public class ISA {
 
             if (instructionDef.isLoad()) {
                 Word loadWord = machine.getMemory().getInstruction(newValue);
-                InstructionDef loadInstructionDef = lookupTable[loadWord.getValue()];
+                InstructionDefinition loadInstructionDef = lookupTable[loadWord.getValue()];
                 if (loadInstructionDef == null) {
                     throw new IllegalInstructionException(
                             "Undefined instruction: " + loadWord.toHex());
@@ -62,7 +65,7 @@ public class ISA {
         if (!machine.lookupAddressToInstruction(address) && !PennSim.isLC3()) {
             return "";
         } else {
-            InstructionDef value = lookupTable[word.getValue()];
+            InstructionDefinition value = lookupTable[word.getValue()];
             return value == null ? ".FILL " + word.toHex() : value.disassemble(word, address, machine);
         }
     }
@@ -71,32 +74,36 @@ public class ISA {
         return opcodeSet.contains(opcode.toUpperCase());
     }
 
-    static void checkFormat(Instruction instruction, int var1) throws AsException {
-        if (formatToDef.get(instruction.getFormat()) == null) {
+    static void checkFormat(Instruction instruction, int lineNumber) throws AsException {
+        if (formatToDefinition.get(instruction.getFormat()) == null) {
             throw new AsException(instruction,
                     "Unexpected instruction format: actual: '" + instruction.getFormat() + "'");
+        }
+
+        if (lineNumber < 1) {
+            throw new AsException("Location of instruction [" + instruction.getOpcode() + "] is incorrect.");
         }
     }
 
     public static void encode(Instruction instruction, List var1) throws AsException {
         String instructionFormat = instruction.getFormat();
-        InstructionDef instructionDef = formatToDef.get(instructionFormat);
-        if (instructionDef == null) {
+        InstructionDefinition definition = formatToDefinition.get(instructionFormat);
+        if (definition == null) {
             instruction.error("Unknown instruction format: " + instructionFormat);
         }
 
     }
 
     static boolean isCall(Word word) throws IllegalInstructionException {
-        InstructionDef instructionDef = lookupTable[word.getValue()];
-        if (instructionDef != null) {
-            return instructionDef.isCall();
+        InstructionDefinition definition = lookupTable[word.getValue()];
+        if (definition != null) {
+            return definition.isCall();
         } else {
             throw new IllegalInstructionException("Undefined instruction:  " + word.toHex());
         }
     }
 
-    static void createDef(String opcode, String encoding, InstructionDef instructionDef) {
+    static void createDef(String opcode, String encoding, InstructionDefinition instructionDef) {
         instructionDef.setOpcode(opcode);
         if (encoding != null) {
             instructionDef.setEncoding(encoding);
@@ -120,21 +127,21 @@ public class ISA {
             }
         }
 
-        formatToDef.put(instructionDef.getFormat(), instructionDef);
+        formatToDefinition.put(instructionDef.getFormat(), instructionDef);
         opcodeSet.add(instructionDef.getOpcode().toUpperCase());
     }
 
-    public static void check(boolean var0, String message) {
+    public static void check(boolean var0, String var1) {
         if (!var0) {
-            throw new InternalException(message);
+            throw new InternalException(var1);
         }
     }
 
-    protected static void labelRefToPCOffset(SymbolTable symbolTable, Instruction instruction, int jumpOffset)
+    public static void labelRefToPCOffset(SymbolTable symbolTable, Instruction instruction, int jumpOffset)
             throws AsException {
-        int var3 = instruction.getAddress() + 1;
+        int address = instruction.getAddress() + 1;
         int var4 = symbolTable.lookup(instruction.getLabelRef());
-        int var5 = var4 - var3;
+        int var5 = var4 - address;
         if (var4 == -1) {
             throw new AsException(instruction, "Undeclared label '" + instruction.getLabelRef() + "'");
         } else if (var5 >= -(1 << jumpOffset - 1) && var5 <= 1 << jumpOffset - 1) {
@@ -148,7 +155,7 @@ public class ISA {
      * Initialize the generic opcodes that all instruction sets are based off of
      */
     protected void init() {
-        createDef(".ORIG", "xxxx iiiiiiiiiiii", new InstructionDef() {
+        createDef(".ORIG", "xxxx iiiiiiiiiiii", new InstructionDefinition() {
             public void encode(SymbolTable symbolTable, Instruction instruction, List<Word> words) throws AsException {
                 if (words.size() != 0) {
                     throw new AsException(".ORIG can only appear at the beginning of a file");
@@ -165,7 +172,7 @@ public class ISA {
                 return instruction.getOffsetImmediate();
             }
         });
-        createDef(".FILL", "xxxx iiiiiiiiiiii", new InstructionDef() {
+        createDef(".FILL", "xxxx iiiiiiiiiiii", new InstructionDefinition() {
             public void encode(SymbolTable symbolTable, Instruction instruction, List<Word> words) throws AsException {
                 words.add(new Word(instruction.getOffsetImmediate()));
             }
@@ -174,7 +181,7 @@ public class ISA {
                 return true;
             }
         });
-        createDef(".FILL", "xxxx pppppppppppp", new InstructionDef() {
+        createDef(".FILL", "xxxx pppppppppppp", new InstructionDefinition() {
             public void encode(SymbolTable symbolTable, Instruction instruction, List<Word> words) throws AsException {
                 int label = symbolTable.lookup(instruction.getLabelRef());
                 if (label == -1) {
@@ -189,7 +196,7 @@ public class ISA {
                 return true;
             }
         });
-        createDef(".BLKW", "xxxx iiiiiiiiiiii", new InstructionDef() {
+        createDef(".BLKW", "xxxx iiiiiiiiiiii", new InstructionDefinition() {
             public void encode(SymbolTable symbolTable, Instruction instruction, List<Word> words) throws AsException {
                 int offsetImmediate = instruction.getOffsetImmediate();
 
@@ -207,7 +214,7 @@ public class ISA {
                 return instruction.getAddress() + instruction.getOffsetImmediate();
             }
         });
-        createDef(".STRINGZ", "xxxx zzzzzzzzzzzz", new InstructionDef() {
+        createDef(".STRINGZ", "xxxx zzzzzzzzzzzz", new InstructionDefinition() {
             public void encode(SymbolTable symbolTable, Instruction instruction, List<Word> words) {
                 for (int i = 0; i < instruction.getStringz().length(); ++i) {
                     words.add(new Word(instruction.getStringz().charAt(i)));
@@ -220,12 +227,12 @@ public class ISA {
                 return true;
             }
 
-            public int getNextAddress(Instruction instruction) throws AsException {
+            public int getNextAddress(Instruction instruction) {
                 return instruction.getAddress() + instruction.getStringz().length() + 1;
             }
         });
-        createDef(".END", "xxxx xxxxxxxxxxxx", new InstructionDef() {
-            public void encode(SymbolTable symbolTable, Instruction instruction, List words) throws AsException {
+        createDef(".END", "xxxx xxxxxxxxxxxx", new InstructionDefinition() {
+            public void encode(SymbolTable symbolTable, Instruction instruction, List<Word> words) {
             }
 
             public boolean isDataDirective() {

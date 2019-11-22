@@ -1,5 +1,8 @@
 package com.pennsim;
 
+import com.pennsim.exception.AsException;
+import com.pennsim.exception.InternalException;
+import com.pennsim.gui.Console;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 
@@ -48,7 +51,7 @@ public class Word {
      * @param value the number to be converted
      * @return the hex value as a String
      */
-    static String toHex(int value) {
+    public static String toHex(int value) {
         return toHex(value, true);
     }
 
@@ -190,9 +193,9 @@ public class Word {
     }
 
     /**
-     * TODO: Study this function
+     * Function to write the binary value of each word the the file
      */
-    void writeWordToFile(BufferedOutputStream stream) throws IOException {
+    public void writeWordToFile(BufferedOutputStream stream) throws IOException {
         byte var2 = (byte) (this.value >> 8 & 255);
         byte var3 = (byte) (this.value & 255);
         stream.write(var2);
@@ -202,7 +205,7 @@ public class Word {
     /**
      * Get the Z-Extention of two values
      */
-    int getZext(int var1, int var2) {
+    public int getZext(int var1, int var2) {
         int var3 = this.value;
         if (var2 > var1) {
             return this.getZext(var2, var1);

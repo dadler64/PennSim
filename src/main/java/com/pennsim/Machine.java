@@ -1,5 +1,11 @@
 package com.pennsim;
 
+import com.pennsim.exception.GenericException;
+import com.pennsim.exception.IllegalInstructionException;
+import com.pennsim.exception.IllegalMemoryAccessException;
+import com.pennsim.gui.Console;
+import com.pennsim.gui.GUI;
+import com.pennsim.util.ErrorLog;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
@@ -45,7 +51,7 @@ public class Machine implements Runnable {
         this.notifyOnStop = new LinkedList<>();
     }
 
-    GUI getGUI() {
+    public GUI getGUI() {
         return this.gui;
     }
 
@@ -53,7 +59,7 @@ public class Machine implements Runnable {
         this.gui = gui;
     }
 
-    void setStoppedListener(ActionListener listener) {
+    public void setStoppedListener(ActionListener listener) {
         this.notifyOnStop.add(listener);
     }
 
@@ -77,7 +83,7 @@ public class Machine implements Runnable {
         this.branchStallCount = 0;
     }
 
-    void cleanup() {
+    public void cleanup() {
         ErrorLog.logClose();
         if (this.isTraceEnabled()) {
             this.disableTrace();
@@ -89,7 +95,7 @@ public class Machine implements Runnable {
         return this.memory;
     }
 
-    RegisterFile getRegisterFile() {
+    public RegisterFile getRegisterFile() {
         return this.registers;
     }
 
@@ -148,7 +154,7 @@ public class Machine implements Runnable {
         }
     }
 
-    boolean isContinueMode() {
+    public boolean isContinueMode() {
         return this.continueMode;
     }
 
@@ -160,7 +166,7 @@ public class Machine implements Runnable {
         this.continueMode = false;
     }
 
-    String loadObjectFile(File file) {
+    public String loadObjectFile(File file) {
         byte[] bytes = new byte[2];
         String inputFilePath = file.getPath();
         if (!inputFilePath.endsWith(".obj")) {
@@ -222,7 +228,7 @@ public class Machine implements Runnable {
         return response;
     }
 
-    void executeStep() throws GenericException {
+    public void executeStep() throws GenericException {
         this.registers.setClockMCR(true);
         this.stopImmediately = false;
         this.executePumpedContinues(1);
@@ -233,7 +239,7 @@ public class Machine implements Runnable {
 
     }
 
-    void executeNext() throws GenericException {
+    public void executeNext() throws GenericException {
         if (ISA.isCall(this.memory.read(this.registers.getPC()))) {
             this.memory.setNextBreakPoint((this.registers.getPC() + 1) % Memory.MEM_SIZE);
             this.executeMany();
@@ -243,7 +249,7 @@ public class Machine implements Runnable {
 
     }
 
-    synchronized String stopExecution(boolean var1) {
+    public synchronized String stopExecution(boolean var1) {
         return this.stopExecution(0, var1);
     }
 
@@ -272,6 +278,7 @@ public class Machine implements Runnable {
         this.executePumpedContinues(NUM_CONTINUES);
     }
 
+    // TODO: Simplify method to decrease "NPath Complexity". Currently has a complexity of 1420.
     private void executePumpedContinues(int var1) throws GenericException {
         int var2 = var1;
         this.registers.setClockMCR(true);
@@ -284,7 +291,7 @@ public class Machine implements Runnable {
                 int pc = this.registers.getPC();
                 this.registers.checkAddress(pc);
                 Word word = this.memory.getInstruction(pc);
-                InstructionDef instructionDef = ISA.lookupTable[word.getValue()];
+                InstructionDefinition instructionDef = ISA.lookupTable[word.getValue()];
                 if (instructionDef == null) {
                     throw new IllegalInstructionException("Undefined instruction:  " + word.toHex());
                 }
@@ -302,7 +309,7 @@ public class Machine implements Runnable {
 
                 if (instructionDef.isLoad()) {
                     Word var8 = this.memory.getInstruction(var6);
-                    InstructionDef var9 = ISA.lookupTable[var8.getValue()];
+                    InstructionDefinition var9 = ISA.lookupTable[var8.getValue()];
                     if (var9 == null) {
                         throw new IllegalInstructionException("Undefined instruction:  " + var8.toHex());
                     }
@@ -344,7 +351,7 @@ public class Machine implements Runnable {
 
     }
 
-    synchronized void executeMany() throws GenericException {
+    public synchronized void executeMany() throws GenericException {
         this.setContinueMode();
         this.stopImmediately = false;
 
@@ -356,7 +363,7 @@ public class Machine implements Runnable {
         }
     }
 
-    void generateTrace(InstructionDef instructionDef, int address, Word word) throws IllegalMemoryAccessException {
+    void generateTrace(InstructionDefinition instructionDef, int address, Word word) throws IllegalMemoryAccessException {
         if (this.isTraceEnabled()) {
             PrintWriter writer = this.getTraceWriter();
             writer.print(Word.toHex(address, false));

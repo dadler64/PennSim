@@ -1,5 +1,8 @@
 package com.pennsim;
 
+import com.pennsim.exception.GenericException;
+import com.pennsim.gui.GUI;
+import com.pennsim.util.ErrorLog;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -7,13 +10,13 @@ import javax.swing.SwingUtilities;
 
 public class PennSim {
 
-    static String version = "1.2.6";
-    static boolean GRAPHICAL_MODE = true;
+    public static final String VERSION = "1.2.6";
+    public static boolean GRAPHICAL_MODE = true;
     private static boolean PIPELINE_MODE = false;
     private static boolean LC3 = true;
     private static boolean P37X = false;
 
-    static boolean isGraphical() {
+    public static boolean isGraphical() {
         return GRAPHICAL_MODE;
     }
 
@@ -62,8 +65,8 @@ public class PennSim {
      *
      * @return the version as a String
      */
-    static String getVersion() {
-        return "PennSim Version " + version;
+    public static String getVersion() {
+        return "PennSim Version " + VERSION;
     }
 
     /**
@@ -78,6 +81,7 @@ public class PennSim {
         System.out.println("\t-s script : run 'script' from a script file");
     }
 
+    // TODO: Simplify method to decrease "NPath Complexity". Currently has a complexity of 6128.
     public static void main(String[] args) {
         String str = null;
         System.out.println(getVersion() + "\n");

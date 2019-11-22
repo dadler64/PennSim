@@ -1,5 +1,7 @@
 package com.pennsim;
 
+import com.pennsim.Word;
+import com.pennsim.util.ErrorLog;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,31 +13,30 @@ public class KeyboardDevice {
     private static final Word KB_UNAVAILABLE = new Word(0);
     public static int SCRIPT_MODE = 0;
     public static int INTERACTIVE_MODE = 1;
-    private static int CBUFSIZE = 128;
     private static char TIMER_TICK = '.';
-    private BufferedReader kbin = null;
-    private BufferedReader defkbin = null;
+    private BufferedReader keyBoardIn;
+    private BufferedReader defaultKeyBoardIn;
     private int current = 0;
     private int mode;
-    private int defmode;
+    private int defaultMode;
 
     public KeyboardDevice() {
-        this.kbin = new BufferedReader(new InputStreamReader(System.in));
+        this.keyBoardIn = new BufferedReader(new InputStreamReader(System.in));
         this.mode = INTERACTIVE_MODE;
-        this.defkbin = this.kbin;
-        this.defmode = this.mode;
+        this.defaultKeyBoardIn = this.keyBoardIn;
+        this.defaultMode = this.mode;
     }
 
     public void setDefaultInputStream() {
-        this.defkbin = this.kbin;
+        this.defaultKeyBoardIn = this.keyBoardIn;
     }
 
     public void setDefaultInputMode() {
-        this.defmode = this.mode;
+        this.defaultMode = this.mode;
     }
 
     public void setInputStream(InputStream var1) {
-        this.kbin = new BufferedReader(new InputStreamReader(var1));
+        this.keyBoardIn = new BufferedReader(new InputStreamReader(var1));
     }
 
     public void setInputMode(int var1) {
@@ -43,8 +44,8 @@ public class KeyboardDevice {
     }
 
     public void reset() {
-        this.kbin = this.defkbin;
-        this.mode = this.defmode;
+        this.keyBoardIn = this.defaultKeyBoardIn;
+        this.mode = this.defaultMode;
         this.current = 0;
     }
 
@@ -54,14 +55,14 @@ public class KeyboardDevice {
 
     public boolean available() {
         try {
-            if (this.kbin.ready()) {
-                this.kbin.mark(1);
-                if (this.kbin.read() == TIMER_TICK) {
-                    this.kbin.reset();
+            if (this.keyBoardIn.ready()) {
+                this.keyBoardIn.mark(1);
+                if (this.keyBoardIn.read() == TIMER_TICK) {
+                    this.keyBoardIn.reset();
                     return false;
                 }
 
-                this.kbin.reset();
+                this.keyBoardIn.reset();
                 return true;
             }
         } catch (IOException var2) {
@@ -72,15 +73,16 @@ public class KeyboardDevice {
     }
 
     public Word read() {
+        int CBUFSIZE = 128;
         char[] var1 = new char[CBUFSIZE];
 
         try {
             if (this.available()) {
                 if (this.mode == INTERACTIVE_MODE) {
-                    int var2 = this.kbin.read(var1, 0, CBUFSIZE);
+                    int var2 = this.keyBoardIn.read(var1, 0, CBUFSIZE);
                     this.current = var1[var2 - 1];
                 } else {
-                    this.current = this.kbin.read();
+                    this.current = this.keyBoardIn.read();
                 }
             }
         } catch (IOException var3) {
@@ -90,15 +92,15 @@ public class KeyboardDevice {
         return new Word(this.current);
     }
 
-    boolean hasTimerTick() {
+    public boolean hasTimerTick() {
         try {
-            this.kbin.mark(1);
-            if (this.kbin.ready()) {
-                if (this.kbin.read() == TIMER_TICK) {
+            this.keyBoardIn.mark(1);
+            if (this.keyBoardIn.ready()) {
+                if (this.keyBoardIn.read() == TIMER_TICK) {
                     return true;
                 }
 
-                this.kbin.reset();
+                this.keyBoardIn.reset();
                 return false;
             }
         } catch (IOException var2) {
