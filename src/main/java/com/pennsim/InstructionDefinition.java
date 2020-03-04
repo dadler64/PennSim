@@ -52,8 +52,8 @@ public abstract class InstructionDefinition {
         return this.opcode;
     }
 
-    final void setOpcode(String address) {
-        this.opcode = address;
+    final void setOpcode(String opcode) {
+        this.opcode = opcode;
     }
 
     public String getFormat() {
@@ -266,11 +266,11 @@ public abstract class InstructionDefinition {
     }
 
     final void setEncoding(String encoding) {
-        String input = encoding;
+        String inputEncoding = encoding;
         encoding = encoding.toLowerCase();
         encoding = encoding.replaceAll("\\s", "");
         encoding = encoding.replaceAll("[^x10iudstpz]", "");
-        ISA.check(encoding.length() == 16, "Strange encoding: " + input);
+        ISA.check(encoding.length() == 16, "Strange encoding: " + inputEncoding);
         encoding = this.encodeField(encoding, 'd', "Reg", this.dReg);
         encoding = this.encodeField(encoding, 's', "Reg", this.sReg);
         encoding = this.encodeField(encoding, 't', "Reg", this.tReg);
@@ -279,7 +279,7 @@ public abstract class InstructionDefinition {
         encoding = this.encodeField(encoding, 'u', "Num", this.unsignedImmediate);
         encoding = this.encodeField(encoding, 'z', "String", this.unsignedImmediate);
         encoding = encoding.replaceAll("[^x10]", "");
-        ISA.check(encoding.length() == 16, "Strange encoding: " + input);
+        ISA.check(encoding.length() == 16, "Strange encoding: " + inputEncoding);
         String replacedEncoding = encoding.replaceAll("0", "1");
         replacedEncoding = replacedEncoding.replaceAll("x", "0");
         this.mask = Integer.parseInt(replacedEncoding, 2);
