@@ -50,7 +50,7 @@ public class CommandLinePanel extends JPanel implements ActionListener, Printabl
         });
         this.machine = machine;
         this.commandLine = commandLine;
-        this.textArea = new JTextArea(10, 70);
+        this.textArea = new JTextArea(10, 70); // 5 rows longer than the original
         this.textArea.setEditable(false);
         this.textArea.setLineWrap(true);
         this.textArea.setWrapStyleWord(true);

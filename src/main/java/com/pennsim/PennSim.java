@@ -10,7 +10,7 @@ import javax.swing.SwingUtilities;
 
 public class PennSim {
 
-    public static final String VERSION = "1.2.6";
+    public static final String VERSION = "1.3.0";
     public static boolean GRAPHICAL_MODE = true;
     private static boolean PIPELINE_MODE = false;
     private static boolean LC3 = true;

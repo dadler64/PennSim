@@ -5,6 +5,7 @@ import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
 
 import com.pennsim.util.ErrorLog;
 import com.pennsim.PrintableConsole;
+import java.awt.Component;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -22,6 +23,13 @@ public class CommandOutputWindow extends JFrame implements PrintableConsole {
         this.textArea.setWrapStyleWord(true);
         JScrollPane scrollPane = new JScrollPane(this.textArea, VERTICAL_SCROLLBAR_ALWAYS, HORIZONTAL_SCROLLBAR_AS_NEEDED);
         this.getContentPane().add(scrollPane);
+    }
+
+    public void repaint() {
+        for (Component component: this.getContentPane().getComponents()) {
+            component.repaint();
+        }
+        this.repaint();
     }
 
     /**

@@ -21,8 +21,7 @@ public class AsException extends Exception {
     public String getMessage() {
         String message = "Assembly error: ";
         if (this.instruction != null) {
-            message = message + "[line " + this.instruction.getLineNumber() + ", '" + this.instruction.getOriginalLine()
-                    + "']: ";
+            message = message + "[line " + this.instruction.getLineNumber() + ", '" + this.instruction.getOriginalLine() + "']: ";
         }
 
         message = message + super.getMessage();

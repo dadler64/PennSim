@@ -48,24 +48,23 @@ public class CommandLine {
         this.setupCommands();
       /*
  TODO: Resolve unchecked assignment error
-         public boolean equals(Object var1) {
-            CommandLine.Command var2 = (CommandLine.Command)var1;
-            String var3 = var2.getUsage().split("\\s+")[0];
-            String var4 = ((CommandLine.Command)this).getUsage().split("\\s+")[0];
-            return var3.equals(var4);
-         }
-*/
-        this.commandsSet = new TreeSet<Command>((Comparator) (var1, var2) -> {
-            Command var3 = (Command) var1;
-            Command var4 = (Command) var2;
-            String var5 = var3.getUsage().split("\\s+")[0];
-            String var6 = var4.getUsage().split("\\s+")[0];
-            return var5.compareTo(var6);
+ */
+
+        this.commandsSet = new TreeSet<Command>((Comparator<? super Command>) (var1, var2) -> {
+            String var3 = var1.getUsage().split("\\s+")[0];
+            String var4 = var2.getUsage().split("\\s+")[0];
+            return var3.compareTo(var4);
         });
         this.commandsSet.addAll(this.commands.values());
         this.commandQueue = new LinkedList<>();
         this.prevHistoryStack = new Stack<>();
         this.nextHistoryStack = new Stack<>();
+    }
+
+    public boolean equals(Command command) {
+        String var2 = command.getUsage().split("\\s+")[0];
+        String var3 = ((CommandLine.Command)this).getUsage().split("\\s+")[0];
+        return var2.equals(var3);
     }
 
     /**
@@ -917,8 +916,7 @@ public class CommandLine {
                         asOutput = assembler.as(asArgs);
 
                         if (asOutput.length() != 0) {
-                            return asOutput + "Warnings encountered during assembly "
-                                    + "(but assembly completed w/o errors).";
+                            return asOutput + "Warnings encountered during assembly (but assembly completed w/o errors).";
                         }
                     } catch (AsException e) {
                         return e.getMessage() + "\nErrors encountered during assembly.";
