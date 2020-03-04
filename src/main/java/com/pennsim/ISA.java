@@ -40,7 +40,8 @@ public class ISA {
                 Word loadWord = machine.getMemory().getInstruction(newValue);
                 InstructionDefinition loadInstructionDef = lookupTable[loadWord.getValue()];
                 if (loadInstructionDef == null) {
-                    throw new IllegalInstructionException("Undefined instruction: " + loadWord.toHex());
+                    throw new IllegalInstructionException(
+                            "Undefined instruction: " + loadWord.toHex());
                 }
 
                 if (!loadInstructionDef.isStore()) {

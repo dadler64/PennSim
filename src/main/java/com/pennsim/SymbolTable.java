@@ -24,7 +24,7 @@ public class SymbolTable {
         return address == null ? -1 : address;
     }
 
-    public Enumeration<String> getLabels() {
+    public Enumeration getLabels() {
         return this.table.keys();
     }
 }

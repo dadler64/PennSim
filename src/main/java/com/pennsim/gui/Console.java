@@ -2,7 +2,6 @@ package com.pennsim.gui;
 
 import com.pennsim.PennSim;
 import com.pennsim.PrintableConsole;
-import java.awt.Component;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -49,9 +48,10 @@ public class Console {
      */
     public static void clear() {
         if (PennSim.isGraphical()) {
-            for (PrintableConsole console : consoles) {
-                console.clear();
+            for (Object console : consoles) {
+                ((PrintableConsole) console).clear();
             }
         }
+
     }
 }

@@ -15,18 +15,16 @@ import java.util.List;
 
 class Assembler {
 
-    private static final String USAGE = "Usage: java -jar PennSim.jar com.pennsim.Assembler <files-to-assemble ...>";
-
-    String as(String[] assemblyArgs) throws AsException {
+    String as(String[] asArgs) throws AsException {
         String arg = null;
         SymbolTable symTab = new SymbolTable();
 
-        for (String assemblyArg : assemblyArgs) {
-            if (assemblyArg.length() == 0) {
+        for (String asArg : asArgs) {
+            if (asArg.length() == 0) {
                 throw new AsException("Null arguments are not permitted.");
             }
 
-            arg = assemblyArg;
+            arg = asArg;
         }
 
         if (arg != null) {
@@ -36,7 +34,7 @@ class Assembler {
             this.passOne(symTab, instructions);
             this.passTwo(symTab, instructions, filename);
             this.generateSymbolFile(symTab, instructions, filename);
-            return " SUCCESSFULLY COMPILED: " + filename;
+            return "";
         } else {
             throw new AsException("No .asm file specified.");
         }
@@ -150,7 +148,7 @@ class Assembler {
 
     private void generateSymbolFile(SymbolTable symbolTable, List<Instruction> instructions, String baseFilename) throws AsException {
         String symbolFilename = baseFilename + ".sym";
-        Enumeration<String> enumeration = symbolTable.getLabels();
+        Enumeration enumeration = symbolTable.getLabels();
 
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(symbolFilename));
@@ -160,7 +158,7 @@ class Assembler {
             writer.write("//\t----------------  ------------\n");
 
             while (enumeration.hasMoreElements()) {
-                String label = enumeration.nextElement();
+                String label = (String) enumeration.nextElement();
                 writer.write("//\t" + label);
 
                 int index;
@@ -193,27 +191,4 @@ class Assembler {
         String formattedAddress = "0000" + Integer.toHexString(address).toUpperCase();
         return formattedAddress.substring(formattedAddress.length() - 4);
     }
-
-    /**
-     * Simple main method to compile files quickly
-     * @param args .asm files to decompile
-     */
-    public static void main(String[] args) {
-        if (args.length > 0) {
-            LC3 isa = new LC3();
-            isa.init();
-            Assembler assembler = new Assembler();
-            try {
-                for (String arg: args) {
-                    String result = assembler.as(new String[] {arg});
-                    System.out.println(result);
-                }
-            } catch (AsException e) {
-                e.printStackTrace();
-            }
-        } else {
-            System.err.println(USAGE);
-        }
-    }
-
 }

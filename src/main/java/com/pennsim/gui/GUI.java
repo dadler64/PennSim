@@ -464,8 +464,7 @@ public class GUI implements ActionListener, TableModelListener {
         grid.fill = 1;
         grid.weightx = 1.0D;
         this.frame.getContentPane().add(this.memoryPanel, grid);
-//        this.frame.setSize(new Dimension(700, 725));
-        this.frame.setSize(new Dimension(1280, 1276));
+        this.frame.setSize(new Dimension(700, 725));
         this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.frame.pack();
         this.frame.setVisible(true);
