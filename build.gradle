@@ -1,0 +1,161 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.yuvimasory:orange-extensions:1.3.0'   // OSX support
+        classpath 'com.netflix.nebula:gradle-ospackage-plugin:8.1.0' // https://plugins.gradle.org/plugin/nebula.ospackage
+        classpath 'edu.sc.seis.gradle:launch4j:2.4.6' // https://plugins.gradle.org/plugin/edu.sc.seis.launch4j
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'distribution'
+apply plugin: 'edu.sc.seis.launch4j'
+apply plugin: 'nebula.ospackage'
+
+// Common Configuration //
+rootProject.version='1.3.0'
+targetCompatibility='1.8'
+
+allprojects {
+    apply plugin: 'eclipse'
+    apply plugin: 'idea'
+
+    tasks.withType(JavaCompile) {
+        sourceCompatibility = targetCompatibility = '1.8'
+        options.compilerArgs << '-Xlint:deprecation'
+        options.compilerArgs << '-Xlint:unchecked'
+        options.encoding = 'UTF-8'
+    }
+
+    repositories {
+        jcenter()
+    }
+
+    configurations {
+        provided
+        compile.extendsFrom provided
+    }
+}
+
+// 'cleanIdea' task extension //
+cleanIdea.doFirst {
+    delete project.name + '.iws'
+    delete 'out'
+    followSymLinks = true
+}
+
+subprojects.each { subproject ->
+    evaluationDependsOn(subproject.path)
+}
+
+// All in one JAR file //
+jar {
+    // Add dependencies
+    def deps = []
+    
+    subprojects.each { subproject ->
+        from subproject.sourceSets.main.output.classesDirs
+        from subproject.sourceSets.main.output.resourcesDir
+        deps += subproject.configurations.runtime - subproject.configurations.provided
+    }
+    subprojects.each { subproject ->
+        deps -= subproject.jar.archivePath
+    }
+    deps = deps.unique().collect {it.isDirectory() ? it : zipTree(it)}
+    from deps
+
+    manifest {
+        attributes 'Main-Class': 'com.pennsim.PennSim',
+            'SplashScreen-Image': 'src/main/resources/PennSimIcon.png',
+            'PennSim-Version': project.version
+    }
+
+    duplicatesStrategy DuplicatesStrategy.EXCLUDE
+}
+
+// Java executable wrapper for Windows //
+launch4j {
+    createExe.dependsOn 'jar'
+
+    version = textVersion = project.version
+    fileDescription = productName = 'PennSim'
+    errTitle 'PennSim Windows Wrapper'
+    copyright 'Dan Adler (C) 2020'
+    fileDescription = 'PennSim, 16 bit virtual computer'
+    icon projectDir.path + '/src/main/resources/PennSimIcon.ico'
+    bundledJrePath = '%JAVA_HOME%'
+    outfile = 'PennSim.exe'
+}
+
+// Packages for Linux //
+ospackage {
+//    buildDeb.dependsOn 'proguard'
+//    buildRpm.dependsOn 'proguard'
+    buildDeb.dependsOn 'jar'
+    buildRpm.dependsOn 'jar'
+
+    license = file('LICENSE')
+    maintainer 'Dan Adler <dadler64@users.noreply.github.com>'
+    os LINUX
+    packageDescription 'PennSim, 16 bit virtual computer'
+    packageGroup 'java'
+    packageName 'pennsim'
+    release '0'
+    summary 'Software Computer'
+    url 'https://github.com/dadler64/pennsim'
+
+    logger.debug('/opt/' + project.name)
+    into '/opt/' + project.name
+    from (jar) {
+        fileMode 0755
+    }
+    from ('src/linux/resources/') {
+        fileMode 0755
+    }
+    from 'LICENSE', 'README.md'
+
+//    postInstall 'cd /opt/' + project.name + '; ln -s ./' + file(jar).name + ' ./pennsim.jar; ' +
+//            'xdg-icon-resource install --size 128 --novendor ./PenSimIcon.png pennsim; xdg-desktop-menu install ./*.desktop'
+//    preUninstall 'cd /opt/' + project.name + '; rm -f ./jd-gui.jar; rm -fr ./ext; xdg-desktop-menu uninstall ./*.desktop'
+}
+
+// Distributions for OSX and Windows //
+distributions {
+    osx.contents {
+        into('PennSim.app/Contents') {
+            from('src/osx/resources') {
+                include 'Info.plist'
+                expand VERSION: project.version,
+//                        JAR: file(proguard.outJarFiles[0]).name
+                        JAR: jar
+            }
+        }
+        into('PennSim.app/Contents/MacOS') {
+            from('src/osx/resources') {
+                include 'universalJavaApplicationStub.sh'
+                fileMode 0755
+            }
+        }
+        into('PennSim.app/Contents/Resources/Java') {
+            from jar
+        }
+        from 'LICENSE', 'README.md'
+    }
+    windows.contents {
+        from 'build/launch4j/pennsim.exe'
+        from 'LICENSE', 'README.md'
+    }
+
+    installWindowsDist.dependsOn createExe
+    windowsDistTar.dependsOn createExe
+    windowsDistZip.dependsOn createExe
+
+    installOsxDist.dependsOn 'jar'
+    osxDistTar.dependsOn 'jar'
+    osxDistZip.dependsOn 'jar'
+}
+
+build.finalizedBy buildDeb
+build.finalizedBy buildRpm
