@@ -1,7 +1,30 @@
-/out
-/.idea
-/target
-dependency-reduced-pom.xml
+# IntelliJ
+.idea/
+*.iml
+
+# Gradle
+.gradle/
+!gradle/wrapper/*
+
+# Build Files
+build/
+target/
+*.class
+
+# PennSim Files
 *.obj
 *.sym
-*.iml
+*.asm
+*.cfg
+
+# MacOS Files
+.DS_Store
+
+# Windows Files
+thumbs.db
+
+# Eclipse
+.settings/
+classes/
+.classpath
+.project
