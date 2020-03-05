@@ -1,18 +1,19 @@
 package com.pennsim.gui;
 
 import com.pennsim.CommandLine;
-import com.pennsim.util.ErrorLog;
-import com.pennsim.exception.GenericException;
 import com.pennsim.Machine;
 import com.pennsim.Memory;
 import com.pennsim.PennSim;
 import com.pennsim.RegisterFile;
+import com.pennsim.exception.GenericException;
+import com.pennsim.util.ErrorLog;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -23,6 +24,7 @@ import javax.swing.Box;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -33,6 +35,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -79,6 +82,8 @@ public class GUI implements ActionListener, TableModelListener {
     private final String continueButtonCommand;
     private final JButton stopButton;
     private final String stopButtonCommand;
+    private final JButton resetButton;
+    private final String resetButtonCommand;
     private final String statusLabelRunning;
     private final String statusLabelSuspended;
     private final String statusLabelHalted;
@@ -123,6 +128,8 @@ public class GUI implements ActionListener, TableModelListener {
         this.continueButtonCommand = "Continue";
         this.stopButton = new JButton("Stop");
         this.stopButtonCommand = "Stop";
+        this.resetButton = new JButton("Reset");
+        this.resetButtonCommand = "Reset";
         this.statusLabelRunning = "    Running ";
         this.statusLabelSuspended = "Suspended ";
         this.statusLabelHalted = "       Halted ";
@@ -301,12 +308,14 @@ public class GUI implements ActionListener, TableModelListener {
         constraints.fill = 10;
         constraints.gridx = 0;
         constraints.gridy = 0;
-        constraints.weightx = 1.0D;
+        constraints.weightx = 1.0;
+        constraints.weighty = 0.75D;
         this.devicePanel.add(this.video, constraints);
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 1;
-        constraints.weightx = 1.0D;
+        constraints.weightx = 1.0;
+        constraints.weighty = 0.25D;
         constraints.fill = 0;
         this.devicePanel.add(this.ioPanel, constraints);
         this.devicePanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Devices"),
@@ -322,49 +331,77 @@ public class GUI implements ActionListener, TableModelListener {
 //        boolean var1 = true;
         this.controlPanel.setLayout(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
-        constraints.fill = 2;
+
+        // Next Button
         this.nextButton.setActionCommand(nextButtonCommand);
         this.nextButton.addActionListener(this);
-        constraints.weightx = 1.0D;
+        constraints.weightx = 1.0;
         constraints.gridx = 0;
         constraints.gridy = 0;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         this.controlPanel.add(this.nextButton, constraints);
+
+        // Step Button
         this.stepButton.setActionCommand(stepButtonCommand);
         this.stepButton.addActionListener(this);
         constraints.gridx = 1;
         constraints.gridy = 0;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         this.controlPanel.add(this.stepButton, constraints);
+
+        // Continue Button
         this.continueButton.setActionCommand(continueButtonCommand);
         this.continueButton.addActionListener(this);
         constraints.gridx = 2;
         constraints.gridy = 0;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         this.controlPanel.add(this.continueButton, constraints);
+
+        // Stop Button
         this.stopButton.setActionCommand(stopButtonCommand);
         this.stopButton.addActionListener(this);
         constraints.gridx = 3;
         constraints.gridy = 0;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         this.controlPanel.add(this.stopButton, constraints);
+
+        // Reset Button
+        // TODO Have a dialog pop up confirming the action
+        this.resetButton.setActionCommand(resetButtonCommand);
+        this.resetButton.addActionListener(this);
         constraints.gridx = 4;
         constraints.gridy = 0;
-        constraints.fill = 0;
-        constraints.anchor = 22;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        this.controlPanel.add(this.resetButton, constraints);
+
+        // Status Label
+        constraints.gridx = 5;
+        constraints.gridy = 0;
+        constraints.fill = GridBagConstraints.REMAINDER;
+        constraints.anchor = GridBagConstraints.LINE_END;
         this.setStatusLabelSuspended();
         this.controlPanel.add(this.statusLabel, constraints);
+
+        // Space between buttons and CommandPanel
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 1;
         constraints.gridwidth = 6;
-        this.controlPanel.add(Box.createRigidArea(new Dimension(5, 5)), constraints);
+//        this.controlPanel.add(Box.createRigidArea(new Dimension(5, 5)), constraints);
+        this.controlPanel.add(Box.createRigidArea(new Dimension(8, 8)), constraints);
+
+        // Command Panel
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 2;
         constraints.gridwidth = 6;
         constraints.gridheight = 1;
         constraints.ipady = 100;
-        constraints.weightx = 1.0D;
-        constraints.weighty = 1.0D;
-        constraints.fill = 1;
+        constraints.weightx = 1.0;
+        constraints.weighty = 1.0;
+        constraints.fill = GridBagConstraints.BOTH;
         this.controlPanel.add(this.commandPanel, constraints);
+
         this.controlPanel.setMinimumSize(new Dimension(100, 150));
         this.controlPanel.setPreferredSize(new Dimension(100, 150));
         this.controlPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Controls"),
@@ -380,7 +417,7 @@ public class GUI implements ActionListener, TableModelListener {
         GridBagConstraints grid = new GridBagConstraints();
         grid.gridx = 0;
         grid.gridy = 0;
-        grid.weightx = 1.0D;
+        grid.weightx = 1.0;
         grid.fill = 2;
         this.registerPanel.add(this.regTable, grid);
         this.registerPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Registers"),
@@ -432,44 +469,78 @@ public class GUI implements ActionListener, TableModelListener {
         this.setupRegisterPanel();
         this.regTable.getModel().addTableModelListener(this);
         this.frame.getContentPane().setLayout(new GridBagLayout());
+
+        JTabbedPane tabPane = new JTabbedPane();
+
+        JComponent simTab = initSimTab();
+        JComponent editorTab = initEditorTab();
+
+        tabPane.addTab("Simulator", null, simTab, "Simulation Tab");
+//        tabPane.addTab("Editor", null, editorTab, "Editor Tab");
+
         GridBagConstraints grid = new GridBagConstraints();
-        grid.fill = 1;
-        grid.gridx = 0;
-        grid.gridy = 0;
-        grid.gridwidth = 2;
-        grid.weighty = 1.0D;
-        grid.gridwidth = 0;
-        this.frame.getContentPane().add(this.controlPanel, grid);
-        grid = new GridBagConstraints();
-        grid.gridx = 0;
-        grid.gridy = 1;
-        grid.gridwidth = 1;
-        grid.gridheight = 1;
-        grid.weightx = 0.0D;
-        grid.fill = 2;
-        this.frame.getContentPane().add(this.registerPanel, grid);
-        grid = new GridBagConstraints();
-        grid.gridx = 0;
-        grid.gridy = 2;
-        grid.weightx = 0.0D;
-        grid.gridheight = 1;
-        grid.gridwidth = 1;
-        grid.fill = 1;
-        this.frame.getContentPane().add(this.devicePanel, grid);
-        grid = new GridBagConstraints();
-        grid.gridx = 1;
-        grid.gridy = 1;
-        grid.gridheight = 2;
-        grid.gridwidth = 0;
-        grid.fill = 1;
-        grid.weightx = 1.0D;
-        this.frame.getContentPane().add(this.memoryPanel, grid);
-        this.frame.setSize(new Dimension(700, 725));
+        grid.fill = GridBagConstraints.BOTH;
+        grid.weightx = 1;
+        grid.weighty = 1;
+        this.frame.getContentPane().add(tabPane, grid);
+
+        this.frame.setSize(new Dimension(700, 750));
         this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.frame.pack();
         this.frame.setVisible(true);
         this.scrollToPC();
         this.commandPanel.actionPerformed(null);
+    }
+
+    JComponent initEditorTab() {
+        JPanel panel = new JPanel(false);
+        JLabel text = new JLabel("Editor Pane...");
+        text.setHorizontalAlignment(JLabel.CENTER);
+        panel.setLayout(new GridLayout(1, 1));
+        panel.add(text);
+        return panel;
+    }
+
+    JComponent initSimTab() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+
+        GridBagConstraints grid = new GridBagConstraints();
+        grid.fill = GridBagConstraints.BOTH;
+        grid.gridx = 0;
+        grid.gridy = 0;
+        grid.gridwidth = 3;
+        grid.gridheight = 1;
+        grid.weightx = 1;
+        grid.weighty = 0.5;
+        panel.add(this.controlPanel, grid);
+
+        grid = new GridBagConstraints();
+        grid.fill = GridBagConstraints.BOTH;
+        grid.gridx = 0;
+        grid.gridy = 1;
+        grid.gridwidth = 1;
+        grid.gridheight = 1;
+        panel.add(this.registerPanel, grid);
+
+        grid = new GridBagConstraints();
+        grid.fill = GridBagConstraints.BOTH;
+        grid.gridx = 0;
+        grid.gridy = 2;
+        grid.gridwidth = 1;
+        grid.gridheight = 2;
+        panel.add(this.devicePanel, grid);
+
+        grid = new GridBagConstraints();
+        grid.fill = GridBagConstraints.BOTH;
+        grid.gridx = 1;
+        grid.gridy = 1;
+        grid.gridwidth = 2;
+        grid.gridheight = 3;
+        grid.weighty = 1;
+        panel.add(this.memoryPanel, grid);
+
+        return panel;
     }
 
     /**
@@ -533,6 +604,9 @@ public class GUI implements ActionListener, TableModelListener {
                     this.confirmExit();
                 } else if (stopButtonCommand.equals(event.getActionCommand())) {
                     Console.println(this.machine.stopExecution(true));
+                } else if (resetButtonCommand.equals(event.getActionCommand())) {
+                    this.machine.reset();
+                    Console.println("System reset");
                 } else if (openCOWActionCommand.equals(event.getActionCommand())) {
                     this.commandOutputWindow.setVisible(true);
                 } else if (versionActionCommand.equals(event.getActionCommand())) {

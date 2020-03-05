@@ -59,7 +59,7 @@ public class VideoConsole extends JPanel implements TableModelListener {
             byte scaling = SCALING;
             int start = firstRow - START;
             int yPos = start / NUMBER_OF_ROWS * scaling;
-            int xPos = start % NUMBER_OF_ROWS * scaling;
+            int xPos = start % NUMBER_OF_COLUMNS * scaling;
             int rgb = convertToRGB(this.machine.getMemory().read(firstRow));
 
             for (int i = 0; i < scaling; ++i) {
