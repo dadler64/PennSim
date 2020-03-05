@@ -1,18 +1,19 @@
 package com.pennsim.gui;
 
 import com.pennsim.CommandLine;
-import com.pennsim.util.ErrorLog;
-import com.pennsim.exception.GenericException;
 import com.pennsim.Machine;
 import com.pennsim.Memory;
 import com.pennsim.PennSim;
 import com.pennsim.RegisterFile;
+import com.pennsim.exception.GenericException;
+import com.pennsim.util.ErrorLog;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -23,6 +24,7 @@ import javax.swing.Box;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -33,6 +35,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -302,11 +305,13 @@ public class GUI implements ActionListener, TableModelListener {
         constraints.gridx = 0;
         constraints.gridy = 0;
         constraints.weightx = 1.0D;
+        constraints.weighty = 0.75D;
         this.devicePanel.add(this.video, constraints);
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 1;
         constraints.weightx = 1.0D;
+        constraints.weighty = 0.25D;
         constraints.fill = 0;
         this.devicePanel.add(this.ioPanel, constraints);
         this.devicePanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Devices"),
@@ -432,44 +437,78 @@ public class GUI implements ActionListener, TableModelListener {
         this.setupRegisterPanel();
         this.regTable.getModel().addTableModelListener(this);
         this.frame.getContentPane().setLayout(new GridBagLayout());
+
+        JTabbedPane tabPane = new JTabbedPane();
+
+        JComponent simTab = initSimTab();
+        JComponent editorTab = initEditorTab();
+
+        tabPane.addTab("Simulator", null, simTab, "Simulation Tab");
+//        tabPane.addTab("Editor", null, editorTab, "Editor Tab");
+
         GridBagConstraints grid = new GridBagConstraints();
-        grid.fill = 1;
-        grid.gridx = 0;
-        grid.gridy = 0;
-        grid.gridwidth = 2;
-        grid.weighty = 1.0D;
-        grid.gridwidth = 0;
-        this.frame.getContentPane().add(this.controlPanel, grid);
-        grid = new GridBagConstraints();
-        grid.gridx = 0;
-        grid.gridy = 1;
-        grid.gridwidth = 1;
-        grid.gridheight = 1;
-        grid.weightx = 0.0D;
-        grid.fill = 2;
-        this.frame.getContentPane().add(this.registerPanel, grid);
-        grid = new GridBagConstraints();
-        grid.gridx = 0;
-        grid.gridy = 2;
-        grid.weightx = 0.0D;
-        grid.gridheight = 1;
-        grid.gridwidth = 1;
-        grid.fill = 1;
-        this.frame.getContentPane().add(this.devicePanel, grid);
-        grid = new GridBagConstraints();
-        grid.gridx = 1;
-        grid.gridy = 1;
-        grid.gridheight = 2;
-        grid.gridwidth = 0;
-        grid.fill = 1;
-        grid.weightx = 1.0D;
-        this.frame.getContentPane().add(this.memoryPanel, grid);
-        this.frame.setSize(new Dimension(700, 725));
+        grid.fill = GridBagConstraints.BOTH;
+        grid.weightx = 1;
+        grid.weighty = 1;
+        this.frame.getContentPane().add(tabPane, grid);
+
+        this.frame.setSize(new Dimension(700, 750));
         this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.frame.pack();
         this.frame.setVisible(true);
         this.scrollToPC();
         this.commandPanel.actionPerformed(null);
+    }
+
+    JComponent initEditorTab() {
+        JPanel panel = new JPanel(false);
+        JLabel text = new JLabel("Editor Pane...");
+        text.setHorizontalAlignment(JLabel.CENTER);
+        panel.setLayout(new GridLayout(1, 1));
+        panel.add(text);
+        return panel;
+    }
+
+    JComponent initSimTab() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+
+        GridBagConstraints grid = new GridBagConstraints();
+        grid.fill = GridBagConstraints.BOTH;
+        grid.gridx = 0;
+        grid.gridy = 0;
+        grid.gridwidth = 3;
+        grid.gridheight = 1;
+        grid.weightx = 1;
+        grid.weighty = 0.5;
+        panel.add(this.controlPanel, grid);
+
+        grid = new GridBagConstraints();
+        grid.fill = GridBagConstraints.BOTH;
+        grid.gridx = 0;
+        grid.gridy = 1;
+        grid.gridwidth = 1;
+        grid.gridheight = 1;
+        panel.add(this.registerPanel, grid);
+
+        grid = new GridBagConstraints();
+        grid.fill = GridBagConstraints.BOTH;
+        grid.gridx = 0;
+        grid.gridy = 2;
+        grid.gridwidth = 1;
+        grid.gridheight = 2;
+        panel.add(this.devicePanel, grid);
+
+        grid = new GridBagConstraints();
+        grid.fill = GridBagConstraints.BOTH;
+        grid.gridx = 1;
+        grid.gridy = 1;
+        grid.gridwidth = 2;
+        grid.gridheight = 3;
+        grid.weighty = 1;
+        panel.add(this.memoryPanel, grid);
+
+        return panel;
     }
 
     /**
