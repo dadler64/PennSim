@@ -14,7 +14,7 @@ apply plugin: 'edu.sc.seis.launch4j'
 apply plugin: 'nebula.ospackage'
 
 // Common Configuration //
-rootProject.version='1.3.0'
+rootProject.version='1.4.0'
 targetCompatibility='1.8'
 
 allprojects {
@@ -84,8 +84,6 @@ launch4j {
     copyright 'Dan Adler (C) 2020'
     fileDescription = 'PennSim, 16 bit virtual computer'
     icon projectDir.path + '/src/main/resources/PennSimIcon.ico'
-    bundledJrePath = '%JAVA_HOME%'
-    outfile = 'PennSim.exe'
 }
 
 // Distribution for Windows //
@@ -98,4 +96,9 @@ distributions {
     installWindowsDist.dependsOn createExe
     windowsDistTar.dependsOn createExe
     windowsDistZip.dependsOn createExe
+}
+
+dependencies {
+    compile 'com.fifesoft:rsyntaxtextarea:3.0.8'
+    compile 'com.jtattoo:JTattoo:1.6.13'
 }
