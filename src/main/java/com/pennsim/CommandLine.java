@@ -13,7 +13,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -46,26 +45,28 @@ public class CommandLine {
         this.mac = machine;
         this.commands = new Hashtable<>();
         this.setupCommands();
-      /*
- TODO: Resolve unchecked assignment error
-         public boolean equals(Object var1) {
-            CommandLine.Command var2 = (CommandLine.Command)var1;
-            String var3 = var2.getUsage().split("\\s+")[0];
-            String var4 = ((CommandLine.Command)this).getUsage().split("\\s+")[0];
-            return var3.equals(var4);
-         }
-*/
-        this.commandsSet = new TreeSet<Command>((Comparator) (var1, var2) -> {
-            Command var3 = (Command) var1;
-            Command var4 = (Command) var2;
-            String var5 = var3.getUsage().split("\\s+")[0];
-            String var6 = var4.getUsage().split("\\s+")[0];
-            return var5.compareTo(var6);
+        this.commandsSet = new TreeSet<>((command1, command2) -> {
+            String parts1 = command1.getUsage().split("\\s+")[0];
+            String parts2 = command2.getUsage().split("\\s+")[0];
+            return parts1.compareTo(parts2);
         });
         this.commandsSet.addAll(this.commands.values());
         this.commandQueue = new LinkedList<>();
         this.prevHistoryStack = new Stack<>();
         this.nextHistoryStack = new Stack<>();
+    }
+
+    /**
+     * Function to check for equality between the first word of two commands.
+     * Note that arguments are not used in the equality check.
+     *
+     * @param command command to be checked against
+     * @return if the commands are equal
+     */
+    public boolean equals(Command command) {
+        String otherCommand = command.getUsage().split("\\s+")[0];
+        String currentCommand = ((Command)this).getUsage().split("\\s+")[0];
+        return otherCommand.equals(currentCommand);
     }
 
     /**
