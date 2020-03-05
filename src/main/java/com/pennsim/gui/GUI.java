@@ -13,7 +13,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -37,6 +36,7 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.SpringLayout.Constraints;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
@@ -54,8 +54,6 @@ public class GUI implements ActionListener, TableModelListener {
     // TODO: Add option to change theming in the program
     private static final String LOOKANDFEEL = "Metal";
 //   private static final String LOOKANDFEEL = "System";
-//   private static final String LOOKANDFEEL = "Motif";
-//   private static final String LOOKANDFEEL = "GTK+";
 
     static {
         PC_COLOR = Color.YELLOW;
@@ -91,12 +89,12 @@ public class GUI implements ActionListener, TableModelListener {
     private final Color runningColor;
     private final Color suspendedColor;
     private final Color haltedColor;
-    private final JTable regTable;
+    private final JTable registerTable;
     private final CommandLinePanel commandPanel;
     private final CommandOutputWindow commandOutputWindow;
     private final JPanel memoryPanel;
-    private final JTable memTable;
-    private final JScrollPane memScrollPane;
+    private final JTable memoryTable;
+    private final JScrollPane memoryScrollPane;
     private final Machine machine;
     private final JFrame frame;
     private final JPanel devicePanel;
@@ -142,15 +140,15 @@ public class GUI implements ActionListener, TableModelListener {
         this.registerPanel = new JPanel();
         this.machine = machine;
         RegisterFile registerFile = machine.getRegisterFile();
-        this.regTable = new JTable(registerFile);
-        TableColumn column = this.regTable.getColumnModel().getColumn(0);
-        column.setMaxWidth(30);
-        column.setMinWidth(30);
-        column = this.regTable.getColumnModel().getColumn(2);
-        column.setMaxWidth(30);
-        column.setMinWidth(30);
+        this.registerTable = new JTable(registerFile);
+        TableColumn column = this.registerTable.getColumnModel().getColumn(0);
+        column.setMaxWidth(35);
+        column.setMinWidth(35);
+        column = this.registerTable.getColumnModel().getColumn(2);
+        column.setMaxWidth(35);
+        column.setMinWidth(35);
         Memory memory = machine.getMemory();
-        this.memTable = new JTable(memory) {
+        this.memoryTable = new JTable(memory) {
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component component = super.prepareRenderer(renderer, row, column);
                 if (column == 0) {
@@ -190,21 +188,21 @@ public class GUI implements ActionListener, TableModelListener {
 
             }
         };
-        this.memScrollPane = new JScrollPane(this.memTable) {
+        this.memoryScrollPane = new JScrollPane(this.memoryTable) {
             public JScrollBar createVerticalScrollBar() {
                 return new HighlightScrollBar(machine);
             }
         };
-        this.memScrollPane.getVerticalScrollBar()
-                .setBlockIncrement(this.memTable.getModel().getRowCount() / 512);
-        this.memScrollPane.getVerticalScrollBar().setUnitIncrement(1);
-        column = this.memTable.getColumnModel().getColumn(0);
-        column.setMaxWidth(20);
-        column.setMinWidth(20);
+        this.memoryScrollPane.getVerticalScrollBar()
+                .setBlockIncrement(this.memoryTable.getModel().getRowCount() / 512);
+        this.memoryScrollPane.getVerticalScrollBar().setUnitIncrement(1);
+        column = this.memoryTable.getColumnModel().getColumn(0);
+        column.setMaxWidth(25);
+        column.setMinWidth(25);
         column.setCellEditor(new DefaultCellEditor(new JCheckBox()));
-        column = this.memTable.getColumnModel().getColumn(2);
-        column.setMinWidth(50);
-        column.setMaxWidth(50);
+        column = this.memoryTable.getColumnModel().getColumn(2);
+        column.setMinWidth(60);
+        column.setMaxWidth(60);
         this.commandPanel = new CommandLinePanel(machine, commandLine);
         this.commandOutputWindow = new CommandOutputWindow("Command Output");
         WindowListener listener = new WindowListener() {
@@ -288,15 +286,14 @@ public class GUI implements ActionListener, TableModelListener {
      * Set up the Memory Panel
      */
     private void setupMemoryPanel() {
-        this.memoryPanel.add(this.memScrollPane, "Center");
+        this.memoryPanel.add(this.memoryScrollPane, "Center");
         this.memoryPanel.setMinimumSize(new Dimension(400, 100));
         this.memoryPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Memory"),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-        this.memTable.getModel().addTableModelListener(this);
-        this.memTable.getModel().addTableModelListener(this.video);
-        this.memTable.getModel().addTableModelListener(
-                (HighlightScrollBar) this.memScrollPane.getVerticalScrollBar());
-        this.memTable.setPreferredScrollableViewportSize(new Dimension(400, 460));
+        this.memoryTable.getModel().addTableModelListener(this);
+        this.memoryTable.getModel().addTableModelListener(this.video);
+        this.memoryTable.getModel().addTableModelListener((HighlightScrollBar) this.memoryScrollPane.getVerticalScrollBar());
+        this.memoryTable.setPreferredScrollableViewportSize(new Dimension(400, 460));
     }
 
     /**
@@ -387,7 +384,6 @@ public class GUI implements ActionListener, TableModelListener {
         constraints.gridx = 0;
         constraints.gridy = 1;
         constraints.gridwidth = 6;
-//        this.controlPanel.add(Box.createRigidArea(new Dimension(5, 5)), constraints);
         this.controlPanel.add(Box.createRigidArea(new Dimension(8, 8)), constraints);
 
         // Command Panel
@@ -404,6 +400,8 @@ public class GUI implements ActionListener, TableModelListener {
 
         this.controlPanel.setMinimumSize(new Dimension(100, 150));
         this.controlPanel.setPreferredSize(new Dimension(100, 150));
+
+        // Set up border
         this.controlPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Controls"),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         this.controlPanel.setVisible(true);
@@ -414,12 +412,15 @@ public class GUI implements ActionListener, TableModelListener {
      */
     private void setupRegisterPanel() {
         this.registerPanel.setLayout(new GridBagLayout());
-        GridBagConstraints grid = new GridBagConstraints();
-        grid.gridx = 0;
-        grid.gridy = 0;
-        grid.weightx = 1.0;
-        grid.fill = 2;
-        this.registerPanel.add(this.regTable, grid);
+
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.weightx = 1.0;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        this.registerPanel.add(this.registerTable, constraints);
+
+        // Set up border
         this.registerPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Registers"),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         this.registerPanel.setVisible(true);
@@ -467,7 +468,7 @@ public class GUI implements ActionListener, TableModelListener {
         this.setupDevicePanel();
         this.setupMemoryPanel();
         this.setupRegisterPanel();
-        this.regTable.getModel().addTableModelListener(this);
+        this.registerTable.getModel().addTableModelListener(this);
         this.frame.getContentPane().setLayout(new GridBagLayout());
 
         JTabbedPane tabPane = new JTabbedPane();
@@ -478,11 +479,11 @@ public class GUI implements ActionListener, TableModelListener {
         tabPane.addTab("Simulator", null, simTab, "Simulation Tab");
 //        tabPane.addTab("Editor", null, editorTab, "Editor Tab");
 
-        GridBagConstraints grid = new GridBagConstraints();
-        grid.fill = GridBagConstraints.BOTH;
-        grid.weightx = 1;
-        grid.weighty = 1;
-        this.frame.getContentPane().add(tabPane, grid);
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.weightx = 1;
+        constraints.weighty = 1;
+        this.frame.getContentPane().add(tabPane, constraints);
 
         this.frame.setSize(new Dimension(700, 750));
         this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -505,40 +506,40 @@ public class GUI implements ActionListener, TableModelListener {
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
 
-        GridBagConstraints grid = new GridBagConstraints();
-        grid.fill = GridBagConstraints.BOTH;
-        grid.gridx = 0;
-        grid.gridy = 0;
-        grid.gridwidth = 3;
-        grid.gridheight = 1;
-        grid.weightx = 1;
-        grid.weighty = 0.5;
-        panel.add(this.controlPanel, grid);
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.gridwidth = 3;
+        constraints.gridheight = 1;
+        constraints.weightx = 1;
+        constraints.weighty = 0.5;
+        panel.add(this.controlPanel, constraints);
 
-        grid = new GridBagConstraints();
-        grid.fill = GridBagConstraints.BOTH;
-        grid.gridx = 0;
-        grid.gridy = 1;
-        grid.gridwidth = 1;
-        grid.gridheight = 1;
-        panel.add(this.registerPanel, grid);
+        constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        constraints.gridwidth = 1;
+        constraints.gridheight = 1;
+        panel.add(this.registerPanel, constraints);
 
-        grid = new GridBagConstraints();
-        grid.fill = GridBagConstraints.BOTH;
-        grid.gridx = 0;
-        grid.gridy = 2;
-        grid.gridwidth = 1;
-        grid.gridheight = 2;
-        panel.add(this.devicePanel, grid);
+        constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.gridx = 0;
+        constraints.gridy = 2;
+        constraints.gridwidth = 1;
+        constraints.gridheight = 2;
+        panel.add(this.devicePanel, constraints);
 
-        grid = new GridBagConstraints();
-        grid.fill = GridBagConstraints.BOTH;
-        grid.gridx = 1;
-        grid.gridy = 1;
-        grid.gridwidth = 2;
-        grid.gridheight = 3;
-        grid.weighty = 1;
-        panel.add(this.memoryPanel, grid);
+        constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.gridx = 1;
+        constraints.gridy = 1;
+        constraints.gridwidth = 2;
+        constraints.gridheight = 3;
+        constraints.weighty = 1;
+        panel.add(this.memoryPanel, constraints);
 
         return panel;
     }
@@ -549,7 +550,7 @@ public class GUI implements ActionListener, TableModelListener {
      * @param row the row to scroll to
      */
     public void scrollToIndex(int row) {
-        this.memTable.scrollRectToVisible(this.memTable.getCellRect(row, 0, true));
+        this.memoryTable.scrollRectToVisible(this.memoryTable.getCellRect(row, 0, true));
     }
 
     /**
@@ -561,7 +562,7 @@ public class GUI implements ActionListener, TableModelListener {
 
     public void scrollToPC(int row) {
         int address = this.machine.getRegisterFile().getPC() + row;
-        this.memTable.scrollRectToVisible(this.memTable.getCellRect(address, 0, true));
+        this.memoryTable.scrollRectToVisible(this.memoryTable.getCellRect(address, 0, true));
     }
 
     @Deprecated
@@ -596,7 +597,7 @@ public class GUI implements ActionListener, TableModelListener {
             } catch (NumberFormatException var4) {
                 if (nextButtonCommand.equals(event.getActionCommand())) {
                     this.machine.executeNext();
-                } else if (stopButtonCommand.equals(event.getActionCommand())) {
+                } else if (stepButtonCommand.equals(event.getActionCommand())) {
                     this.machine.executeStep();
                 } else if (continueButtonCommand.equals(event.getActionCommand())) {
                     this.machine.executeMany();
@@ -605,6 +606,7 @@ public class GUI implements ActionListener, TableModelListener {
                 } else if (stopButtonCommand.equals(event.getActionCommand())) {
                     Console.println(this.machine.stopExecution(true));
                 } else if (resetButtonCommand.equals(event.getActionCommand())) {
+                    Console.println(this.machine.stopExecution(true));
                     this.machine.reset();
                     Console.println("System reset");
                 } else if (openCOWActionCommand.equals(event.getActionCommand())) {
