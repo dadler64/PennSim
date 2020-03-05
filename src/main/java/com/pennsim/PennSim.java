@@ -10,7 +10,7 @@ import javax.swing.SwingUtilities;
 
 public class PennSim {
 
-    public static final String VERSION = "1.2.6";
+    public static final String VERSION = "1.4.0";
     public static boolean GRAPHICAL_MODE = true;
     private static boolean PIPELINE_MODE = false;
     private static boolean LC3 = true;
@@ -81,7 +81,6 @@ public class PennSim {
         System.out.println("\t-s script : run 'script' from a script file");
     }
 
-    // TODO: Simplify method to decrease "NPath Complexity". Currently has a complexity of 6128.
     public static void main(String[] args) {
         String str = null;
         System.out.println(getVersion() + "\n");
