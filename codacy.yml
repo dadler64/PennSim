@@ -1,0 +1,12 @@
+exclude_paths:
+  - '.github/**/*'
+  - 'asm/**/*'
+  - 'docs/**/*'
+  - '**/tests/**'
+  - '**.asm'
+  - '**.bat'
+  - '**.gradle'
+  - '**.iml'
+  - '**.min.js'
+  - '**.txt'
+  - '**.xml'
