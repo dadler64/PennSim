@@ -82,6 +82,8 @@ public class GUI implements ActionListener, TableModelListener {
     private final String continueButtonCommand;
     private final JButton stopButton;
     private final String stopButtonCommand;
+    private final JButton resetButton;
+    private final String resetButtonCommand;
     private final String statusLabelRunning;
     private final String statusLabelSuspended;
     private final String statusLabelHalted;
@@ -126,6 +128,8 @@ public class GUI implements ActionListener, TableModelListener {
         this.continueButtonCommand = "Continue";
         this.stopButton = new JButton("Stop");
         this.stopButtonCommand = "Stop";
+        this.resetButton = new JButton("Reset");
+        this.resetButtonCommand = "Reset";
         this.statusLabelRunning = "    Running ";
         this.statusLabelSuspended = "Suspended ";
         this.statusLabelHalted = "       Halted ";
@@ -304,13 +308,13 @@ public class GUI implements ActionListener, TableModelListener {
         constraints.fill = 10;
         constraints.gridx = 0;
         constraints.gridy = 0;
-        constraints.weightx = 1.0D;
+        constraints.weightx = 1.0;
         constraints.weighty = 0.75D;
         this.devicePanel.add(this.video, constraints);
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 1;
-        constraints.weightx = 1.0D;
+        constraints.weightx = 1.0;
         constraints.weighty = 0.25D;
         constraints.fill = 0;
         this.devicePanel.add(this.ioPanel, constraints);
@@ -327,49 +331,77 @@ public class GUI implements ActionListener, TableModelListener {
 //        boolean var1 = true;
         this.controlPanel.setLayout(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
-        constraints.fill = 2;
+
+        // Next Button
         this.nextButton.setActionCommand(nextButtonCommand);
         this.nextButton.addActionListener(this);
-        constraints.weightx = 1.0D;
+        constraints.weightx = 1.0;
         constraints.gridx = 0;
         constraints.gridy = 0;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         this.controlPanel.add(this.nextButton, constraints);
+
+        // Step Button
         this.stepButton.setActionCommand(stepButtonCommand);
         this.stepButton.addActionListener(this);
         constraints.gridx = 1;
         constraints.gridy = 0;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         this.controlPanel.add(this.stepButton, constraints);
+
+        // Continue Button
         this.continueButton.setActionCommand(continueButtonCommand);
         this.continueButton.addActionListener(this);
         constraints.gridx = 2;
         constraints.gridy = 0;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         this.controlPanel.add(this.continueButton, constraints);
+
+        // Stop Button
         this.stopButton.setActionCommand(stopButtonCommand);
         this.stopButton.addActionListener(this);
         constraints.gridx = 3;
         constraints.gridy = 0;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
         this.controlPanel.add(this.stopButton, constraints);
+
+        // Reset Button
+        // TODO Have a dialog pop up confirming the action
+        this.resetButton.setActionCommand(resetButtonCommand);
+        this.resetButton.addActionListener(this);
         constraints.gridx = 4;
         constraints.gridy = 0;
-        constraints.fill = 0;
-        constraints.anchor = 22;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        this.controlPanel.add(this.resetButton, constraints);
+
+        // Status Label
+        constraints.gridx = 5;
+        constraints.gridy = 0;
+        constraints.fill = GridBagConstraints.REMAINDER;
+        constraints.anchor = GridBagConstraints.LINE_END;
         this.setStatusLabelSuspended();
         this.controlPanel.add(this.statusLabel, constraints);
+
+        // Space between buttons and CommandPanel
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 1;
         constraints.gridwidth = 6;
-        this.controlPanel.add(Box.createRigidArea(new Dimension(5, 5)), constraints);
+//        this.controlPanel.add(Box.createRigidArea(new Dimension(5, 5)), constraints);
+        this.controlPanel.add(Box.createRigidArea(new Dimension(8, 8)), constraints);
+
+        // Command Panel
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 2;
         constraints.gridwidth = 6;
         constraints.gridheight = 1;
         constraints.ipady = 100;
-        constraints.weightx = 1.0D;
-        constraints.weighty = 1.0D;
-        constraints.fill = 1;
+        constraints.weightx = 1.0;
+        constraints.weighty = 1.0;
+        constraints.fill = GridBagConstraints.BOTH;
         this.controlPanel.add(this.commandPanel, constraints);
+
         this.controlPanel.setMinimumSize(new Dimension(100, 150));
         this.controlPanel.setPreferredSize(new Dimension(100, 150));
         this.controlPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Controls"),
@@ -385,7 +417,7 @@ public class GUI implements ActionListener, TableModelListener {
         GridBagConstraints grid = new GridBagConstraints();
         grid.gridx = 0;
         grid.gridy = 0;
-        grid.weightx = 1.0D;
+        grid.weightx = 1.0;
         grid.fill = 2;
         this.registerPanel.add(this.regTable, grid);
         this.registerPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Registers"),
@@ -572,6 +604,9 @@ public class GUI implements ActionListener, TableModelListener {
                     this.confirmExit();
                 } else if (stopButtonCommand.equals(event.getActionCommand())) {
                     Console.println(this.machine.stopExecution(true));
+                } else if (resetButtonCommand.equals(event.getActionCommand())) {
+                    this.machine.reset();
+                    Console.println("System reset");
                 } else if (openCOWActionCommand.equals(event.getActionCommand())) {
                     this.commandOutputWindow.setVisible(true);
                 } else if (versionActionCommand.equals(event.getActionCommand())) {
