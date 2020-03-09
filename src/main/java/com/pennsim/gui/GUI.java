@@ -6,7 +6,6 @@ import com.pennsim.Memory;
 import com.pennsim.PennSim;
 import com.pennsim.RegisterFile;
 import com.pennsim.exception.GenericException;
-import com.pennsim.util.ErrorLog;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -20,6 +19,7 @@ import java.awt.event.WindowListener;
 import java.io.File;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -32,11 +32,12 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
-import javax.swing.SpringLayout.Constraints;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
@@ -49,27 +50,28 @@ import javax.swing.table.TableColumn;
 public class GUI implements ActionListener, TableModelListener {
 
     static final Color BREAK_POINT_COLOR = new Color(241, 103, 103);
-    private static final Color PC_COLOR;
-    // Various UI themes (WARNING: Some do not work well)
-    // TODO: Add option to change theming in the program
-    private static final String LOOKANDFEEL = "Metal";
-//   private static final String LOOKANDFEEL = "System";
-
-    static {
-        PC_COLOR = Color.YELLOW;
-    }
+    private static final Color PC_COLOR = Color.YELLOW;
 
     private final JFileChooser fileChooser;
     private final JMenuBar menuBar;
     private final JMenu fileMenu;
+    private final JMenu themeMenu;
     private final JMenu aboutMenu;
     private final JMenuItem openItem;
     private final JMenuItem quitItem;
     private final JMenuItem commandItem;
     private final JMenuItem versionItem;
     private final String openActionCommand;
-    private final String quitActionCommand;
     private final String openCOWActionCommand;
+    private final String quitActionCommand;
+    private final JMenuItem lightItem;
+    private final String lightActionCommand;
+    private final JMenuItem darkItem;
+    private final String darkActionCommand;
+    private final JMenuItem metalItem;
+    private final String metalActionCommand;
+    private final JMenuItem systemItem;
+    private final String systemActionCommand;
     private final String versionActionCommand;
     private final JPanel controlPanel;
     private final JButton nextButton;
@@ -107,10 +109,18 @@ public class GUI implements ActionListener, TableModelListener {
         this.fileChooser = new JFileChooser(".");
         this.menuBar = new JMenuBar();
         this.fileMenu = new JMenu("File");
+        this.themeMenu = new JMenu("Theme");
         this.aboutMenu = new JMenu("About");
         this.openItem = new JMenuItem("Open .obj File");
         this.quitItem = new JMenuItem("Quit");
-        this.commandItem = new JMenuItem("Open Command Output Window");
+        this.lightItem = new JRadioButtonMenuItem("Light");
+        this.lightActionCommand = "light";
+        this.darkItem = new JRadioButtonMenuItem("Dark");
+        this.darkActionCommand = "Dark";
+        this.metalItem = new JRadioButtonMenuItem("Metal");
+        this.metalActionCommand = "Motif";
+        this.systemItem = new JRadioButtonMenuItem("System");
+        this.systemActionCommand = "System";
         this.versionItem = new JMenuItem("Simulator Version");
         this.openActionCommand = "Open";
         this.quitActionCommand = "Quit";
@@ -239,44 +249,52 @@ public class GUI implements ActionListener, TableModelListener {
     }
 
     /**
-     * Initialize the UI theme
+     * Set the UI theme
+     * @param lookAndFeel the desired theme you wish to use
      */
-    public static void initLookAndFeel() {
+    public void setLookAndFeel(String lookAndFeel) {
         String theme;
         JFrame.setDefaultLookAndFeelDecorated(true);
-        if (LOOKANDFEEL != null) {
-            switch (LOOKANDFEEL) {
+        if (lookAndFeel != null) {
+            switch (lookAndFeel) {
+                case "Light":
+                    if (!lightItem.isSelected()) lightItem.setSelected(true);
+                    theme = "com.jtattoo.plaf.fast.FastLookAndFeel";
+                    break;
+                case "Dark":
+                    if (!darkItem.isSelected()) darkItem.setSelected(true);
+                    theme = "com.jtattoo.plaf.hifi.HiFiLookAndFeel"; // Dark Grey Theme
+//                    theme = "com.jtattoo.plaf.noire.NoireLookAndFeel"; // Dark Theme
+                    break;
                 case "Metal":
+                    if (!metalItem.isSelected()) metalItem.setSelected(true);
                     theme = UIManager.getCrossPlatformLookAndFeelClassName();
                     break;
                 case "System":
+                    if (!systemItem.isSelected()) systemItem.setSelected(true);
                     theme = UIManager.getSystemLookAndFeelClassName();
                     break;
-                case "Motif":
-                    theme = "com.sun.java.swing.plaf.motif.MotifLookAndFeel";
-                    break;
-                case "GTK+":
-                    theme = "com.sun.java.swing.plaf.gtk.GTKLookAndFeel";
-                    break;
-                default:
-                    ErrorLog.logError("Unexpected value of LOOKANDFEEL specified: " + LOOKANDFEEL);
+                default: {
+                    System.err.println("Unexpected value of lookAndFeel specified: " + lookAndFeel);
                     theme = UIManager.getCrossPlatformLookAndFeelClassName();
                     break;
+                }
             }
 
             try {
                 UIManager.setLookAndFeel(theme);
+                SwingUtilities.updateComponentTreeUI(frame);
             } catch (ClassNotFoundException e) {
-                ErrorLog.logError("Couldn't find class for specified look and feel:" + theme);
-                ErrorLog.logError("Did you include the L&F library in the class path?");
-                ErrorLog.logError("Using the default look and feel.");
+                System.err.println("Couldn't find class for specified look and feel:" + theme);
+                System.err.println("Did you include the L&F library in the class path?");
+                System.err.println("Using the default look and feel.");
             } catch (UnsupportedLookAndFeelException e) {
-                ErrorLog.logError("Can't use the specified look and feel (" + theme + ") on this platform.");
-                ErrorLog.logError("Using the default look and feel.");
+                System.err.println("Can't use the specified look and feel (" + theme + ") on this platform.");
+                System.err.println("Using the default look and feel.");
             } catch (Exception e) {
-                ErrorLog.logError("Couldn't get specified look and feel (" + theme + "), for some reason.");
-                ErrorLog.logError("Using the default look and feel.");
-                ErrorLog.logError(e);
+                System.err.println("Couldn't get specified look and feel (" + theme + "), for some reason.");
+                System.err.println("Using the default look and feel.");
+                System.err.println(e.getMessage());
             }
         }
 
@@ -430,7 +448,6 @@ public class GUI implements ActionListener, TableModelListener {
      * Set up the overall GUI
      */
     public void setUpGUI() {
-        initLookAndFeel();
         JFrame.setDefaultLookAndFeelDecorated(true);
         this.machine.setStoppedListener(this.commandPanel);
         this.fileChooser.setFileSelectionMode(2);
@@ -473,8 +490,8 @@ public class GUI implements ActionListener, TableModelListener {
 
         JTabbedPane tabPane = new JTabbedPane();
 
-        JComponent simTab = initSimTab();
-        JComponent editorTab = initEditorTab();
+        JComponent simTab = setUpSimTab();
+        JComponent editorTab = setUpEditorTab();
 
         tabPane.addTab("Simulator", null, simTab, "Simulation Tab");
 //        tabPane.addTab("Editor", null, editorTab, "Editor Tab");
@@ -484,7 +501,9 @@ public class GUI implements ActionListener, TableModelListener {
         constraints.weightx = 1;
         constraints.weighty = 1;
         this.frame.getContentPane().add(tabPane, constraints);
+        this.frame.setJMenuBar(this.menuBar);
 
+        setLookAndFeel("Metal");
         this.frame.setSize(new Dimension(700, 750));
         this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.frame.pack();
@@ -502,9 +521,16 @@ public class GUI implements ActionListener, TableModelListener {
         return panel;
     }
 
-    JComponent initSimTab() {
+    private JComponent setUpSimTab() {
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
+
+        this.setUpMenuBar();
+        this.setupControlPanel();
+        this.setupDevicePanel();
+        this.setupMemoryPanel();
+        this.setupRegisterPanel();
+        this.registerTable.getModel().addTableModelListener(this);
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.BOTH;
@@ -542,6 +568,51 @@ public class GUI implements ActionListener, TableModelListener {
         panel.add(this.memoryPanel, constraints);
 
         return panel;
+    }
+
+
+    private void setUpMenuBar() {
+        // File Menu
+        this.openItem.setActionCommand(openActionCommand);
+        this.openItem.addActionListener(this);
+        this.fileMenu.add(this.openItem);
+        this.commandItem.setActionCommand(openCOWActionCommand);
+        this.commandItem.addActionListener(this);
+        this.fileMenu.addSeparator();
+        this.quitItem.setActionCommand(quitActionCommand);
+        this.quitItem.addActionListener(this);
+        this.fileMenu.add(this.quitItem);
+
+        // Theme Menu
+        this.lightItem.setActionCommand(lightActionCommand);
+        this.lightItem.addActionListener(this);
+        this.darkItem.setActionCommand(darkActionCommand);
+        this.darkItem.addActionListener(this);
+        this.metalItem.setActionCommand(metalActionCommand);
+        this.metalItem.addActionListener(this);
+        this.systemItem.setActionCommand(metalActionCommand);
+        this.systemItem.addActionListener(this);
+
+        ButtonGroup group = new ButtonGroup();
+        group.add(this.lightItem);
+        group.add(this.darkItem);
+        group.add(this.metalItem);
+        group.add(this.systemItem);
+
+        this.themeMenu.add(lightItem);
+        this.themeMenu.add(darkItem);
+        this.themeMenu.add(metalItem);
+        this.themeMenu.add(systemItem);
+
+        // Version Menu
+        this.versionItem.setActionCommand("Version");
+        this.versionItem.addActionListener(this);
+        this.aboutMenu.add(this.versionItem);
+
+        //Menu Bar
+        this.menuBar.add(this.fileMenu);
+        this.menuBar.add(this.themeMenu);
+        this.menuBar.add(this.aboutMenu);
     }
 
     /**
@@ -603,6 +674,14 @@ public class GUI implements ActionListener, TableModelListener {
                     this.machine.executeMany();
                 } else if (quitActionCommand.equals(event.getActionCommand())) {
                     this.confirmExit();
+                } else if (lightActionCommand.equals(event.getActionCommand())) {
+                    setLookAndFeel("Light");
+                } else if (darkActionCommand.equals(event.getActionCommand())) {
+                    setLookAndFeel("Dark");
+                } else if (metalActionCommand.equals(event.getActionCommand())) {
+                    setLookAndFeel("Metal");
+                } else if (systemActionCommand.equals(event.getActionCommand())) {
+                    setLookAndFeel("System");
                 } else if (stopButtonCommand.equals(event.getActionCommand())) {
                     Console.println(this.machine.stopExecution(true));
                 } else if (resetButtonCommand.equals(event.getActionCommand())) {

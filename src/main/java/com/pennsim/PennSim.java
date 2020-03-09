@@ -127,7 +127,6 @@ public class PennSim {
 
             if (GRAPHICAL_MODE) {
                 System.out.println("Loading graphical interface\n");
-                GUI.initLookAndFeel();
                 GUI gui = new GUI(machine, commandLine);
                 machine.setGUI(gui);
                 SwingUtilities.invokeLater(new TempRun(gui));
