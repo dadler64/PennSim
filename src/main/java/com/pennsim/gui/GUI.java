@@ -12,6 +12,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -37,6 +38,7 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -46,6 +48,9 @@ import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rtextarea.RTextScrollPane;
 
 public class GUI implements ActionListener, TableModelListener {
 
@@ -59,7 +64,7 @@ public class GUI implements ActionListener, TableModelListener {
     private final JMenu aboutMenu;
     private final JMenuItem openItem;
     private final JMenuItem quitItem;
-    private final JMenuItem commandItem;
+    private final JMenuItem commandOutputWinItem;
     private final JMenuItem versionItem;
     private final String openActionCommand;
     private final String openCOWActionCommand;
@@ -84,6 +89,12 @@ public class GUI implements ActionListener, TableModelListener {
     private final String stopButtonCommand;
     private final JButton resetButton;
     private final String resetButtonCommand;
+    private final JButton newFileButton;
+    private final String newFileButtonCommand;
+    private final JButton openFileButton;
+    private final String openFileButtonCommand;
+    private final JButton saveFileButton;
+    private final String saveFileButtonCommand;
     private final String statusLabelRunning;
     private final String statusLabelSuspended;
     private final String statusLabelHalted;
@@ -112,7 +123,11 @@ public class GUI implements ActionListener, TableModelListener {
         this.themeMenu = new JMenu("Theme");
         this.aboutMenu = new JMenu("About");
         this.openItem = new JMenuItem("Open .obj File");
+        this.openActionCommand = "Open";
+        this.commandOutputWinItem = new JMenuItem("Output Window");
+        this.openCOWActionCommand = "OutputWindow";
         this.quitItem = new JMenuItem("Quit");
+        this.quitActionCommand = "Quit";
         this.lightItem = new JRadioButtonMenuItem("Light");
         this.lightActionCommand = "light";
         this.darkItem = new JRadioButtonMenuItem("Dark");
@@ -122,11 +137,7 @@ public class GUI implements ActionListener, TableModelListener {
         this.systemItem = new JRadioButtonMenuItem("System");
         this.systemActionCommand = "System";
         this.versionItem = new JMenuItem("Simulator Version");
-        this.openActionCommand = "Open";
-        this.quitActionCommand = "Quit";
-        this.openCOWActionCommand = "OutputWindow";
         this.versionActionCommand = "Version";
-//        JPanel leftPanel = new JPanel();
         this.controlPanel = new JPanel();
         this.nextButton = new JButton("Next");
         this.nextButtonCommand = "Next";
@@ -138,6 +149,12 @@ public class GUI implements ActionListener, TableModelListener {
         this.stopButtonCommand = "Stop";
         this.resetButton = new JButton("Reset");
         this.resetButtonCommand = "Reset";
+        this.newFileButton = new JButton("New");
+        this.newFileButtonCommand = "New";
+        this.openFileButton = new JButton("Open");
+        this.openFileButtonCommand = "Open";
+        this.saveFileButton = new JButton("Save");
+        this.saveFileButtonCommand = "Save";
         this.statusLabelRunning = "    Running ";
         this.statusLabelSuspended = "Suspended ";
         this.statusLabelHalted = "       Halted ";
@@ -149,6 +166,8 @@ public class GUI implements ActionListener, TableModelListener {
         this.devicePanel = new JPanel();
         this.registerPanel = new JPanel();
         this.machine = machine;
+
+        // Register pane init
         RegisterFile registerFile = machine.getRegisterFile();
         this.registerTable = new JTable(registerFile);
         TableColumn column = this.registerTable.getColumnModel().getColumn(0);
@@ -319,6 +338,7 @@ public class GUI implements ActionListener, TableModelListener {
      */
     private void setupDevicePanel() {
         this.devicePanel.setLayout(new GridBagLayout());
+
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = 10;
         constraints.gridx = 0;
@@ -326,6 +346,7 @@ public class GUI implements ActionListener, TableModelListener {
         constraints.weightx = 1.0;
         constraints.weighty = 0.75D;
         this.devicePanel.add(this.video, constraints);
+
         constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 1;
@@ -333,6 +354,7 @@ public class GUI implements ActionListener, TableModelListener {
         constraints.weighty = 0.25D;
         constraints.fill = 0;
         this.devicePanel.add(this.ioPanel, constraints);
+
         this.devicePanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Devices"),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         this.devicePanel.setVisible(true);
@@ -342,8 +364,6 @@ public class GUI implements ActionListener, TableModelListener {
      * Set up the Console Panel
      */
     private void setupControlPanel() {
-        //TODO: Figure out why this boolean is here
-//        boolean var1 = true;
         this.controlPanel.setLayout(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
 
@@ -468,9 +488,9 @@ public class GUI implements ActionListener, TableModelListener {
         this.openItem.setActionCommand("Open");
         this.openItem.addActionListener(this);
         this.fileMenu.add(this.openItem);
-        this.commandItem.setActionCommand("OutputWindow");
-        this.commandItem.addActionListener(this);
-        this.fileMenu.add(this.commandItem);
+        this.commandOutputWinItem.setActionCommand("OutputWindow");
+        this.commandOutputWinItem.addActionListener(this);
+        this.fileMenu.add(this.commandOutputWinItem);
         this.fileMenu.addSeparator();
         this.quitItem.setActionCommand("Quit");
         this.quitItem.addActionListener(this);
@@ -493,8 +513,8 @@ public class GUI implements ActionListener, TableModelListener {
         JComponent simTab = setUpSimTab();
         JComponent editorTab = setUpEditorTab();
 
+        tabPane.addTab("Editor", null, editorTab, "Editor Tab");
         tabPane.addTab("Simulator", null, simTab, "Simulation Tab");
-//        tabPane.addTab("Editor", null, editorTab, "Editor Tab");
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.BOTH;
@@ -512,13 +532,63 @@ public class GUI implements ActionListener, TableModelListener {
         this.commandPanel.actionPerformed(null);
     }
 
-    JComponent initEditorTab() {
+    // TODO look into turning this into tabbed files???
+    JComponent setUpEditorTab() {
         JPanel panel = new JPanel(false);
-        JLabel text = new JLabel("Editor Pane...");
-        text.setHorizontalAlignment(JLabel.CENTER);
-        panel.setLayout(new GridLayout(1, 1));
-        panel.add(text);
+        panel.setLayout(new GridBagLayout());
+
+        // Set up button bar
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.weightx = 1;
+        constraints.weighty = 0;
+
+        JToolBar toolBar = setUpToolBar();
+        panel.add(toolBar, constraints);
+
+        constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        constraints.weightx = 1;
+        constraints.weighty = 1;
+
+        RSyntaxTextArea textArea = new RSyntaxTextArea(20, 60);
+        textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_ASSEMBLER_X86);
+        textArea.setCodeFoldingEnabled(true);
+        RTextScrollPane scrollPane = new RTextScrollPane(textArea);
+        panel.add(scrollPane, constraints);
+
+        // TODO develop syntax highlighting
+        // Set syntax highlighting
+//        AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
+//        atmf.putMapping("text/lc3", "com.pennsim.util.LC3Syntax");
+//        textArea.setSyntaxEditingStyle("text/lc3");
+
         return panel;
+    }
+
+    private JToolBar setUpToolBar() {
+        JToolBar toolBar = new JToolBar();
+        toolBar.setFloatable(false);
+        toolBar.setMargin(new Insets(4, 4, 4, 4));
+        toolBar.setMinimumSize(new Dimension(800, 24));
+
+        newFileButton.setActionCommand(newFileButtonCommand);
+        newFileButton.addActionListener(this);
+        toolBar.add(newFileButton);
+
+        openFileButton.setActionCommand(openFileButtonCommand);
+        openFileButton.addActionListener(this);
+        toolBar.add(openFileButton);
+
+        saveFileButton.setActionCommand(saveFileButtonCommand);
+        saveFileButton.addActionListener(this);
+        toolBar.add(saveFileButton);
+
+        return toolBar;
     }
 
     private JComponent setUpSimTab() {
@@ -576,8 +646,8 @@ public class GUI implements ActionListener, TableModelListener {
         this.openItem.setActionCommand(openActionCommand);
         this.openItem.addActionListener(this);
         this.fileMenu.add(this.openItem);
-        this.commandItem.setActionCommand(openCOWActionCommand);
-        this.commandItem.addActionListener(this);
+        this.commandOutputWinItem.setActionCommand(openCOWActionCommand);
+        this.commandOutputWinItem.addActionListener(this);
         this.fileMenu.addSeparator();
         this.quitItem.setActionCommand(quitActionCommand);
         this.quitItem.addActionListener(this);
@@ -665,14 +735,41 @@ public class GUI implements ActionListener, TableModelListener {
             try {
                 index = Integer.parseInt(event.getActionCommand());
                 this.scrollToIndex(index);
-            } catch (NumberFormatException var4) {
-                if (nextButtonCommand.equals(event.getActionCommand())) {
+            } catch (NumberFormatException nfe) {
+                // TODO Create switch case statements for these
+                // Control Buttons
+                if (event.getSource() == nextButton) {
                     this.machine.executeNext();
-                } else if (stepButtonCommand.equals(event.getActionCommand())) {
+                } else if (event.getSource() == stepButton) {
                     this.machine.executeStep();
-                } else if (continueButtonCommand.equals(event.getActionCommand())) {
+                } else if (event.getSource() == continueButton) {
                     this.machine.executeMany();
-                } else if (quitActionCommand.equals(event.getActionCommand())) {
+                }else if (event.getSource() == stopButton) {
+                    Console.println(this.machine.stopExecution(true));
+                } else if (event.getSource() == resetButton) {
+                    resetDialog();
+                }
+                // Editor buttons
+                else if (event.getSource() == newFileButton) {
+                    System.out.println("New File");
+                } else if (event.getSource() == openFileButton) {
+                    System.out.println("Open File");
+                } else if (event.getSource() == saveFileButton) {
+                    System.out.println("Save File");
+                }
+
+                // MenuBar items
+                else if (openActionCommand.equals(event.getActionCommand())) {
+                    index = this.fileChooser.showOpenDialog(this.frame);
+                    if (index == 0) {
+                        File file = this.fileChooser.getSelectedFile();
+                        Console.println(this.machine.loadObjectFile(file));
+                    } else {
+                        Console.println("Open command cancelled by user.");
+                    }
+                } else if (openCOWActionCommand.equals(event.getActionCommand())) {
+                    this.commandOutputWindow.setVisible(true);
+                }else if (quitActionCommand.equals(event.getActionCommand())) {
                     this.confirmExit();
                 } else if (lightActionCommand.equals(event.getActionCommand())) {
                     setLookAndFeel("Light");
@@ -682,25 +779,9 @@ public class GUI implements ActionListener, TableModelListener {
                     setLookAndFeel("Metal");
                 } else if (systemActionCommand.equals(event.getActionCommand())) {
                     setLookAndFeel("System");
-                } else if (stopButtonCommand.equals(event.getActionCommand())) {
-                    Console.println(this.machine.stopExecution(true));
-                } else if (resetButtonCommand.equals(event.getActionCommand())) {
-                    Console.println(this.machine.stopExecution(true));
-                    this.machine.reset();
-                    Console.println("System reset");
-                } else if (openCOWActionCommand.equals(event.getActionCommand())) {
-                    this.commandOutputWindow.setVisible(true);
                 } else if (versionActionCommand.equals(event.getActionCommand())) {
                     JOptionPane.showMessageDialog(this.frame, PennSim.getVersion(),
                             "Version", JOptionPane.INFORMATION_MESSAGE);
-                } else if (openActionCommand.equals(event.getActionCommand())) {
-                    index = this.fileChooser.showOpenDialog(this.frame);
-                    if (index == 0) {
-                        File file = this.fileChooser.getSelectedFile();
-                        Console.println(this.machine.loadObjectFile(file));
-                    } else {
-                        Console.println("Open command cancelled by user.");
-                    }
                 }
             }
         } catch (GenericException e) {
