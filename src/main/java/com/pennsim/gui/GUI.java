@@ -791,6 +791,27 @@ public class GUI implements ActionListener, TableModelListener {
     }
 
     /**
+     * Dialog which confirms reset of simulator
+     */
+    private void resetDialog() {
+        // TODO investigate and fix the "Double Reset" issue
+        String[] options = {"Yes", "No"};
+        int answer = JOptionPane.showOptionDialog(
+                null,
+                "Do you want to reset the simulator?", "Reset Warning",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.WARNING_MESSAGE,
+                null,
+                options,
+                options[0]);
+        if (answer == 0) {
+            Console.println(this.machine.stopExecution(true));
+            this.machine.reset();
+            Console.println("System reset");
+        }
+    }
+
+    /**
      * Get this JFrame
      *
      * @return the current JFrame
