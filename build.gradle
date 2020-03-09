@@ -53,7 +53,7 @@ subprojects.each { subproject ->
 jar {
     // Add dependencies
     def deps = []
-    
+
     subprojects.each { subproject ->
         from subproject.sourceSets.main.output.classesDirs
         from subproject.sourceSets.main.output.resourcesDir
@@ -62,7 +62,7 @@ jar {
     subprojects.each { subproject ->
         deps -= subproject.jar.archivePath
     }
-    deps = deps.unique().collect {it.isDirectory() ? it : zipTree(it)}
+    deps = deps.unique().collect { it.isDirectory() ? it : zipTree(it) }
     from deps
 
     manifest {
@@ -86,8 +86,28 @@ launch4j {
     icon projectDir.path + '/src/main/resources/PennSimIcon.ico'
 }
 
-// Distribution for Windows //
+// Distributions for OSX and Windows //
 distributions {
+//    osx.contents {
+//        into('PennSim.app/Contents') {
+//            from('src/osx/resources') {
+//                include 'Info.plist'
+//                expand VERSION: project.version,
+////                        JAR: file(proguard.outJarFiles[0]).name
+//                        JAR: jar
+//            }
+//        }
+//        into('PennSim.app/Contents/MacOS') {
+//            from('src/osx/resources') {
+//                include 'universalJavaApplicationStub.sh'
+//                fileMode 0755
+//            }
+//        }
+//        into('PennSim.app/Contents/Resources/Java') {
+//            from jar
+//        }
+//        from 'LICENSE', 'README.md'
+//    }
     windows.contents {
         from 'build/launch4j/pennsim.exe'
         from 'LICENSE', 'README.md'
@@ -96,6 +116,10 @@ distributions {
     installWindowsDist.dependsOn createExe
     windowsDistTar.dependsOn createExe
     windowsDistZip.dependsOn createExe
+
+//    installOsxDist.dependsOn 'jar'
+//    osxDistTar.dependsOn 'jar'
+//    osxDistZip.dependsOn 'jar'
 }
 
 dependencies {
