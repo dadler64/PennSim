@@ -4,6 +4,7 @@ import com.pennsim.exception.AsException;
 import com.pennsim.exception.GenericException;
 import com.pennsim.gui.Console;
 import com.pennsim.gui.GUI;
+import com.pennsim.isa.ISA;
 import com.pennsim.util.ErrorLog;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

@@ -168,7 +168,7 @@ public class RegisterFile extends TableModel {
         return this.PC.getValue();
     }
 
-    void setPC(int value) {
+    public void setPC(int value) {
         int pcValue = this.PC.getValue();
         this.PC.setValue(value);
         this.fireTableCellUpdated(indRow[PC_ROW], indCol[PC_ROW]);
@@ -188,7 +188,7 @@ public class RegisterFile extends TableModel {
         }
     }
 
-    int getRegister(int regiister) throws IndexOutOfBoundsException {
+    public int getRegister(int regiister) throws IndexOutOfBoundsException {
         if (regiister >= 0 && regiister < NUM_REGISTERS) {
             return this.registerArr[regiister].getValue();
         } else {
@@ -196,7 +196,7 @@ public class RegisterFile extends TableModel {
         }
     }
 
-    void setRegister(int register, int value) {
+    public void setRegister(int register, int value) {
         if (register >= 0 && register < NUM_REGISTERS) {
             this.dirty = true;
             this.mostRecentlyWrittenValue = value;
@@ -207,7 +207,7 @@ public class RegisterFile extends TableModel {
         }
     }
 
-    boolean getN() {
+    public boolean getN() {
         return this.PSR.getBit(2) == 1;
     }
 
@@ -219,11 +219,11 @@ public class RegisterFile extends TableModel {
         return this.PSR.getBit(0) == 1;
     }
 
-    boolean getPrivMode() {
+    public boolean getPrivMode() {
         return this.PSR.getBit(15) == 1;
     }
 
-    void setPrivMode(boolean var1) {
+    public void setPrivMode(boolean var1) {
         int psrValue = this.PSR.getValue();
         if (!var1) {
             psrValue &= 32767;
@@ -234,7 +234,7 @@ public class RegisterFile extends TableModel {
         this.setPSR(psrValue);
     }
 
-    void checkAddress(int row) throws IllegalMemoryAccessException {
+    public void checkAddress(int row) throws IllegalMemoryAccessException {
         boolean isPrivMode = this.getPrivMode();
         if (row >= 0 && row < Memory.MEM_SIZE) {
             if (!isPrivMode) {
@@ -272,13 +272,13 @@ public class RegisterFile extends TableModel {
         return this.PSR.getValue();
     }
 
-    void setPSR(int value) {
+    public void setPSR(int value) {
         this.PSR.setValue(value);
         this.fireTableCellUpdated(indRow[PSR_ROW], indCol[PSR_ROW]);
         this.fireTableCellUpdated(indRow[CC_ROW], indCol[CC_ROW]);
     }
 
-    void setNZP(int value) {
+    public void setNZP(int value) {
         int psrValue = this.PSR.getValue();
         psrValue &= -8;
         value &= 65535;

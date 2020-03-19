@@ -1,5 +1,10 @@
-package com.pennsim;
+package com.pennsim.isa;
 
+import com.pennsim.InstructionDefinition;
+import com.pennsim.Machine;
+import com.pennsim.Memory;
+import com.pennsim.RegisterFile;
+import com.pennsim.Word;
 import com.pennsim.exception.IllegalInstructionException;
 import com.pennsim.exception.IllegalMemoryAccessException;
 
@@ -262,13 +267,7 @@ public class LC3 extends ISA {
 
     private static class TrapDef extends InstructionDefinition {
 
-        private TrapDef() {
-        }
-
-        // $FF: synthetic method
-//        TrapDef(Object obj) {
-//            this();
-//        }
+        private TrapDef() { }
 
         public boolean isCall() {
             return true;
@@ -283,13 +282,7 @@ public class LC3 extends ISA {
 
     private static class BranchDef extends InstructionDefinition {
 
-        private BranchDef() {
-        }
-
-        // $FF: synthetic method
-//        BranchDef(Object obj) {
-//            this();
-//        }
+        private BranchDef() { }
 
         public boolean isBranch() {
             return true;

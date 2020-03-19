@@ -5,6 +5,9 @@ import com.pennsim.exception.IllegalInstructionException;
 import com.pennsim.exception.IllegalMemoryAccessException;
 import com.pennsim.gui.Console;
 import com.pennsim.gui.GUI;
+import com.pennsim.isa.ISA;
+import com.pennsim.isa.LC3;
+import com.pennsim.isa.P37X;
 import com.pennsim.util.ErrorLog;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -25,10 +28,10 @@ public class Machine implements Runnable {
     private final Hashtable<String, Integer> symbolTable = new Hashtable<>();
     private final Hashtable<Integer, String> inverseTable = new Hashtable<>();
     private final Hashtable<Integer, Boolean> addressToInstructionTable = new Hashtable<>();
-    int cycleCount = 0;
-    int instructionCount = 0;
-    int loadStallCount = 0;
-    int branchStallCount = 0;
+    public int cycleCount = 0;
+    public int instructionCount = 0;
+    public int loadStallCount = 0;
+    public int branchStallCount = 0;
     private Memory memory;
     private RegisterFile registers;
     private BranchPredictor branchPredictor;
@@ -99,7 +102,7 @@ public class Machine implements Runnable {
         return this.registers;
     }
 
-    BranchPredictor getBranchPredictor() {
+    public BranchPredictor getBranchPredictor() {
         return this.branchPredictor;
     }
 
@@ -111,7 +114,7 @@ public class Machine implements Runnable {
         this.traceWriter = printWriter;
     }
 
-    boolean isTraceEnabled() {
+    public boolean isTraceEnabled() {
         return this.traceWriter != null;
     }
 
@@ -363,7 +366,7 @@ public class Machine implements Runnable {
         }
     }
 
-    void generateTrace(InstructionDefinition instructionDef, int address, Word word) throws IllegalMemoryAccessException {
+    public void generateTrace(InstructionDefinition instructionDef, int address, Word word) throws IllegalMemoryAccessException {
         if (this.isTraceEnabled()) {
             PrintWriter writer = this.getTraceWriter();
             writer.print(Word.toHex(address, false));
@@ -410,7 +413,7 @@ public class Machine implements Runnable {
         return var2 != null ? var2 : Integer.MAX_VALUE;
     }
 
-    boolean lookupAddressToInstruction(int address) {
+    public boolean lookupAddressToInstruction(int address) {
         return this.addressToInstructionTable.get(address) != null;
     }
 

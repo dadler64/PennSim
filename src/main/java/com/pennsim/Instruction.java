@@ -1,6 +1,7 @@
 package com.pennsim;
 
 import com.pennsim.exception.AsException;
+import com.pennsim.isa.ISA;
 import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -127,7 +128,7 @@ public class Instruction {
         return this.label;
     }
 
-    String getLabelRef() {
+    public String getLabelRef() {
         return this.labelRef;
     }
 
@@ -135,11 +136,11 @@ public class Instruction {
         return this.regs.get(var1);
     }
 
-    String getStringz() {
+    public String getStringz() {
         return this.stringz;
     }
 
-    int getOffsetImmediate() throws AsException {
+    public int getOffsetImmediate() throws AsException {
         if (this.offsetImmediate == null) {
             throw new AsException(this, "Internal error: no offset/immediate when expected");
         } else {
@@ -147,7 +148,7 @@ public class Instruction {
         }
     }
 
-    void setOffsetImmediate(int offsetImmediate) {
+    public void setOffsetImmediate(int offsetImmediate) {
         this.offsetImmediate = offsetImmediate;
     }
 

@@ -41,7 +41,7 @@ public class BranchPredictor {
         }
     }
 
-    int getPredictedPC(int value) {
+    public int getPredictedPC(int value) {
         int maskedValue = value & this.indexMask;
         int predictedValue = value + 1;
         if (this.predictor[maskedValue][TAG] == value) {
@@ -51,7 +51,7 @@ public class BranchPredictor {
         return predictedValue;
     }
 
-    void update(int tagValue, int predictionValue) {
+    public void update(int tagValue, int predictionValue) {
         this.predictor[tagValue & this.indexMask][TAG] = tagValue;
         this.predictor[tagValue & this.indexMask][PREDICTION] = predictionValue;
     }

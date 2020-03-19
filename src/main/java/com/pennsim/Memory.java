@@ -4,11 +4,12 @@ import com.pennsim.exception.IllegalMemoryAccessException;
 import com.pennsim.gui.Console;
 import com.pennsim.gui.MonitorDevice;
 import com.pennsim.gui.TableModel;
+import com.pennsim.isa.ISA;
 import com.pennsim.util.TimerDevice;
 
 public class Memory extends TableModel {
 
-    static final int MEM_SIZE = 65536;
+    public static final int MEM_SIZE = 65536;
     private static final int DISABLE_TIMER = 0;
     private static final int MANUAL_TIMER_MODE = 1;
     private static final int BEGIN_DEVICE_REGISTERS = 65024;
@@ -260,11 +261,11 @@ public class Memory extends TableModel {
         return value;
     }
 
-    Word getInstruction(int row) {
+    public Word getInstruction(int row) {
         return this.memArr[row];
     }
 
-    Word checkAndRead(int row) throws IllegalMemoryAccessException {
+    public Word checkAndRead(int row) throws IllegalMemoryAccessException {
         this.machine.getRegisterFile().checkAddress(row);
         return this.read(row);
     }
@@ -327,7 +328,7 @@ public class Memory extends TableModel {
         }
     }
 
-    void checkAndWrite(int row, int value) throws IllegalMemoryAccessException {
+    public void checkAndWrite(int row, int value) throws IllegalMemoryAccessException {
         this.machine.getRegisterFile().checkAddress(row);
         this.write(row, value);
     }

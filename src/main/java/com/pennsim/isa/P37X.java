@@ -1,5 +1,10 @@
-package com.pennsim;
+package com.pennsim.isa;
 
+import com.pennsim.InstructionDefinition;
+import com.pennsim.Machine;
+import com.pennsim.Memory;
+import com.pennsim.RegisterFile;
+import com.pennsim.Word;
 import com.pennsim.exception.IllegalMemoryAccessException;
 
 public class P37X extends ISA {

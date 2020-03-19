@@ -3,6 +3,7 @@ package com.pennsim;
 import com.pennsim.exception.AsException;
 import com.pennsim.exception.IllegalInstructionException;
 import com.pennsim.exception.IllegalMemoryAccessException;
+import com.pennsim.isa.ISA;
 import java.util.List;
 
 public abstract class InstructionDefinition {
@@ -52,7 +53,7 @@ public abstract class InstructionDefinition {
         return this.opcode;
     }
 
-    final void setOpcode(String opcode) {
+    public final void setOpcode(String opcode) {
         this.opcode = opcode;
     }
 
@@ -76,22 +77,22 @@ public abstract class InstructionDefinition {
         return -1;
     }
 
-    final int getDReg(Word word) {
+    protected final int getDReg(Word word) {
         ISA.check(this.dReg.valid, "Invalid register");
         return word.getZext(this.dReg.start, this.dReg.end);
     }
 
-    final int getSReg(Word word) {
+    protected final int getSReg(Word word) {
         ISA.check(this.sReg.valid, "Invalid register");
         return word.getZext(this.sReg.start, this.sReg.end);
     }
 
-    final int getTReg(Word word) {
+    protected final int getTReg(Word word) {
         ISA.check(this.tReg.valid, "Invalid register");
         return word.getZext(this.tReg.start, this.tReg.end);
     }
 
-    final int getSignedImmediate(Word word) {
+    protected final int getSignedImmediate(Word word) {
         return word.getSext(this.signedImmediate.start, this.signedImmediate.end);
     }
 
@@ -104,7 +105,7 @@ public abstract class InstructionDefinition {
     }
 
     // TODO: Simplify method to decrease "NPath Complexity". Currently has a complexity of 2187.
-    String disassemble(Word word, int address, Machine machine) {
+    public String disassemble(Word word, int address, Machine machine) {
         boolean isMultipleOpcodes = true;
         String opcode = this.getOpcode();
         if (this.dReg.valid) {
@@ -261,11 +262,11 @@ public abstract class InstructionDefinition {
         }
     }
 
-    final boolean match(Word word) {
+    public final boolean match(Word word) {
         return (word.getValue() & this.mask) == this.match;
     }
 
-    final void setEncoding(String encoding) {
+    public final void setEncoding(String encoding) {
         String inputEncoding = encoding;
         encoding = encoding.toLowerCase();
         encoding = encoding.replaceAll("\\s", "");

@@ -1,8 +1,8 @@
 package com.pennsim.util;
 
-import com.pennsim.ISA;
+import com.pennsim.isa.ISA;
 import com.pennsim.InstructionDefinition;
-import com.pennsim.P37X;
+import com.pennsim.isa.P37X;
 import com.pennsim.Word;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;

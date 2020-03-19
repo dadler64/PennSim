@@ -1,5 +1,13 @@
-package com.pennsim;
+package com.pennsim.isa;
 
+import com.pennsim.Instruction;
+import com.pennsim.InstructionDefinition;
+import com.pennsim.Machine;
+import com.pennsim.Memory;
+import com.pennsim.PennSim;
+import com.pennsim.RegisterFile;
+import com.pennsim.SymbolTable;
+import com.pennsim.Word;
 import com.pennsim.exception.AsException;
 import com.pennsim.exception.IllegalInstructionException;
 import com.pennsim.exception.IllegalMemoryAccessException;
@@ -61,7 +69,8 @@ public class ISA {
         }
     }
 
-    static String disassemble(Word word, int address, Machine machine) {
+    public static String disassemble(Word word, int address, Machine machine) {
+        // TODO change to isLC3b()
         if (!machine.lookupAddressToInstruction(address) && !PennSim.isLC3()) {
             return "";
         } else {
@@ -70,11 +79,11 @@ public class ISA {
         }
     }
 
-    static boolean isOpcode(String opcode) {
+    public static boolean isOpcode(String opcode) {
         return opcodeSet.contains(opcode.toUpperCase());
     }
 
-    static void checkFormat(Instruction instruction, int lineNumber) throws AsException {
+    public static void checkFormat(Instruction instruction, int lineNumber) throws AsException {
         if (formatToDefinition.get(instruction.getFormat()) == null) {
             throw new AsException(instruction,
                     "Unexpected instruction format: actual: '" + instruction.getFormat() + "'");
@@ -94,7 +103,7 @@ public class ISA {
 
     }
 
-    static boolean isCall(Word word) throws IllegalInstructionException {
+    public static boolean isCall(Word word) throws IllegalInstructionException {
         InstructionDefinition definition = lookupTable[word.getValue()];
         if (definition != null) {
             return definition.isCall();

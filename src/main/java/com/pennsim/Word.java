@@ -131,7 +131,7 @@ public class Word {
      *
      * @return the value of this object to hex
      */
-    String toHex() {
+    public String toHex() {
         return toHex(this.value, true);
     }
 
@@ -179,7 +179,7 @@ public class Word {
      *
      * @return the value of this object
      */
-    int getValue() {
+    public int getValue() {
         return this.value;
     }
 
@@ -243,7 +243,7 @@ public class Word {
     /**
      * TODO: Study this function
      */
-    int getBit(int value) {
+    public int getBit(int value) {
         return this.getZext(value, value);
     }
 
