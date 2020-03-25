@@ -6,43 +6,10 @@ import com.pennsim.Memory;
 import com.pennsim.PennSim;
 import com.pennsim.RegisterFile;
 import com.pennsim.exception.GenericException;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.File;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.ButtonGroup;
-import javax.swing.DefaultCellEditor;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComponent;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.JScrollBar;
-import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
-import javax.swing.JToolBar;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileFilter;
@@ -66,35 +33,35 @@ public class GUI implements ActionListener, TableModelListener {
     private final JMenuItem quitItem;
     private final JMenuItem commandOutputWinItem;
     private final JMenuItem versionItem;
-    private final String openActionCommand;
-    private final String openCOWActionCommand;
-    private final String quitActionCommand;
+//    private final String openActionCommand;
+//    private final String openCOWActionCommand;
+//    private final String quitActionCommand;
     private final JMenuItem lightItem;
-    private final String lightActionCommand;
+//    private final String lightActionCommand;
     private final JMenuItem darkItem;
-    private final String darkActionCommand;
+//    private final String darkActionCommand;
     private final JMenuItem metalItem;
-    private final String metalActionCommand;
+//    private final String metalActionCommand;
     private final JMenuItem systemItem;
-    private final String systemActionCommand;
-    private final String versionActionCommand;
+//    private final String systemActionCommand;
+//    private final String versionActionCommand;
     private final JPanel controlPanel;
     private final JButton nextButton;
-    private final String nextButtonCommand;
+//    private final String nextButtonCommand;
     private final JButton stepButton;
-    private final String stepButtonCommand;
+//    private final String stepButtonCommand;
     private final JButton continueButton;
-    private final String continueButtonCommand;
+//    private final String continueButtonCommand;
     private final JButton stopButton;
-    private final String stopButtonCommand;
+//    private final String stopButtonCommand;
     private final JButton resetButton;
-    private final String resetButtonCommand;
+//    private final String resetButtonCommand;
     private final JButton newFileButton;
-    private final String newFileButtonCommand;
+//    private final String newFileButtonCommand;
     private final JButton openFileButton;
-    private final String openFileButtonCommand;
+//    private final String openFileButtonCommand;
     private final JButton saveFileButton;
-    private final String saveFileButtonCommand;
+//    private final String saveFileButtonCommand;
     private final String statusLabelRunning;
     private final String statusLabelSuspended;
     private final String statusLabelHalted;
@@ -123,38 +90,38 @@ public class GUI implements ActionListener, TableModelListener {
         this.themeMenu = new JMenu("Theme");
         this.aboutMenu = new JMenu("About");
         this.openItem = new JMenuItem("Open .obj File");
-        this.openActionCommand = "Open";
+//        this.openActionCommand = "Open";
         this.commandOutputWinItem = new JMenuItem("Output Window");
-        this.openCOWActionCommand = "OutputWindow";
+//        this.openCOWActionCommand = "OutputWindow";
         this.quitItem = new JMenuItem("Quit");
-        this.quitActionCommand = "Quit";
+//        this.quitActionCommand = "Quit";
         this.lightItem = new JRadioButtonMenuItem("Light");
-        this.lightActionCommand = "light";
+//        this.lightActionCommand = "light";
         this.darkItem = new JRadioButtonMenuItem("Dark");
-        this.darkActionCommand = "Dark";
+//        this.darkActionCommand = "Dark";
         this.metalItem = new JRadioButtonMenuItem("Metal");
-        this.metalActionCommand = "Motif";
+//        this.metalActionCommand = "Motif";
         this.systemItem = new JRadioButtonMenuItem("System");
-        this.systemActionCommand = "System";
+//        this.systemActionCommand = "System";
         this.versionItem = new JMenuItem("Simulator Version");
-        this.versionActionCommand = "Version";
+//        this.versionActionCommand = "Version";
         this.controlPanel = new JPanel();
         this.nextButton = new JButton("Next");
-        this.nextButtonCommand = "Next";
+//        this.nextButtonCommand = "Next";
         this.stepButton = new JButton("Step");
-        this.stepButtonCommand = "Step";
+//        this.stepButtonCommand = "Step";
         this.continueButton = new JButton("Continue");
-        this.continueButtonCommand = "Continue";
+//        this.continueButtonCommand = "Continue";
         this.stopButton = new JButton("Stop");
-        this.stopButtonCommand = "Stop";
+//        this.stopButtonCommand = "Stop";
         this.resetButton = new JButton("Reset");
-        this.resetButtonCommand = "Reset";
+//        this.resetButtonCommand = "Reset";
         this.newFileButton = new JButton("New");
-        this.newFileButtonCommand = "New";
+//        this.newFileButtonCommand = "New";
         this.openFileButton = new JButton("Open");
-        this.openFileButtonCommand = "Open";
+//        this.openFileButtonCommand = "Open";
         this.saveFileButton = new JButton("Save");
-        this.saveFileButtonCommand = "Save";
+//        this.saveFileButtonCommand = "Save";
         this.statusLabelRunning = "    Running ";
         this.statusLabelSuspended = "Suspended ";
         this.statusLabelHalted = "       Halted ";
@@ -224,7 +191,9 @@ public class GUI implements ActionListener, TableModelListener {
         };
         this.memoryScrollPane.getVerticalScrollBar()
                 .setBlockIncrement(this.memoryTable.getModel().getRowCount() / 512);
-        this.memoryScrollPane.getVerticalScrollBar().setUnitIncrement(1);
+        this.memoryScrollPane.getVerticalScrollBar().setUnitIncrement(30); // Scroll Speed
+        this.memoryScrollPane.getViewport().putClientProperty("EnableWindowBlit", Boolean.TRUE);
+        this.memoryScrollPane.getViewport().setScrollMode(JViewport.BACKINGSTORE_SCROLL_MODE);
         column = this.memoryTable.getColumnModel().getColumn(0);
         column.setMaxWidth(25);
         column.setMinWidth(25);
@@ -236,6 +205,7 @@ public class GUI implements ActionListener, TableModelListener {
         this.commandOutputWindow = new CommandOutputWindow("Command Output");
         WindowListener listener = new WindowListener() {
             public void windowActivated(WindowEvent event) {
+
             }
 
             public void windowClosed(WindowEvent event) {
@@ -243,6 +213,7 @@ public class GUI implements ActionListener, TableModelListener {
 
             public void windowClosing(WindowEvent event) {
                 GUI.this.commandOutputWindow.setVisible(false);
+                PennSim.cfg.write();
             }
 
             public void windowDeactivated(WindowEvent event) {
@@ -340,19 +311,21 @@ public class GUI implements ActionListener, TableModelListener {
         this.devicePanel.setLayout(new GridBagLayout());
 
         GridBagConstraints constraints = new GridBagConstraints();
-        constraints.fill = 10;
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.anchor = GridBagConstraints.NORTH;
         constraints.gridx = 0;
         constraints.gridy = 0;
-        constraints.weightx = 1.0;
-        constraints.weighty = 0.75D;
+        constraints.weightx = 1;
+        constraints.weighty = 1;
         this.devicePanel.add(this.video, constraints);
 
         constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.VERTICAL;
+        constraints.anchor = GridBagConstraints.SOUTH;
         constraints.gridx = 0;
         constraints.gridy = 1;
-        constraints.weightx = 1.0;
-        constraints.weighty = 0.25D;
-        constraints.fill = 0;
+        constraints.weightx = 1;
+        constraints.weighty = 1;
         this.devicePanel.add(this.ioPanel, constraints);
 
         this.devicePanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Devices"),
@@ -368,7 +341,7 @@ public class GUI implements ActionListener, TableModelListener {
         GridBagConstraints constraints = new GridBagConstraints();
 
         // Next Button
-        this.nextButton.setActionCommand(nextButtonCommand);
+//        this.nextButton.setActionCommand(nextButtonCommand);
         this.nextButton.addActionListener(this);
         constraints.weightx = 1.0;
         constraints.gridx = 0;
@@ -377,7 +350,7 @@ public class GUI implements ActionListener, TableModelListener {
         this.controlPanel.add(this.nextButton, constraints);
 
         // Step Button
-        this.stepButton.setActionCommand(stepButtonCommand);
+//        this.stepButton.setActionCommand(stepButtonCommand);
         this.stepButton.addActionListener(this);
         constraints.gridx = 1;
         constraints.gridy = 0;
@@ -385,7 +358,7 @@ public class GUI implements ActionListener, TableModelListener {
         this.controlPanel.add(this.stepButton, constraints);
 
         // Continue Button
-        this.continueButton.setActionCommand(continueButtonCommand);
+//        this.continueButton.setActionCommand(continueButtonCommand);
         this.continueButton.addActionListener(this);
         constraints.gridx = 2;
         constraints.gridy = 0;
@@ -393,7 +366,7 @@ public class GUI implements ActionListener, TableModelListener {
         this.controlPanel.add(this.continueButton, constraints);
 
         // Stop Button
-        this.stopButton.setActionCommand(stopButtonCommand);
+//        this.stopButton.setActionCommand(stopButtonCommand);
         this.stopButton.addActionListener(this);
         constraints.gridx = 3;
         constraints.gridy = 0;
@@ -402,7 +375,7 @@ public class GUI implements ActionListener, TableModelListener {
 
         // Reset Button
         // TODO Have a dialog pop up confirming the action
-        this.resetButton.setActionCommand(resetButtonCommand);
+//        this.resetButton.setActionCommand(resetButtonCommand);
         this.resetButton.addActionListener(this);
         constraints.gridx = 4;
         constraints.gridy = 0;
@@ -513,8 +486,8 @@ public class GUI implements ActionListener, TableModelListener {
         JComponent simTab = setUpSimTab();
         JComponent editorTab = setUpEditorTab();
 
-        tabPane.addTab("Editor", null, editorTab, "Editor Tab");
         tabPane.addTab("Simulator", null, simTab, "Simulation Tab");
+        tabPane.addTab("Editor", null, editorTab, "Editor Tab");
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.BOTH;
@@ -523,7 +496,7 @@ public class GUI implements ActionListener, TableModelListener {
         this.frame.getContentPane().add(tabPane, constraints);
         this.frame.setJMenuBar(this.menuBar);
 
-        setLookAndFeel("Metal");
+        setLookAndFeel("system");
         this.frame.setSize(new Dimension(700, 750));
         this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.frame.pack();
@@ -576,15 +549,15 @@ public class GUI implements ActionListener, TableModelListener {
         toolBar.setMargin(new Insets(4, 4, 4, 4));
         toolBar.setMinimumSize(new Dimension(800, 24));
 
-        newFileButton.setActionCommand(newFileButtonCommand);
+//        newFileButton.setActionCommand(newFileButtonCommand);
         newFileButton.addActionListener(this);
         toolBar.add(newFileButton);
 
-        openFileButton.setActionCommand(openFileButtonCommand);
+//        openFileButton.setActionCommand(openFileButtonCommand);
         openFileButton.addActionListener(this);
         toolBar.add(openFileButton);
 
-        saveFileButton.setActionCommand(saveFileButtonCommand);
+//        saveFileButton.setActionCommand(saveFileButtonCommand);
         saveFileButton.addActionListener(this);
         toolBar.add(saveFileButton);
 
@@ -643,24 +616,24 @@ public class GUI implements ActionListener, TableModelListener {
 
     private void setUpMenuBar() {
         // File Menu
-        this.openItem.setActionCommand(openActionCommand);
+//        this.openItem.setActionCommand(openActionCommand);
         this.openItem.addActionListener(this);
         this.fileMenu.add(this.openItem);
-        this.commandOutputWinItem.setActionCommand(openCOWActionCommand);
+//        this.commandOutputWinItem.setActionCommand(openCOWActionCommand);
         this.commandOutputWinItem.addActionListener(this);
         this.fileMenu.addSeparator();
-        this.quitItem.setActionCommand(quitActionCommand);
+//        this.quitItem.setActionCommand(quitActionCommand);
         this.quitItem.addActionListener(this);
         this.fileMenu.add(this.quitItem);
 
         // Theme Menu
-        this.lightItem.setActionCommand(lightActionCommand);
+//        this.lightItem.setActionCommand(lightActionCommand);
         this.lightItem.addActionListener(this);
-        this.darkItem.setActionCommand(darkActionCommand);
+//        this.darkItem.setActionCommand(darkActionCommand);
         this.darkItem.addActionListener(this);
-        this.metalItem.setActionCommand(metalActionCommand);
+//        this.metalItem.setActionCommand(metalActionCommand);
         this.metalItem.addActionListener(this);
-        this.systemItem.setActionCommand(metalActionCommand);
+//        this.systemItem.setActionCommand(metalActionCommand);
         this.systemItem.addActionListener(this);
 
         ButtonGroup group = new ButtonGroup();
@@ -746,6 +719,7 @@ public class GUI implements ActionListener, TableModelListener {
                     this.machine.executeMany();
                 }else if (event.getSource() == stopButton) {
                     Console.println(this.machine.stopExecution(true));
+//                } else if (event.getSource() == resetButton) {
                 } else if (event.getSource() == resetButton) {
                     resetDialog();
                 }
@@ -759,7 +733,7 @@ public class GUI implements ActionListener, TableModelListener {
                 }
 
                 // MenuBar items
-                else if (openActionCommand.equals(event.getActionCommand())) {
+                else if (event.getSource() == openItem) {
                     index = this.fileChooser.showOpenDialog(this.frame);
                     if (index == 0) {
                         File file = this.fileChooser.getSelectedFile();
@@ -767,25 +741,25 @@ public class GUI implements ActionListener, TableModelListener {
                     } else {
                         Console.println("Open command cancelled by user.");
                     }
-                } else if (openCOWActionCommand.equals(event.getActionCommand())) {
+                } else if (event.getSource() == commandOutputWinItem) {
                     this.commandOutputWindow.setVisible(true);
-                }else if (quitActionCommand.equals(event.getActionCommand())) {
+                }else if (event.getSource() == quitItem) {
                     this.confirmExit();
-                } else if (lightActionCommand.equals(event.getActionCommand())) {
+                } else if (event.getSource() == lightItem) {
                     setLookAndFeel("Light");
-                } else if (darkActionCommand.equals(event.getActionCommand())) {
+                } else if (event.getSource() == darkItem) {
                     setLookAndFeel("Dark");
-                } else if (metalActionCommand.equals(event.getActionCommand())) {
+                } else if (event.getSource() == metalItem) {
                     setLookAndFeel("Metal");
-                } else if (systemActionCommand.equals(event.getActionCommand())) {
+                } else if (event.getSource() == systemItem) {
                     setLookAndFeel("System");
-                } else if (versionActionCommand.equals(event.getActionCommand())) {
+                } else if (event.getSource() == versionItem) {
                     JOptionPane.showMessageDialog(this.frame, PennSim.getVersion(),
                             "Version", JOptionPane.INFORMATION_MESSAGE);
                 }
             }
-        } catch (GenericException e) {
-            e.showMessageDialog(this.frame);
+        } catch (GenericException ge) {
+            ge.showMessageDialog(this.frame);
         }
 
     }
