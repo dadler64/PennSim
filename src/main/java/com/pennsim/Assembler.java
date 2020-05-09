@@ -2,6 +2,7 @@ package com.pennsim;
 
 import com.pennsim.exception.AsException;
 import com.pennsim.gui.Console;
+import com.pennsim.gui.EditorTab;
 import com.pennsim.isa.ISA;
 import com.pennsim.isa.Instruction;
 import com.pennsim.isa.InstructionDefinition;
@@ -13,12 +14,13 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 
-class Assembler {
+public class Assembler {
 
-    String as(String[] asArgs) throws AsException {
+    public String assembleFile(String[] asArgs) throws AsException {
         String arg = null;
         SymbolTable symTab = new SymbolTable();
 
@@ -32,7 +34,7 @@ class Assembler {
 
         if (arg != null) {
             String filename = this.baseFilename(arg);
-            List<Instruction> instructions = this.parse(filename);
+            List<Instruction> instructions = this.parseFile(filename);
             instructions = this.passZero(instructions);
             this.passOne(symTab, instructions);
             this.passTwo(symTab, instructions, filename);
@@ -43,6 +45,20 @@ class Assembler {
         }
     }
 
+    public String assembleTab(EditorTab tab, boolean warnFlag) throws AsException {
+        SymbolTable symTab = new SymbolTable();
+
+        ArrayList<String> lines = new ArrayList<>(Arrays.asList(tab.getText().split("\n")));
+
+        String filename = tab.getFilename();
+        List<Instruction> instructions = this.parseTab(lines);
+        instructions = this.passZero(instructions);
+        this.passOne(symTab, instructions);
+        this.passTwo(symTab, instructions, filename);
+        this.generateSymbolFile(symTab, instructions, filename);
+        return "";
+    }
+
     private String baseFilename(String filename) throws AsException {
         if (!filename.endsWith(".asm")) {
             throw new AsException("Input file must have .asm suffix ('" + filename + "')");
@@ -51,7 +67,13 @@ class Assembler {
         }
     }
 
-    private List<Instruction> parse(String baseFilename) throws AsException {
+    /**
+     * Get the instructions from the
+     * @param baseFilename
+     * @return
+     * @throws AsException
+     */
+    private List<Instruction> parseFile(String baseFilename) throws AsException {
         String asmFilename = baseFilename + ".asm";
         ArrayList<Instruction> instructions = new ArrayList<>();
         int lineNumber = 1;
@@ -78,6 +100,33 @@ class Assembler {
         }
     }
 
+    /**
+     *
+     * @return
+     * @throws AsException
+     */
+    private List<Instruction> parseTab(List<String> lines) throws AsException {
+        ArrayList<Instruction> instructions = new ArrayList<>();
+        int lineNumber = 1;
+        Instruction instruction = null;
+
+        for (String line: lines) {
+            instruction = new Instruction(line, lineNumber++);
+
+            if (instruction.getOpcode() != null && instruction.getLabel() != null) {
+                instructions.add(instruction);
+            }
+        }
+
+        return instructions;
+    }
+
+    /**
+     *
+     * @param instructions
+     * @return
+     * @throws AsException
+     */
     private List<Instruction> passZero(List<Instruction> instructions) throws AsException {
         ArrayList<Instruction> newList = new ArrayList<>();
 
@@ -88,6 +137,12 @@ class Assembler {
         return newList;
     }
 
+    /**
+     *
+     * @param symbolTable
+     * @param instructions
+     * @throws AsException
+     */
     private void passOne(SymbolTable symbolTable, List<Instruction> instructions) throws AsException {
         int address = -1;
 
@@ -117,6 +172,13 @@ class Assembler {
 
     }
 
+    /**
+     *
+     * @param symbolTable
+     * @param Instructions
+     * @param baseFilename
+     * @throws AsException
+     */
     private void passTwo(SymbolTable symbolTable, List<Instruction> Instructions, String baseFilename) throws AsException {
         ArrayList<Word> words = new ArrayList<>();
 
@@ -194,4 +256,5 @@ class Assembler {
         String formattedAddress = "0000" + Integer.toHexString(address).toUpperCase();
         return formattedAddress.substring(formattedAddress.length() - 4);
     }
+
 }
