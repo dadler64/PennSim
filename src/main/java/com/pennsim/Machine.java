@@ -456,4 +456,12 @@ public class Machine implements Runnable {
         }
 
     }
+
+    public EditorTab getSelectedTab() {
+        if (this.gui != null) {
+            return this.gui.getSelectedTab();
+        } else {
+            return null;
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package com.pennsim;
 
+import com.pennsim.command.CommandLine;
 import com.pennsim.exception.GenericException;
 import com.pennsim.gui.GUI;
 import com.pennsim.util.ErrorLog;
@@ -9,8 +10,7 @@ import java.io.InputStreamReader;
 import javax.swing.SwingUtilities;
 
 public class PennSim {
-
-    public static final String VERSION = "1.4.0";
+    public static final String VERSION = "2.0.0 beta";
     public static boolean GRAPHICAL_MODE = true;
     private static boolean PIPELINE_MODE = false;
     private static boolean LC3 = true;

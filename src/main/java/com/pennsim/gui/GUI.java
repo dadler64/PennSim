@@ -1,11 +1,12 @@
 package com.pennsim.gui;
 
-import com.pennsim.CommandLine;
+import com.pennsim.command.CommandLine;
 import com.pennsim.Machine;
 import com.pennsim.Memory;
 import com.pennsim.PennSim;
 import com.pennsim.RegisterFile;
 import com.pennsim.exception.GenericException;
+import com.pennsim.exception.PennSimException;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -15,11 +16,8 @@ import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
-import org.fife.ui.rtextarea.RTextScrollPane;
 
-public class GUI implements ActionListener, TableModelListener {
+public class GUI implements TableModelListener {
 
     static final Color BREAK_POINT_COLOR = new Color(241, 103, 103);
     private static final Color PC_COLOR = Color.YELLOW;
@@ -28,40 +26,28 @@ public class GUI implements ActionListener, TableModelListener {
     private final JMenuBar menuBar;
     private final JMenu fileMenu;
     private final JMenu themeMenu;
+    private final JMenu optionsMenu;
     private final JMenu aboutMenu;
-    private final JMenuItem openItem;
+    private final JMenuItem openFileItem;
+    private final JMenuItem saveFileItem;
+    private final JMenuItem newFileItem;
     private final JMenuItem quitItem;
     private final JMenuItem commandOutputWinItem;
-    private final JMenuItem versionItem;
-//    private final String openActionCommand;
-//    private final String openCOWActionCommand;
-//    private final String quitActionCommand;
     private final JMenuItem lightItem;
-//    private final String lightActionCommand;
     private final JMenuItem darkItem;
-//    private final String darkActionCommand;
     private final JMenuItem metalItem;
-//    private final String metalActionCommand;
     private final JMenuItem systemItem;
-//    private final String systemActionCommand;
-//    private final String versionActionCommand;
+    private final JMenuItem scrollLayoutItem;
+    private final JMenuItem versionItem;
     private final JPanel controlPanel;
     private final JButton nextButton;
-//    private final String nextButtonCommand;
     private final JButton stepButton;
-//    private final String stepButtonCommand;
     private final JButton continueButton;
-//    private final String continueButtonCommand;
     private final JButton stopButton;
-//    private final String stopButtonCommand;
     private final JButton resetButton;
-//    private final String resetButtonCommand;
     private final JButton newFileButton;
-//    private final String newFileButtonCommand;
     private final JButton openFileButton;
-//    private final String openFileButtonCommand;
     private final JButton saveFileButton;
-//    private final String saveFileButtonCommand;
     private final String statusLabelRunning;
     private final String statusLabelSuspended;
     private final String statusLabelHalted;
@@ -81,6 +67,10 @@ public class GUI implements ActionListener, TableModelListener {
     private final JPanel registerPanel;
     private final TextConsolePanel ioPanel;
     private final VideoConsole video;
+    private final EditorPanel editorPanel;
+    private final LeftTabbedPanel leftTabbedPanel;
+    private final JPanel mainPanel;
+    private final JPanel terminalPanel;
 
     public GUI(final Machine machine, CommandLine commandLine) {
         this.frame = new JFrame("PennSim - " + PennSim.VERSION + " - " + PennSim.getISA());
@@ -88,40 +78,28 @@ public class GUI implements ActionListener, TableModelListener {
         this.menuBar = new JMenuBar();
         this.fileMenu = new JMenu("File");
         this.themeMenu = new JMenu("Theme");
+        this.optionsMenu = new JMenu("Options");
         this.aboutMenu = new JMenu("About");
-        this.openItem = new JMenuItem("Open .obj File");
-//        this.openActionCommand = "Open";
+        this.newFileItem = new JMenuItem("New File");
+        this.openFileItem = new JMenuItem("Open File");
+        this.saveFileItem = new JMenuItem("Save File");
         this.commandOutputWinItem = new JMenuItem("Output Window");
-//        this.openCOWActionCommand = "OutputWindow";
         this.quitItem = new JMenuItem("Quit");
-//        this.quitActionCommand = "Quit";
         this.lightItem = new JRadioButtonMenuItem("Light");
-//        this.lightActionCommand = "light";
         this.darkItem = new JRadioButtonMenuItem("Dark");
-//        this.darkActionCommand = "Dark";
         this.metalItem = new JRadioButtonMenuItem("Metal");
-//        this.metalActionCommand = "Motif";
         this.systemItem = new JRadioButtonMenuItem("System");
-//        this.systemActionCommand = "System";
+        this.scrollLayoutItem = new JCheckBoxMenuItem("Set ScrollLayout");
         this.versionItem = new JMenuItem("Simulator Version");
-//        this.versionActionCommand = "Version";
         this.controlPanel = new JPanel();
         this.nextButton = new JButton("Next");
-//        this.nextButtonCommand = "Next";
         this.stepButton = new JButton("Step");
-//        this.stepButtonCommand = "Step";
         this.continueButton = new JButton("Continue");
-//        this.continueButtonCommand = "Continue";
         this.stopButton = new JButton("Stop");
-//        this.stopButtonCommand = "Stop";
         this.resetButton = new JButton("Reset");
-//        this.resetButtonCommand = "Reset";
         this.newFileButton = new JButton("New");
-//        this.newFileButtonCommand = "New";
         this.openFileButton = new JButton("Open");
-//        this.openFileButtonCommand = "Open";
         this.saveFileButton = new JButton("Save");
-//        this.saveFileButtonCommand = "Save";
         this.statusLabelRunning = "    Running ";
         this.statusLabelSuspended = "Suspended ";
         this.statusLabelHalted = "       Halted ";
@@ -132,31 +110,33 @@ public class GUI implements ActionListener, TableModelListener {
         this.memoryPanel = new JPanel(new BorderLayout());
         this.devicePanel = new JPanel();
         this.registerPanel = new JPanel();
+        this.terminalPanel = new JPanel();
+        this.leftTabbedPanel = new LeftTabbedPanel();
         this.machine = machine;
 
         // Register pane init
         RegisterFile registerFile = machine.getRegisterFile();
-        this.registerTable = new JTable(registerFile);
-        TableColumn column = this.registerTable.getColumnModel().getColumn(0);
+        registerTable = new JTable(registerFile);
+        TableColumn column = registerTable.getColumnModel().getColumn(0);
         column.setMaxWidth(35);
         column.setMinWidth(35);
-        column = this.registerTable.getColumnModel().getColumn(2);
+        column = registerTable.getColumnModel().getColumn(2);
         column.setMaxWidth(35);
         column.setMinWidth(35);
         Memory memory = machine.getMemory();
-        this.memoryTable = new JTable(memory) {
+        memoryTable = new JTable(memory) {
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component component = super.prepareRenderer(renderer, row, column);
                 if (column == 0) {
                     JCheckBox checkBox = new JCheckBox();
                     if (row < 65024) {
-                        if (GUI.this.machine.getMemory().isBreakPointSet(row)) {
+                        if (machine.getMemory().isBreakPointSet(row)) {
                             checkBox.setSelected(true);
                             checkBox.setBackground(GUI.BREAK_POINT_COLOR);
                             checkBox.setForeground(GUI.BREAK_POINT_COLOR);
                         } else {
                             checkBox.setSelected(false);
-                            checkBox.setBackground(this.getBackground());
+                            checkBox.setBackground(getBackground());
                         }
                     } else {
                         checkBox.setEnabled(false);
@@ -165,12 +145,12 @@ public class GUI implements ActionListener, TableModelListener {
 
                     return checkBox;
                 } else {
-                    if (row == GUI.this.machine.getRegisterFile().getPC()) {
+                    if (row == machine.getRegisterFile().getPC()) {
                         component.setBackground(GUI.PC_COLOR);
-                    } else if (GUI.this.machine.getMemory().isBreakPointSet(row)) {
+                    } else if (machine.getMemory().isBreakPointSet(row)) {
                         component.setBackground(GUI.BREAK_POINT_COLOR);
                     } else {
-                        component.setBackground(this.getBackground());
+                        component.setBackground(getBackground());
                     }
 
                     return component;
@@ -184,25 +164,24 @@ public class GUI implements ActionListener, TableModelListener {
 
             }
         };
-        this.memoryScrollPane = new JScrollPane(this.memoryTable) {
+        memoryScrollPane = new JScrollPane(memoryTable) {
             public JScrollBar createVerticalScrollBar() {
                 return new HighlightScrollBar(machine);
             }
         };
-        this.memoryScrollPane.getVerticalScrollBar()
-                .setBlockIncrement(this.memoryTable.getModel().getRowCount() / 512);
-        this.memoryScrollPane.getVerticalScrollBar().setUnitIncrement(30); // Scroll Speed
-        this.memoryScrollPane.getViewport().putClientProperty("EnableWindowBlit", Boolean.TRUE);
-        this.memoryScrollPane.getViewport().setScrollMode(JViewport.BACKINGSTORE_SCROLL_MODE);
-        column = this.memoryTable.getColumnModel().getColumn(0);
+        memoryScrollPane.getVerticalScrollBar().setBlockIncrement(memoryTable.getModel().getRowCount() / 512);
+        memoryScrollPane.getVerticalScrollBar().setUnitIncrement(30); // Scroll Speed
+        memoryScrollPane.getViewport().putClientProperty("EnableWindowBlit", Boolean.TRUE);
+        memoryScrollPane.getViewport().setScrollMode(JViewport.BACKINGSTORE_SCROLL_MODE);
+        column = memoryTable.getColumnModel().getColumn(0);
         column.setMaxWidth(25);
         column.setMinWidth(25);
         column.setCellEditor(new DefaultCellEditor(new JCheckBox()));
-        column = this.memoryTable.getColumnModel().getColumn(2);
+        column = memoryTable.getColumnModel().getColumn(2);
         column.setMinWidth(60);
         column.setMaxWidth(60);
-        this.commandPanel = new CommandLinePanel(machine, commandLine);
-        this.commandOutputWindow = new CommandOutputWindow("Command Output");
+        commandPanel = new CommandLinePanel(machine, commandLine);
+        commandOutputWindow = new CommandOutputWindow("Command Output");
         WindowListener listener = new WindowListener() {
             public void windowActivated(WindowEvent event) {
 
@@ -212,8 +191,7 @@ public class GUI implements ActionListener, TableModelListener {
             }
 
             public void windowClosing(WindowEvent event) {
-                GUI.this.commandOutputWindow.setVisible(false);
-                PennSim.cfg.write();
+                commandOutputWindow.setVisible(false);
             }
 
             public void windowDeactivated(WindowEvent event) {
@@ -228,14 +206,16 @@ public class GUI implements ActionListener, TableModelListener {
             public void windowOpened(WindowEvent event) {
             }
         };
-        this.commandOutputWindow.addWindowListener(listener);
-        this.commandOutputWindow.setSize(700, 600);
-        Console.registerConsole(this.commandPanel);
-        Console.registerConsole(this.commandOutputWindow);
-        this.ioPanel = new TextConsolePanel(machine.getMemory().getKeyBoardDevice(), machine.getMemory().getMonitor());
-        this.ioPanel.setMinimumSize(new Dimension(256, 85));
-        this.video = new VideoConsole(machine);
-        this.commandPanel.setGUI(this);
+        commandOutputWindow.addWindowListener(listener);
+        commandOutputWindow.setSize(700, 600);
+        Console.registerConsole(commandPanel);
+        Console.registerConsole(commandOutputWindow);
+        ioPanel = new TextConsolePanel(machine.getMemory().getKeyBoardDevice(), machine.getMemory().getMonitor());
+        ioPanel.setMinimumSize(new Dimension(256, 85));
+        video = new VideoConsole(machine);
+        commandPanel.setGUI(this);
+        editorPanel = new EditorPanel();
+        mainPanel = new JPanel();
     }
 
     /**
@@ -291,299 +271,335 @@ public class GUI implements ActionListener, TableModelListener {
     }
 
     /**
-     * Set up the Memory Panel
+     * Set up the overall GUI
      */
-    private void setupMemoryPanel() {
-        this.memoryPanel.add(this.memoryScrollPane, "Center");
-        this.memoryPanel.setMinimumSize(new Dimension(400, 100));
-        this.memoryPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Memory"),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-        this.memoryTable.getModel().addTableModelListener(this);
-        this.memoryTable.getModel().addTableModelListener(this.video);
-        this.memoryTable.getModel().addTableModelListener((HighlightScrollBar) this.memoryScrollPane.getVerticalScrollBar());
-        this.memoryTable.setPreferredScrollableViewportSize(new Dimension(400, 460));
-    }
+    public void setUpGUI() {
+        JFrame.setDefaultLookAndFeelDecorated(true);
 
-    /**
-     * Set up the Device Panel
-     */
-    private void setupDevicePanel() {
-        this.devicePanel.setLayout(new GridBagLayout());
+        setUpMenuBar();
+        setupControlPanel();
+        setupRegisterPanel();
+        setupDevicePanel();
+        setUpEditorPanel();
+        setupMemoryPanel();
+        setupTerminalPanel();
+
+        setUpMainPanel();
+
+        machine.setStoppedListener(commandPanel);
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        fileChooser.addChoosableFileFilter(new FileFilter() {
+            public boolean accept(File file) {
+                if (file.isDirectory()) {
+                    return true;
+                } else {
+                    String name = file.getName();
+                    return name.toLowerCase().endsWith(".obj");
+                }
+            }
+
+            public String getDescription() {
+                return "Object Files (*.obj)";
+            }
+        });
+        fileChooser.addChoosableFileFilter(new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                if (file.isDirectory()) {
+                    return true;
+                } else {
+                    String name = file.getName();
+                    return name.toLowerCase().endsWith(".asm");
+                }
+            }
+
+            @Override
+            public String getDescription() {
+                return "Assembly Files (*.asm)";
+            }
+        });
+        fileChooser.addChoosableFileFilter(new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                if (file.isDirectory()) {
+                    return true;
+                } else {
+                    String name = file.getName();
+                    return name.toLowerCase().endsWith(".txt");
+                }
+            }
+
+            @Override
+            public String getDescription() {
+                return "Text Files (*.txt)";
+            }
+        });
+        frame.setJMenuBar(menuBar);
+        registerTable.getModel().addTableModelListener(this);
+        frame.getContentPane().setLayout(new GridBagLayout());
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.BOTH;
-        constraints.anchor = GridBagConstraints.NORTH;
         constraints.gridx = 0;
         constraints.gridy = 0;
         constraints.weightx = 1;
         constraints.weighty = 1;
-        this.devicePanel.add(this.video, constraints);
+        frame.getContentPane().add(mainPanel, constraints);
 
-        constraints = new GridBagConstraints();
-        constraints.fill = GridBagConstraints.VERTICAL;
-        constraints.anchor = GridBagConstraints.SOUTH;
-        constraints.gridx = 0;
-        constraints.gridy = 1;
-        constraints.weightx = 1;
-        constraints.weighty = 1;
-        this.devicePanel.add(this.ioPanel, constraints);
+        setLookAndFeel("Metal");
+        frame.setPreferredSize(new Dimension(1050, 750));
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setVisible(true);
+        scrollToPC();
+        commandPanel.actionPerformed(null);
+    }
 
-        this.devicePanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Devices"),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-        this.devicePanel.setVisible(true);
+    private void setUpMainPanel() {
+        mainPanel.setLayout(new BorderLayout());
+
+        mainPanel.add(controlPanel, BorderLayout.PAGE_START);
+        mainPanel.add(registerPanel, BorderLayout.LINE_START);
+        mainPanel.add(devicePanel, BorderLayout.LINE_START);
+        mainPanel.add(editorPanel, BorderLayout.CENTER);
+        mainPanel.add(memoryPanel, BorderLayout.LINE_END);
+        mainPanel.add(terminalPanel, BorderLayout.PAGE_END);
+    }
+
+    private void setUpMenuBar() {
+        // File Menu
+        newFileItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK));
+        openFileItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
+        saveFileItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK));
+        quitItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.META_DOWN_MASK));
+
+        newFileItem.addActionListener(e -> editorPanel.addFileTab());
+        openFileItem.addActionListener(e -> openFile());
+        saveFileItem.addActionListener(e -> {
+            try {
+                saveFile();
+            } catch (PennSimException pennSimException) {
+                pennSimException.showMessageDialog(getFrame());
+            }
+        });
+        commandOutputWinItem.addActionListener( e -> commandOutputWindow.setVisible(true));
+        quitItem.addActionListener(e -> confirmExit());
+
+        fileMenu.add(newFileItem);
+        fileMenu.add(openFileItem);
+        fileMenu.add(saveFileItem);
+        fileMenu.addSeparator();
+        fileMenu.add(commandOutputWinItem);
+        fileMenu.addSeparator();
+        fileMenu.add(quitItem);
+
+        // Theme Menu
+        lightItem.addActionListener(e -> setLookAndFeel("Light"));
+        darkItem.addActionListener(e -> setLookAndFeel("Dark"));
+        metalItem.addActionListener(e -> setLookAndFeel("Metal"));
+        systemItem.addActionListener(e -> setLookAndFeel("System"));
+
+        ButtonGroup group = new ButtonGroup();
+        group.add(lightItem);
+        group.add(darkItem);
+        group.add(metalItem);
+        group.add(systemItem);
+
+        themeMenu.add(lightItem);
+        themeMenu.add(darkItem);
+        themeMenu.add(metalItem);
+        themeMenu.add(systemItem);
+
+        // Option Menu
+        scrollLayoutItem.addActionListener(e -> {
+            if (editorPanel.getTabLayoutPolicy() == JTabbedPane.WRAP_TAB_LAYOUT) {
+                editorPanel.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+            } else {
+                editorPanel.setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
+            }
+        });
+        optionsMenu.add(scrollLayoutItem);
+
+        // Version Menu
+        versionItem.setActionCommand("Version");
+        versionItem.addActionListener(e ->
+                JOptionPane.showMessageDialog(frame, PennSim.getVersion(), "Version", JOptionPane.INFORMATION_MESSAGE)
+        );
+        aboutMenu.add(versionItem);
+
+        //Menu Bar
+        menuBar.add(fileMenu);
+        menuBar.add(themeMenu);
+        menuBar.add(optionsMenu);
+        menuBar.add(aboutMenu);
     }
 
     /**
      * Set up the Console Panel
      */
     private void setupControlPanel() {
-        this.controlPanel.setLayout(new GridBagLayout());
+        controlPanel.setLayout(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
 
-        // Next Button
-//        this.nextButton.setActionCommand(nextButtonCommand);
-        this.nextButton.addActionListener(this);
-        constraints.weightx = 1.0;
+        constraints.fill = GridBagConstraints.BOTH;
         constraints.gridx = 0;
         constraints.gridy = 0;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        this.controlPanel.add(this.nextButton, constraints);
+        constraints.weightx = 0.25;
+        newFileButton.addActionListener(e -> editorPanel.addFileTab());
+        controlPanel.add(newFileButton, constraints);
 
-        // Step Button
-//        this.stepButton.setActionCommand(stepButtonCommand);
-        this.stepButton.addActionListener(this);
+        constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
         constraints.gridx = 1;
         constraints.gridy = 0;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        this.controlPanel.add(this.stepButton, constraints);
+        constraints.weightx = 0.25;
+        openFileButton.addActionListener(e -> openFile());
+        controlPanel.add(openFileButton, constraints);
 
-        // Continue Button
-//        this.continueButton.setActionCommand(continueButtonCommand);
-        this.continueButton.addActionListener(this);
+        constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
         constraints.gridx = 2;
         constraints.gridy = 0;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        this.controlPanel.add(this.continueButton, constraints);
+        constraints.weightx = 0.25;
+        saveFileButton.addActionListener(e -> {
+            try {
+                saveFile();
+            } catch (PennSimException pennSimException) {
+                pennSimException.showMessageDialog(getFrame());
+            }
+        });
+        controlPanel.add(saveFileButton, constraints);
 
-        // Stop Button
-//        this.stopButton.setActionCommand(stopButtonCommand);
-        this.stopButton.addActionListener(this);
+        constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
         constraints.gridx = 3;
         constraints.gridy = 0;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        this.controlPanel.add(this.stopButton, constraints);
+        controlPanel.add(Box.createRigidArea(new Dimension(8, 8)), constraints);
 
-        // Reset Button
-        // TODO Have a dialog pop up confirming the action
-//        this.resetButton.setActionCommand(resetButtonCommand);
-        this.resetButton.addActionListener(this);
+        constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
         constraints.gridx = 4;
         constraints.gridy = 0;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        this.controlPanel.add(this.resetButton, constraints);
+        constraints.weightx = 0.25;
+        nextButton.addActionListener(e -> {
+            try {
+                machine.executeNext();
+            } catch (GenericException genericException) {
+                genericException.showMessageDialog(getFrame());
+            }
+        });
+        controlPanel.add(nextButton, constraints);
+
+        constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.gridx = 5;
+        constraints.gridy = 0;
+        constraints.weightx = 0.25;
+        stepButton.addActionListener(e -> {
+            try {
+                machine.executeStep();
+            } catch (GenericException genericException) {
+                genericException.showMessageDialog(getFrame());
+            }
+        });
+        controlPanel.add(stepButton, constraints);
+
+        constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.gridx = 6;
+        constraints.gridy = 0;
+        constraints.weightx = 0.25;
+        continueButton.addActionListener(e -> {
+            try {
+                machine.executeMany();
+            } catch (GenericException genericException) {
+                genericException.showMessageDialog(getFrame());
+            }
+        });
+        controlPanel.add(continueButton, constraints);
+
+        constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.gridx = 7;
+        constraints.gridy = 0;
+        constraints.weightx = 0.25;
+        stopButton.addActionListener(e -> machine.stopExecution(true));
+        controlPanel.add(stopButton, constraints);
+
+        // TODO Have a dialog pop up confirming the action
+        constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.gridx = 8;
+        constraints.gridy = 0;
+        constraints.weightx = 0.25;
+        resetButton.addActionListener(e -> resetDialog());
+        controlPanel.add(resetButton, constraints);
+
+        constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.gridx = 9;
+        constraints.gridy = 0;
+        constraints.weightx = 1;
+        controlPanel.add(Box.createRigidArea(new Dimension(8, 8)), constraints);
 
         // Status Label
-        constraints.gridx = 5;
+        constraints = new GridBagConstraints();
+        constraints.gridx = 10;
         constraints.gridy = 0;
         constraints.fill = GridBagConstraints.REMAINDER;
         constraints.anchor = GridBagConstraints.LINE_END;
-        this.setStatusLabelSuspended();
-        this.controlPanel.add(this.statusLabel, constraints);
+        setStatusLabelSuspended();
+        controlPanel.add(statusLabel, constraints);
 
-        // Space between buttons and CommandPanel
-        constraints = new GridBagConstraints();
-        constraints.gridx = 0;
-        constraints.gridy = 1;
-        constraints.gridwidth = 6;
-        this.controlPanel.add(Box.createRigidArea(new Dimension(8, 8)), constraints);
-
-        // Command Panel
-        constraints = new GridBagConstraints();
-        constraints.gridx = 0;
-        constraints.gridy = 2;
-        constraints.gridwidth = 6;
-        constraints.gridheight = 1;
-        constraints.ipady = 100;
-        constraints.weightx = 1.0;
-        constraints.weighty = 1.0;
-        constraints.fill = GridBagConstraints.BOTH;
-        this.controlPanel.add(this.commandPanel, constraints);
-
-        this.controlPanel.setMinimumSize(new Dimension(100, 150));
-        this.controlPanel.setPreferredSize(new Dimension(100, 150));
+//        controlPanel.setMinimumSize(new Dimension(700, 50));
+        controlPanel.setPreferredSize(new Dimension(1050, 50));
+        controlPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
 
         // Set up border
-        this.controlPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Controls"),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-        this.controlPanel.setVisible(true);
+        controlPanel.setBorder(
+                BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Controls"),
+                        BorderFactory.createEmptyBorder(5, 5, 5, 5))
+        );
+        controlPanel.setVisible(true);
     }
 
     /**
      * Set up the Register Panel
      */
     private void setupRegisterPanel() {
-        this.registerPanel.setLayout(new GridBagLayout());
-
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.gridx = 0;
-        constraints.gridy = 0;
-        constraints.weightx = 1.0;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        this.registerPanel.add(this.registerTable, constraints);
-
-        // Set up border
-        this.registerPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Registers"),
+//        registerPanel.setLayout(new GridBagLayout());
+//
+//        GridBagConstraints constraints = new GridBagConstraints();
+//        constraints.fill = GridBagConstraints.BOTH;
+//        constraints.gridx = 0;
+//        constraints.gridy = 0;
+//        constraints.gridwidth = 1;
+//        constraints.gridheight = 1;
+//        constraints.weightx = 1;
+//        constraints.weighty = 1;
+//        registerPanel.add(registerTable, constraints);
+        registerPanel.add(registerTable, "Center");
+        registerTable.getModel().addTableModelListener(this);
+        registerPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Registers"),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-        this.registerPanel.setVisible(true);
+        registerPanel.setVisible(true);
     }
 
     /**
-     * Set up the overall GUI
+     * Set up the Device Panel
      */
-    public void setUpGUI() {
-        JFrame.setDefaultLookAndFeelDecorated(true);
-        this.machine.setStoppedListener(this.commandPanel);
-        this.fileChooser.setFileSelectionMode(2);
-        this.fileChooser.addChoosableFileFilter(new FileFilter() {
-            public boolean accept(File file) {
-                if (file.isDirectory()) {
-                    return true;
-                } else {
-                    String name = file.getName();
-                    return name != null && name.toLowerCase().endsWith(".obj");
-                }
-            }
-
-            public String getDescription() {
-                return "*.obj";
-            }
-        });
-        this.openItem.setActionCommand("Open");
-        this.openItem.addActionListener(this);
-        this.fileMenu.add(this.openItem);
-        this.commandOutputWinItem.setActionCommand("OutputWindow");
-        this.commandOutputWinItem.addActionListener(this);
-        this.fileMenu.add(this.commandOutputWinItem);
-        this.fileMenu.addSeparator();
-        this.quitItem.setActionCommand("Quit");
-        this.quitItem.addActionListener(this);
-        this.fileMenu.add(this.quitItem);
-        this.versionItem.setActionCommand("Version");
-        this.versionItem.addActionListener(this);
-        this.aboutMenu.add(this.versionItem);
-        this.menuBar.add(this.fileMenu);
-        this.menuBar.add(this.aboutMenu);
-        this.frame.setJMenuBar(this.menuBar);
-        this.setupControlPanel();
-        this.setupDevicePanel();
-        this.setupMemoryPanel();
-        this.setupRegisterPanel();
-        this.registerTable.getModel().addTableModelListener(this);
-        this.frame.getContentPane().setLayout(new GridBagLayout());
-
-        JTabbedPane tabPane = new JTabbedPane();
-
-        JComponent simTab = setUpSimTab();
-        JComponent editorTab = setUpEditorTab();
-
-        tabPane.addTab("Simulator", null, simTab, "Simulation Tab");
-        tabPane.addTab("Editor", null, editorTab, "Editor Tab");
-
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.fill = GridBagConstraints.BOTH;
-        constraints.weightx = 1;
-        constraints.weighty = 1;
-        this.frame.getContentPane().add(tabPane, constraints);
-        this.frame.setJMenuBar(this.menuBar);
-
-        setLookAndFeel("system");
-        this.frame.setSize(new Dimension(700, 750));
-        this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        this.frame.pack();
-        this.frame.setVisible(true);
-        this.scrollToPC();
-        this.commandPanel.actionPerformed(null);
-    }
-
-    // TODO look into turning this into tabbed files???
-    JComponent setUpEditorTab() {
-        JPanel panel = new JPanel(false);
-        panel.setLayout(new GridBagLayout());
-
-        // Set up button bar
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.gridx = 0;
-        constraints.gridy = 0;
-        constraints.weightx = 1;
-        constraints.weighty = 0;
-
-        JToolBar toolBar = setUpToolBar();
-        panel.add(toolBar, constraints);
-
-        constraints = new GridBagConstraints();
-        constraints.fill = GridBagConstraints.BOTH;
-        constraints.gridx = 0;
-        constraints.gridy = 1;
-        constraints.weightx = 1;
-        constraints.weighty = 1;
-
-        RSyntaxTextArea textArea = new RSyntaxTextArea(20, 60);
-        textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_ASSEMBLER_X86);
-        textArea.setCodeFoldingEnabled(true);
-        RTextScrollPane scrollPane = new RTextScrollPane(textArea);
-        panel.add(scrollPane, constraints);
-
-        // TODO develop syntax highlighting
-        // Set syntax highlighting
-//        AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
-//        atmf.putMapping("text/lc3", "com.pennsim.util.LC3Syntax");
-//        textArea.setSyntaxEditingStyle("text/lc3");
-
-        return panel;
-    }
-
-    private JToolBar setUpToolBar() {
-        JToolBar toolBar = new JToolBar();
-        toolBar.setFloatable(false);
-        toolBar.setMargin(new Insets(4, 4, 4, 4));
-        toolBar.setMinimumSize(new Dimension(800, 24));
-
-//        newFileButton.setActionCommand(newFileButtonCommand);
-        newFileButton.addActionListener(this);
-        toolBar.add(newFileButton);
-
-//        openFileButton.setActionCommand(openFileButtonCommand);
-        openFileButton.addActionListener(this);
-        toolBar.add(openFileButton);
-
-//        saveFileButton.setActionCommand(saveFileButtonCommand);
-        saveFileButton.addActionListener(this);
-        toolBar.add(saveFileButton);
-
-        return toolBar;
-    }
-
-    private JComponent setUpSimTab() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridBagLayout());
-
-        this.setUpMenuBar();
-        this.setupControlPanel();
-        this.setupDevicePanel();
-        this.setupMemoryPanel();
-        this.setupRegisterPanel();
-        this.registerTable.getModel().addTableModelListener(this);
+    private void setupDevicePanel() {
+        devicePanel.setLayout(new GridBagLayout());
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.BOTH;
         constraints.gridx = 0;
         constraints.gridy = 0;
-        constraints.gridwidth = 3;
+        constraints.gridwidth = 1;
         constraints.gridheight = 1;
-        constraints.weightx = 1;
-        constraints.weighty = 0.5;
-        panel.add(this.controlPanel, constraints);
+//        constraints.weightx = 1;
+        constraints.weighty = 1;
+        devicePanel.add(video, constraints);
 
         constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.BOTH;
@@ -591,71 +607,109 @@ public class GUI implements ActionListener, TableModelListener {
         constraints.gridy = 1;
         constraints.gridwidth = 1;
         constraints.gridheight = 1;
-        panel.add(this.registerPanel, constraints);
-
-        constraints = new GridBagConstraints();
-        constraints.fill = GridBagConstraints.BOTH;
-        constraints.gridx = 0;
-        constraints.gridy = 2;
-        constraints.gridwidth = 1;
-        constraints.gridheight = 2;
-        panel.add(this.devicePanel, constraints);
-
-        constraints = new GridBagConstraints();
-        constraints.fill = GridBagConstraints.BOTH;
-        constraints.gridx = 1;
-        constraints.gridy = 1;
-        constraints.gridwidth = 2;
-        constraints.gridheight = 3;
+//        constraints.weightx = 1;
         constraints.weighty = 1;
-        panel.add(this.memoryPanel, constraints);
+        devicePanel.add(ioPanel, constraints);
 
-        return panel;
+        devicePanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Devices"),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        devicePanel.setVisible(true);
     }
 
+    /**
+     *
+     */
+    private void setUpEditorPanel() {
+        editorPanel.setLayout(new GridBagLayout());
 
-    private void setUpMenuBar() {
-        // File Menu
-//        this.openItem.setActionCommand(openActionCommand);
-        this.openItem.addActionListener(this);
-        this.fileMenu.add(this.openItem);
-//        this.commandOutputWinItem.setActionCommand(openCOWActionCommand);
-        this.commandOutputWinItem.addActionListener(this);
-        this.fileMenu.addSeparator();
-//        this.quitItem.setActionCommand(quitActionCommand);
-        this.quitItem.addActionListener(this);
-        this.fileMenu.add(this.quitItem);
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.gridwidth = 1;
+        constraints.gridheight = 1;
 
-        // Theme Menu
-//        this.lightItem.setActionCommand(lightActionCommand);
-        this.lightItem.addActionListener(this);
-//        this.darkItem.setActionCommand(darkActionCommand);
-        this.darkItem.addActionListener(this);
-//        this.metalItem.setActionCommand(metalActionCommand);
-        this.metalItem.addActionListener(this);
-//        this.systemItem.setActionCommand(metalActionCommand);
-        this.systemItem.addActionListener(this);
+        editorPanel.setBorder(
+                BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Editor"),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5))
+        );
+        editorPanel.setMinimumSize(new Dimension(400, 100));
+        editorPanel.setVisible(true);
+//        editorPanel.repaint();
+//        editorPanel.addFileTab();
+    }
 
-        ButtonGroup group = new ButtonGroup();
-        group.add(this.lightItem);
-        group.add(this.darkItem);
-        group.add(this.metalItem);
-        group.add(this.systemItem);
+    /**
+     * Set up the Memory Panel
+     */
+    private void setupMemoryPanel() {
+        memoryPanel.add(memoryScrollPane, "Center");
+        memoryPanel.setMinimumSize(new Dimension(350, 100));
+        memoryPanel.setBorder(
+                BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Memory"),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5))
+        );
+        memoryTable.getModel().addTableModelListener(this);
+        memoryTable.getModel().addTableModelListener(video);
+        memoryTable.getModel().addTableModelListener((HighlightScrollBar) memoryScrollPane.getVerticalScrollBar());
+        memoryTable.setPreferredScrollableViewportSize(new Dimension(350, 460));
+    }
 
-        this.themeMenu.add(lightItem);
-        this.themeMenu.add(darkItem);
-        this.themeMenu.add(metalItem);
-        this.themeMenu.add(systemItem);
+    /**
+     *
+     */
+    private void setupTerminalPanel() {
+        terminalPanel.setLayout(new GridBagLayout());
 
-        // Version Menu
-        this.versionItem.setActionCommand("Version");
-        this.versionItem.addActionListener(this);
-        this.aboutMenu.add(this.versionItem);
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.weightx = 1;
+        constraints.weighty = 1;
+        terminalPanel.add(commandPanel, constraints);
 
-        //Menu Bar
-        this.menuBar.add(this.fileMenu);
-        this.menuBar.add(this.themeMenu);
-        this.menuBar.add(this.aboutMenu);
+        terminalPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Terminal"),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        terminalPanel.setVisible(true);
+    }
+
+    /**
+     *
+     */
+    private void openFile() {
+        int userSelection = fileChooser.showOpenDialog(frame);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            String fileName = file.getName();
+            if (fileName.toLowerCase().endsWith(".obj")) {
+                Console.println(machine.loadObjectFile(file));
+            } else {
+                this.editorPanel.addFileTab(file);
+            }
+        } else if (userSelection == JFileChooser.CANCEL_OPTION) {
+            Console.println("Open command cancelled by user.");
+        } else {
+            Console.println("ERROR: Unknown selection. Could not open file.");
+        }
+    }
+
+    /**
+     *
+     */
+    private void saveFile() throws PennSimException {
+        int userSelection = fileChooser.showSaveDialog(frame);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            if (editorPanel.getSelectedComponent() instanceof EditorTab) {
+                File fileToSave = ((EditorTab) editorPanel.getSelectedComponent()).getFile();
+                Console.println("Save as file: " + fileToSave.getAbsolutePath());
+            } else {
+                throw new PennSimException("Unable to save the selected file.");
+            }
+        } else if (userSelection == JFileChooser.CANCEL_OPTION) {
+            Console.println("Save command cancelled by user.");
+        } else {
+            Console.println("ERROR: Unknown selection. Could not save file.");
+        }
     }
 
     /**
@@ -664,22 +718,21 @@ public class GUI implements ActionListener, TableModelListener {
      * @param row the row to scroll to
      */
     public void scrollToIndex(int row) {
-        this.memoryTable.scrollRectToVisible(this.memoryTable.getCellRect(row, 0, true));
+        memoryTable.scrollRectToVisible(memoryTable.getCellRect(row, 0, true));
     }
 
     /**
      * Scroll the Memory Panel to the row defined by the PC
      */
     public void scrollToPC() {
-        this.scrollToPC(0);
+        scrollToPC(0);
     }
 
     public void scrollToPC(int row) {
-        int address = this.machine.getRegisterFile().getPC() + row;
-        this.memoryTable.scrollRectToVisible(this.memoryTable.getCellRect(address, 0, true));
+        int address = machine.getRegisterFile().getPC() + row;
+        memoryTable.scrollRectToVisible(memoryTable.getCellRect(address, 0, true));
     }
 
-    @Deprecated
     public void tableChanged(TableModelEvent event) { }
 
     /**
@@ -687,81 +740,14 @@ public class GUI implements ActionListener, TableModelListener {
      */
     void confirmExit() {
         Object[] options = new Object[]{"Yes", "No"};
-        int optionDialog = JOptionPane.showOptionDialog(this.frame, "Are you sure you want to quit?",
+        int optionDialog = JOptionPane.showOptionDialog(frame, "Are you sure you want to quit?",
                 "Quit verification", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
         if (optionDialog == 0) {
-            this.machine.cleanup();
-            this.frame.setVisible(false);
-            this.frame.dispose();
+            machine.cleanup();
+            frame.setVisible(false);
+            frame.dispose();
             System.exit(0);
         }
-    }
-
-    /**
-     * Function to handle each event button in the GUI
-     *
-     * @param event the event to be handled
-     */
-    public void actionPerformed(ActionEvent event) {
-        try {
-            int index;
-            try {
-                index = Integer.parseInt(event.getActionCommand());
-                this.scrollToIndex(index);
-            } catch (NumberFormatException nfe) {
-                // TODO Create switch case statements for these
-                // Control Buttons
-                if (event.getSource() == nextButton) {
-                    this.machine.executeNext();
-                } else if (event.getSource() == stepButton) {
-                    this.machine.executeStep();
-                } else if (event.getSource() == continueButton) {
-                    this.machine.executeMany();
-                }else if (event.getSource() == stopButton) {
-                    Console.println(this.machine.stopExecution(true));
-//                } else if (event.getSource() == resetButton) {
-                } else if (event.getSource() == resetButton) {
-                    resetDialog();
-                }
-                // Editor buttons
-                else if (event.getSource() == newFileButton) {
-                    System.out.println("New File");
-                } else if (event.getSource() == openFileButton) {
-                    System.out.println("Open File");
-                } else if (event.getSource() == saveFileButton) {
-                    System.out.println("Save File");
-                }
-
-                // MenuBar items
-                else if (event.getSource() == openItem) {
-                    index = this.fileChooser.showOpenDialog(this.frame);
-                    if (index == 0) {
-                        File file = this.fileChooser.getSelectedFile();
-                        Console.println(this.machine.loadObjectFile(file));
-                    } else {
-                        Console.println("Open command cancelled by user.");
-                    }
-                } else if (event.getSource() == commandOutputWinItem) {
-                    this.commandOutputWindow.setVisible(true);
-                }else if (event.getSource() == quitItem) {
-                    this.confirmExit();
-                } else if (event.getSource() == lightItem) {
-                    setLookAndFeel("Light");
-                } else if (event.getSource() == darkItem) {
-                    setLookAndFeel("Dark");
-                } else if (event.getSource() == metalItem) {
-                    setLookAndFeel("Metal");
-                } else if (event.getSource() == systemItem) {
-                    setLookAndFeel("System");
-                } else if (event.getSource() == versionItem) {
-                    JOptionPane.showMessageDialog(this.frame, PennSim.getVersion(),
-                            "Version", JOptionPane.INFORMATION_MESSAGE);
-                }
-            }
-        } catch (GenericException ge) {
-            ge.showMessageDialog(this.frame);
-        }
-
     }
 
     /**
@@ -779,8 +765,8 @@ public class GUI implements ActionListener, TableModelListener {
                 options,
                 options[0]);
         if (answer == 0) {
-            Console.println(this.machine.stopExecution(true));
-            this.machine.reset();
+            Console.println(machine.stopExecution(true));
+            reset();
             Console.println("System reset");
         }
     }
@@ -791,31 +777,31 @@ public class GUI implements ActionListener, TableModelListener {
      * @return the current JFrame
      */
     public JFrame getFrame() {
-        return this.frame;
+        return frame;
     }
 
     /**
      * Set the status label as "Running"
      */
     public void setStatusLabelRunning() {
-        this.statusLabel.setText(statusLabelRunning);
-        this.statusLabel.setForeground(this.runningColor);
+        statusLabel.setText(statusLabelRunning);
+        statusLabel.setForeground(runningColor);
     }
 
     /**
      * Set the status label as "Suspended"
      */
     public void setStatusLabelSuspended() {
-        this.statusLabel.setText(statusLabelSuspended);
-        this.statusLabel.setForeground(this.suspendedColor);
+        statusLabel.setText(statusLabelSuspended);
+        statusLabel.setForeground(suspendedColor);
     }
 
     /**
      * Set the status label as "Halted"
      */
     public void setStatusLabelHalted() {
-        this.statusLabel.setText(statusLabelHalted);
-        this.statusLabel.setForeground(this.haltedColor);
+        statusLabel.setText(statusLabelHalted);
+        statusLabel.setForeground(haltedColor);
     }
 
     /**
@@ -824,24 +810,32 @@ public class GUI implements ActionListener, TableModelListener {
      */
     public void setStatusLabel(boolean isSuspended) {
         if (isSuspended) {
-            this.setStatusLabelSuspended();
+            setStatusLabelSuspended();
         } else {
-            this.setStatusLabelHalted();
+            setStatusLabelHalted();
         }
 
     }
 
     public void setTextConsoleEnabled(boolean enabled) {
-        this.ioPanel.setEnabled(enabled);
+        ioPanel.setEnabled(enabled);
     }
 
     /**
      * Reset the GUI
      */
     public void reset() {
-        this.setTextConsoleEnabled(true);
-        this.commandPanel.reset();
-        this.video.reset();
-        this.scrollToPC();
+        setTextConsoleEnabled(true);
+        commandPanel.reset();
+        video.reset();
+        scrollToPC();
+    }
+
+    /**
+     * Get the currently selected editor tab as an object.
+     * @return The selected tab.
+     */
+    public EditorTab getSelectedTab() {
+        return (EditorTab) this.editorPanel.getSelectedComponent();
     }
 }

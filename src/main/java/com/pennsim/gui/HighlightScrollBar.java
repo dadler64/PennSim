@@ -18,8 +18,8 @@ public class HighlightScrollBar extends JScrollBar implements TableModelListener
 
     private static final int MARK_HEIGHT = 4;
     private static final int SCROLL_BUTTON_SIZE = 15;
-    private Map<Integer, JButton> highlights = new Hashtable<>();
-    private Machine machine;
+    private final Map<Integer, JButton> highlights = new Hashtable<>();
+    private final Machine machine;
     //    private JButton PCButton;
 
     HighlightScrollBar(Machine machine) {
@@ -35,7 +35,7 @@ public class HighlightScrollBar extends JScrollBar implements TableModelListener
             button = new JButton();
             button.setToolTipText((String) model.getValueAt(firstRow, 1));
             button.setActionCommand(String.valueOf(firstRow));
-            button.addActionListener(this.machine.getGUI());
+            button.addActionListener(e -> this.machine.getGUI());
             button.setSize(this.getWidth() - 5, MARK_HEIGHT);
             button.setForeground(GUI.BREAK_POINT_COLOR);
             button.setBackground(GUI.BREAK_POINT_COLOR);
