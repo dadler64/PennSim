@@ -1,8 +1,16 @@
-package com.pennsim;
+package com.pennsim.command;
 
+import com.pennsim.Assembler;
+import com.pennsim.Machine;
+import com.pennsim.Memory;
+import com.pennsim.PennSim;
+import com.pennsim.RegisterFile;
+import com.pennsim.Word;
 import com.pennsim.exception.AsException;
 import com.pennsim.exception.GenericException;
+import com.pennsim.exception.PennSimException;
 import com.pennsim.gui.Console;
+import com.pennsim.gui.EditorTab;
 import com.pennsim.gui.GUI;
 import com.pennsim.isa.ISA;
 import com.pennsim.util.ErrorLog;
@@ -23,27 +31,27 @@ import java.util.TreeSet;
 
 public class CommandLine {
 
-    static final String PROMPT;
+    public static final String PROMPT;
     private static final String NEWLINE = System.getProperty("line.separator");
 
     static {
         PROMPT = NEWLINE + ">> ";
     }
 
-    private Machine mac;
     private com.pennsim.gui.GUI GUI;
-    private LinkedList<String> commandQueue;
-    private Stack<String> prevHistoryStack;
-    private Stack<String> nextHistoryStack;
-    private Hashtable<String, Command> commands;
-    private TreeSet<Command> commandsSet;
+    private final Machine machine;
+    private final LinkedList<String> commandQueue;
+    private final Stack<String> prevHistoryStack;
+    private final Stack<String> nextHistoryStack;
+    private final Hashtable<String, Command> commands;
+    private final TreeSet<Command> commandsSet;
     private int checksPassed = 0;
     private int checksFailed = 0;
     private int checksPassedCumulative = 0;
     private int checksFailedCumulative = 0;
 
-    CommandLine(Machine machine) {
-        this.mac = machine;
+    public CommandLine(Machine machine) {
+        this.machine = machine;
         this.commands = new Hashtable<>();
         this.setupCommands();
         this.commandsSet = new TreeSet<>((command1, command2) -> {
@@ -66,7 +74,7 @@ public class CommandLine {
      */
     public boolean equals(Command command) {
         String otherCommand = command.getUsage().split("\\s+")[0];
-        String currentCommand = ((Command)this).getUsage().split("\\s+")[0];
+        String currentCommand = ((Command) this).getUsage().split("\\s+")[0];
         return otherCommand.equals(currentCommand);
     }
 
@@ -81,7 +89,6 @@ public class CommandLine {
         } else {
             this.commandQueue.add(command);
         }
-
     }
 
     /**
@@ -96,7 +103,6 @@ public class CommandLine {
             String line = lines.previous();
             this.commandQueue.addFirst(line);
         }
-
     }
 
     /**
@@ -137,7 +143,6 @@ public class CommandLine {
         } else if (!this.prevHistoryStack.peek().equals(command)) {
             this.prevHistoryStack.push(command);
         }
-
     }
 
     /**
@@ -172,20 +177,19 @@ public class CommandLine {
     }
 
     /**
-     * Reset the history stacl
+     * Reset the history stack
      */
     private void resetHistoryStack() {
         while (!this.nextHistoryStack.empty()) {
             this.prevHistoryStack.push(this.nextHistoryStack.pop());
         }
-
     }
 
     /**
      * Set up all the commands for the program
      */
     private void setupCommands() {
-        this.commands.put("help", new CommandLine.Command() {
+        this.commands.put("help", new Command() {
             public String getUsage() {
                 return "h[elp] [command]";
             }
@@ -198,7 +202,7 @@ public class CommandLine {
                 if (argSize > 2) {
                     return this.getUsage();
                 } else if (argSize != 1) {
-                    CommandLine.Command command = CommandLine.this.commands
+                    Command command = CommandLine.this.commands
                             .get(argArray[1].toLowerCase());
                     return command == null ? argArray[1] + ": command not found"
                             : "usage: " + command.getUsage() + "\n   " + command.getHelp();
@@ -209,7 +213,7 @@ public class CommandLine {
                     String var7;
                     for (Iterator<Command> iterator = CommandLine.this.commandsSet.iterator();
                             iterator.hasNext(); result = result + var7 + " usage: " + usage + "\n") {
-                        CommandLine.Command nextCommand = iterator.next();
+                        Command nextCommand = iterator.next();
                         usage = nextCommand.getUsage();
                         var7 = usage.split("\\s+")[0];
                     }
@@ -219,7 +223,7 @@ public class CommandLine {
             }
         });
         this.commands.put("h", this.commands.get("help"));
-        this.commands.put("quit", new CommandLine.Command() {
+        this.commands.put("quit", new Command() {
             public String getUsage() {
                 return "quit";
             }
@@ -234,7 +238,7 @@ public class CommandLine {
         });
         this.commands.put("q", this.commands.get("quit"));
         this.commands.put("exit", this.commands.get("quit"));
-        this.commands.put("next", new CommandLine.Command() {
+        this.commands.put("next", new Command() {
             public String getUsage() {
                 return "n[ext]";
             }
@@ -247,13 +251,13 @@ public class CommandLine {
                 if (argSize != 1) {
                     return this.getUsage();
                 } else {
-                    CommandLine.this.mac.executeNext();
+                    CommandLine.this.machine.executeNext();
                     return "";
                 }
             }
         });
         this.commands.put("n", this.commands.get("next"));
-        this.commands.put("step", new CommandLine.Command() {
+        this.commands.put("step", new Command() {
             public String getUsage() {
                 return "s[tep]";
             }
@@ -263,12 +267,12 @@ public class CommandLine {
             }
 
             public String doCommand(String[] argArray, int argSize) throws GenericException {
-                CommandLine.this.mac.executeStep();
+                CommandLine.this.machine.executeStep();
                 return "";
             }
         });
         this.commands.put("s", this.commands.get("step"));
-        this.commands.put("continue", new CommandLine.Command() {
+        this.commands.put("continue", new Command() {
             public String getUsage() {
                 return "c[ontinue]";
             }
@@ -279,12 +283,12 @@ public class CommandLine {
 
             public String doCommand(String[] argArray, int argSize) throws GenericException {
                 Console.println("use the 'stop' command to interrupt execution");
-                CommandLine.this.mac.executeMany();
+                CommandLine.this.machine.executeMany();
                 return "";
             }
         });
         this.commands.put("c", this.commands.get("continue"));
-        this.commands.put("stop", new CommandLine.Command() {
+        this.commands.put("stop", new Command() {
             public String getUsage() {
                 return "stop";
             }
@@ -294,10 +298,10 @@ public class CommandLine {
             }
 
             public String doCommand(String[] argArray, int argSize) {
-                return CommandLine.this.mac.stopExecution(true);
+                return CommandLine.this.machine.stopExecution(true);
             }
         });
-        this.commands.put("reset", new CommandLine.Command() {
+        this.commands.put("reset", new Command() {
             public String getUsage() {
                 return "reset";
             }
@@ -310,15 +314,15 @@ public class CommandLine {
                 if (argSize != 1) {
                     return this.getUsage();
                 } else {
-                    CommandLine.this.mac.stopExecution(false);
-                    CommandLine.this.mac.reset();
+                    CommandLine.this.machine.stopExecution(false);
+                    CommandLine.this.machine.reset();
                     CommandLine.this.checksPassed = 0;
                     CommandLine.this.checksFailed = 0;
                     return "System reset";
                 }
             }
         });
-        this.commands.put("print", new CommandLine.Command() {
+        this.commands.put("print", new Command() {
             public String getUsage() {
                 return "p[rint]";
             }
@@ -329,11 +333,11 @@ public class CommandLine {
 
             public String doCommand(String[] argArray, int argSize) {
                 return argSize != 1 ? this.getUsage()
-                        : CommandLine.this.mac.getRegisterFile().toString();
+                        : CommandLine.this.machine.getRegisterFile().toString();
             }
         });
         this.commands.put("p", this.commands.get("print"));
-        this.commands.put("input", new CommandLine.Command() {
+        this.commands.put("input", new Command() {
             public String getUsage() {
                 return "input <filename>";
             }
@@ -347,12 +351,12 @@ public class CommandLine {
                     return this.getUsage();
                 } else {
                     File file = new File(argArray[1]);
-                    return file.exists() ? CommandLine.this.mac.setKeyboardInputStream(file)
+                    return file.exists() ? CommandLine.this.machine.setKeyboardInputStream(file)
                             : "Error: file " + argArray[1] + " does not exist.";
                 }
             }
         });
-        this.commands.put("break", new CommandLine.Command() {
+        this.commands.put("break", new Command() {
             public String getUsage() {
                 return "b[reak] [ set | clear ] [ mem_addr | label ]";
             }
@@ -365,16 +369,16 @@ public class CommandLine {
                 if (argSize != 3) {
                     return this.getUsage();
                 } else if (argArray[1].toLowerCase().equals("set")) {
-                    return CommandLine.this.mac.getMemory().setBreakPoint(argArray[2]);
+                    return CommandLine.this.machine.getMemory().setBreakPoint(argArray[2]);
                 } else {
                     return argArray[1].toLowerCase().equalsIgnoreCase("clear")
-                            ? CommandLine.this.mac.getMemory().clearBreakPoint(
+                            ? CommandLine.this.machine.getMemory().clearBreakPoint(
                             argArray[2]) : this.getUsage();
                 }
             }
         });
         this.commands.put("b", this.commands.get("break"));
-        this.commands.put("script", new CommandLine.Command() {
+        this.commands.put("script", new Command() {
             public String getUsage() {
                 return "script <filename>";
             }
@@ -408,7 +412,7 @@ public class CommandLine {
                 }
             }
         });
-        this.commands.put("load", new CommandLine.Command() {
+        this.commands.put("load", new Command() {
             public String getUsage() {
                 return "l[oa]d <filename>";
             }
@@ -419,12 +423,12 @@ public class CommandLine {
 
             public String doCommand(String[] argArray, int argSize) {
                 return argSize != 2 ? this.getUsage()
-                        : CommandLine.this.mac.loadObjectFile(new File(
+                        : CommandLine.this.machine.loadObjectFile(new File(
                                 argArray[1]));
             }
         });
         this.commands.put("ld", this.commands.get("load"));
-        this.commands.put("check", new CommandLine.Command() {
+        this.commands.put("check", new Command() {
             public String getUsage() {
                 return "check [ count | cumulative | reset | PC | reg | PSR | MPR | mem_addr | label | N | Z | P ] [ mem_addr | label ] [ value | label ]";
             }
@@ -478,7 +482,7 @@ public class CommandLine {
                                 CommandLine.this.checksFailedCumulative = 0;
                                 return "check counts reset";
                             default:
-                                RegisterFile registerFile = CommandLine.this.mac.getRegisterFile();
+                                RegisterFile registerFile = CommandLine.this.machine.getRegisterFile();
                                 return (!argArray[1].toLowerCase().equals("n") || !registerFile.getN()) && (
                                         !argArray[1].toLowerCase().equals("z") || !registerFile.getZ()) && (
                                         !argArray[1].toLowerCase().equals("p") || !registerFile.getP())
@@ -490,7 +494,7 @@ public class CommandLine {
                     } else {
                         int value = Word.parseNum(argArray[argSize - 1]);
                         if (value == Integer.MAX_VALUE) {
-                            value = CommandLine.this.mac.lookupSym(argArray[argSize - 1]);
+                            value = CommandLine.this.machine.lookupSym(argArray[argSize - 1]);
                             if (value == Integer.MAX_VALUE) {
                                 return "Bad value or label: " + argArray[argSize - 1];
                             }
@@ -501,7 +505,7 @@ public class CommandLine {
                             return this.check(isRegister, argArray,
                                     CommandLine.this.getRegister(argArray[1]));
                         } else {
-                            int startAddress = CommandLine.this.mac.getAddress(argArray[1]);
+                            int startAddress = CommandLine.this.machine.getAddress(argArray[1]);
                             if (startAddress == Integer.MAX_VALUE) {
                                 return "Bad register, value or label: " + argArray[1];
                             } else if (startAddress >= 0 && startAddress < Memory.MEM_SIZE) {
@@ -509,7 +513,7 @@ public class CommandLine {
                                 if (argSize == 3) {
                                     endAddress = startAddress;
                                 } else {
-                                    endAddress = CommandLine.this.mac.getAddress(argArray[2]);
+                                    endAddress = CommandLine.this.machine.getAddress(argArray[2]);
                                     if (endAddress == Integer.MAX_VALUE) {
                                         return "Bad register, value or label: " + argArray[2];
                                     }
@@ -529,7 +533,7 @@ public class CommandLine {
                                 StringBuilder builder = new StringBuilder();
 
                                 for (int address = startAddress; address <= endAddress; ++address) {
-                                    word = CommandLine.this.mac.getMemory().read(address);
+                                    word = CommandLine.this.machine.getMemory().read(address);
                                     if (word == null) {
                                         return "Bad register, value or label: " + argArray[1];
                                     }
@@ -552,7 +556,7 @@ public class CommandLine {
                 }
             }
         });
-        this.commands.put("dump", new CommandLine.Command() {
+        this.commands.put("dump", new Command() {
             public String getUsage() {
                 return "d[ump] [-check | -coe | -readmemh | -disasm] from_mem_addr to_mem_addr dumpfile";
             }
@@ -580,8 +584,8 @@ public class CommandLine {
                         }
                     }
 
-                    int startAddress = CommandLine.this.mac.getAddress(argArray[argSize - 3]);
-                    int endAddress = CommandLine.this.mac.getAddress(argArray[argSize - 2]);
+                    int startAddress = CommandLine.this.machine.getAddress(argArray[argSize - 3]);
+                    int endAddress = CommandLine.this.machine.getAddress(argArray[argSize - 2]);
                     if (startAddress == Integer.MAX_VALUE) {
                         return "Error: Invalid register, address, or label  ('" + argArray[argSize - 3] + "')";
                     } else if (startAddress >= 0 && startAddress < Memory.MEM_SIZE) {
@@ -614,7 +618,7 @@ public class CommandLine {
                                 }
 
                                 for (int address = startAddress; address <= endAddress; ++address) {
-                                    word = CommandLine.this.mac.getMemory().read(address);
+                                    word = CommandLine.this.machine.getMemory().read(address);
                                     if (word == null) {
                                         return "Bad register, value or label: " + argArray[argSize - 3];
                                     }
@@ -637,7 +641,7 @@ public class CommandLine {
                                             writer.println(word.toHex().substring(1));
                                             break;
                                         case 4:
-                                            writer.println(ISA.disassemble(word, address, CommandLine.this.mac));
+                                            writer.println(ISA.disassemble(word, address, CommandLine.this.machine));
                                             break;
                                         default:
                                             assert false : "Invalid flag to `dump' command: " + argArray[1];
@@ -660,7 +664,7 @@ public class CommandLine {
             }
         });
         this.commands.put("d", this.commands.get("dump"));
-        this.commands.put("trace", new CommandLine.Command() {
+        this.commands.put("trace", new Command() {
             public String getUsage() {
                 return "trace [on <trace-file> | off]";
             }
@@ -674,7 +678,7 @@ public class CommandLine {
                     if (argSize == 3) {
                         if (!argArray[1].equalsIgnoreCase("on")) {
                             return this.getUsage();
-                        } else if (CommandLine.this.mac.isTraceEnabled()) {
+                        } else if (CommandLine.this.machine.isTraceEnabled()) {
                             return "Tracing is already on.";
                         } else {
                             File file = new File(argArray[argSize - 1]);
@@ -691,7 +695,7 @@ public class CommandLine {
                                 return "Error opening file: " + file.getName();
                             }
 
-                            CommandLine.this.mac.setTraceWriter(writer);
+                            CommandLine.this.machine.setTraceWriter(writer);
                             return "Tracing is on.";
                         }
                     } else {
@@ -699,12 +703,12 @@ public class CommandLine {
 
                         if (!argArray[1].equalsIgnoreCase("off")) {
                             return this.getUsage();
-                        } else if (!CommandLine.this.mac.isTraceEnabled()) {
+                        } else if (!CommandLine.this.machine.isTraceEnabled()) {
                             return "Tracing is already off.";
                         } else {
-                            CommandLine.this.mac.getTraceWriter().flush();
-                            CommandLine.this.mac.getTraceWriter().close();
-                            CommandLine.this.mac.disableTrace();
+                            CommandLine.this.machine.getTraceWriter().flush();
+                            CommandLine.this.machine.getTraceWriter().close();
+                            CommandLine.this.machine.disableTrace();
                             return "Tracing is off.";
                         }
                     }
@@ -713,7 +717,7 @@ public class CommandLine {
                 }
             }
         });
-        this.commands.put("counters", new CommandLine.Command() {
+        this.commands.put("counters", new Command() {
             public String getUsage() {
                 return "counters";
             }
@@ -726,20 +730,20 @@ public class CommandLine {
                 if (argSize != 1) {
                     return this.getUsage();
                 } else {
-                    String counts = "Cycle count: " + CommandLine.this.mac.cycleCount
+                    String counts = "Cycle count: " + CommandLine.this.machine.cycleCount
                             + "\n";
                     counts = counts + "Instruction count: "
-                            + CommandLine.this.mac.instructionCount
+                            + CommandLine.this.machine.instructionCount
                             + "\n";
-                    counts = counts + "Load stall count: " + CommandLine.this.mac.loadStallCount
+                    counts = counts + "Load stall count: " + CommandLine.this.machine.loadStallCount
                             + "\n";
-                    counts = counts + "Branch stall count: " + CommandLine.this.mac.branchStallCount
+                    counts = counts + "Branch stall count: " + CommandLine.this.machine.branchStallCount
                             + "\n";
                     return counts;
                 }
             }
         });
-        this.commands.put("set", new CommandLine.Command() {
+        this.commands.put("set", new Command() {
             public String getUsage() {
                 return "set [ PC | reg | PSR | MPR | mem_addr | label ] [ mem_addr | label ] [ value | N | Z | P ]";
             }
@@ -756,7 +760,7 @@ public class CommandLine {
                     } else {
                         int var3 = Word.parseNum(argArray[argSize - 1]);
                         if (var3 == Integer.MAX_VALUE) {
-                            var3 = CommandLine.this.mac.lookupSym(argArray[argSize - 1]);
+                            var3 = CommandLine.this.machine.lookupSym(argArray[argSize - 1]);
                         }
 
                         if (var3 == Integer.MAX_VALUE) {
@@ -769,7 +773,7 @@ public class CommandLine {
                                 }
                             }
 
-                            int var8 = CommandLine.this.mac.getAddress(argArray[1]);
+                            int var8 = CommandLine.this.machine.getAddress(argArray[1]);
                             if (var8 == Integer.MAX_VALUE) {
                                 return "Error: Invalid register, address, or label  ('"
                                         + argArray[1] + "')";
@@ -778,7 +782,7 @@ public class CommandLine {
                                 if (argSize == 3) {
                                     var5 = var8;
                                 } else {
-                                    var5 = CommandLine.this.mac.getAddress(argArray[2]);
+                                    var5 = CommandLine.this.machine.getAddress(argArray[2]);
                                     if (var5 == Integer.MAX_VALUE) {
                                         return "Error: Invalid register, address, or label  ('"
                                                 + argArray[1] + "')";
@@ -795,7 +799,7 @@ public class CommandLine {
                                 }
 
                                 for (int var6 = var8; var6 <= var5; ++var6) {
-                                    CommandLine.this.mac.getMemory().write(var6, var3);
+                                    CommandLine.this.machine.getMemory().write(var6, var3);
                                 }
 
                                 return argSize == 3 ? "Memory location " + Word.toHex(var8)
@@ -814,7 +818,7 @@ public class CommandLine {
                 }
             }
         });
-        this.commands.put("list", new CommandLine.Command() {
+        this.commands.put("list", new Command() {
             public String getUsage() {
                 return "l[ist] [ addr1 | label1 [addr2 | label2] ]";
             }
@@ -828,12 +832,12 @@ public class CommandLine {
                     return this.getUsage();
                 } else if (argSize == 1) {
                     CommandLine.this.scrollToPC();
-                    return Word.toHex(CommandLine.this.mac.getRegisterFile().getPC()) + " : "
-                            + CommandLine.this.mac.getMemory()
-                            .getInstruction(CommandLine.this.mac.getRegisterFile().getPC()).toHex() + " : "
-                            + ISA.disassemble(CommandLine.this.mac.getMemory()
-                                    .getInstruction(CommandLine.this.mac.getRegisterFile().getPC()),
-                            CommandLine.this.mac.getRegisterFile().getPC(), CommandLine.this.mac);
+                    return Word.toHex(CommandLine.this.machine.getRegisterFile().getPC()) + " : "
+                            + CommandLine.this.machine.getMemory()
+                            .getInstruction(CommandLine.this.machine.getRegisterFile().getPC()).toHex() + " : "
+                            + ISA.disassemble(CommandLine.this.machine.getMemory()
+                                    .getInstruction(CommandLine.this.machine.getRegisterFile().getPC()),
+                            CommandLine.this.machine.getRegisterFile().getPC(), CommandLine.this.machine);
                 } else {
                     int var4;
                     if (argSize == 2) {
@@ -841,7 +845,7 @@ public class CommandLine {
                         if (var7 != null) {
                             return argArray[1] + " : " + var7;
                         } else {
-                            var4 = CommandLine.this.mac.getAddress(argArray[1]);
+                            var4 = CommandLine.this.machine.getAddress(argArray[1]);
                             if (var4 == Integer.MAX_VALUE) {
                                 return "Error: Invalid address or label (" + argArray[1] + ")";
                             } else {
@@ -849,15 +853,15 @@ public class CommandLine {
                                     CommandLine.this.GUI.scrollToIndex(var4);
                                 }
 
-                                return Word.toHex(var4) + " : " + CommandLine.this.mac.getMemory()
+                                return Word.toHex(var4) + " : " + CommandLine.this.machine.getMemory()
                                         .read(var4).toHex() + " : " + ISA
-                                        .disassemble(CommandLine.this.mac.getMemory().read(var4),
-                                                var4, CommandLine.this.mac);
+                                        .disassemble(CommandLine.this.machine.getMemory().read(var4),
+                                                var4, CommandLine.this.machine);
                             }
                         }
                     } else {
-                        int var3 = CommandLine.this.mac.getAddress(argArray[1]);
-                        var4 = CommandLine.this.mac.getAddress(argArray[2]);
+                        int var3 = CommandLine.this.machine.getAddress(argArray[1]);
+                        var4 = CommandLine.this.machine.getAddress(argArray[2]);
                         if (var3 == Integer.MAX_VALUE) {
                             return "Error: Invalid address or label (" + argArray[1] + ")";
                         } else if (var4 == Integer.MAX_VALUE) {
@@ -869,10 +873,10 @@ public class CommandLine {
 
                             for (int var6 = var3; var6 <= var4; ++var6) {
                                 var5.append(Word.toHex(var6)).append(" : ")
-                                        .append(CommandLine.this.mac.getMemory().read(var6).toHex())
+                                        .append(CommandLine.this.machine.getMemory().read(var6).toHex())
                                         .append(" : ")
-                                        .append(ISA.disassemble(CommandLine.this.mac.getMemory()
-                                                .read(var6), var6, CommandLine.this.mac));
+                                        .append(ISA.disassemble(CommandLine.this.machine.getMemory()
+                                                .read(var6), var6, CommandLine.this.machine));
                                 if (var6 != var4) {
                                     var5.append("\n");
                                 }
@@ -889,9 +893,9 @@ public class CommandLine {
             }
         });
         this.commands.put("l", this.commands.get("list"));
-        this.commands.put("as", new CommandLine.Command() {
+        this.commands.put("assemble", new Command() {
             public String getUsage() {
-                return "as [-warn] <filename>";
+                return "as[semble] [-warn] <filename>";
             }
 
             public String getHelp() {
@@ -900,8 +904,7 @@ public class CommandLine {
 
             public String doCommand(String[] argArray, int argSize) {
                 if (argSize >= 2 && argSize <= 3) {
-                    // Take all arguments after the "as" or "assemble"
-                    //    command and put them in a new array.
+                    // Take all arguments after the "as" or "assemble" command and put them in a new array.
                     String[] asArgs = new String[argSize - 1];
                     String asArg = "";
                     asArgs[0] = argArray[1];
@@ -916,11 +919,10 @@ public class CommandLine {
                     String asOutput; // Will remain empty if assembly completes successfully without warnings
 
                     try {
-                        asOutput = assembler.as(asArgs);
+                        asOutput = assembler.assembleFile(asArgs);
 
                         if (asOutput.length() != 0) {
-                            return asOutput + "Warnings encountered during assembly "
-                                    + "(but assembly completed w/o errors).";
+                            return asOutput + "Warnings encountered during assembly (but assembly completed w/o errors).";
                         }
                     } catch (AsException e) {
                         return e.getMessage() + "\nErrors encountered during assembly.";
@@ -932,7 +934,8 @@ public class CommandLine {
                 }
             }
         });
-        this.commands.put("clear", new CommandLine.Command() {
+        this.commands.put("as", this.commands.get("assemble"));
+        this.commands.put("clear", new Command() {
             public String getUsage() {
                 return "clear";
             }
@@ -950,20 +953,60 @@ public class CommandLine {
                 }
             }
         });
-        this.commands.put("loadassembly", new CommandLine.Command() {
+        this.commands.put("run", new Command() {
             public String getUsage() {
-                return "l[oa]da[ssembly] [-warn] <filename>";
+                return "run [-warn] [filename]";
             }
 
             public String getHelp() {
-                return "Assembles <filename> showing errors and (optionally) warnings, and then loads the .obj file into memory.";
+                return "Assembles <filename> showing errors and (optionally) warnings, and then loads the .obj file into "
+                        + "memory. First this command will try to run the editor tab with the name inputted. If that does not"
+                        + " exist then the command will search in the directory for the file to run. If no file name is given"
+                        + " the program will attempt to run the program in the selected tab in the editor";
             }
 
             public String doCommand(String[] argArray, int argSize) {
-                return "Error: This command has not been setup.";
+                boolean warnFlag = false;
+
+                for (String arg: argArray) {
+                    if (arg.equalsIgnoreCase("-warn")) {
+                        warnFlag = true;
+                        break;
+                    }
+                }
+
+                if (argSize == 1 || (argSize == 2 && warnFlag)) {
+                    // Just run the selected tab
+                    Assembler assembler = new Assembler();
+                    EditorTab tab = machine.getSelectedTab();
+
+                    if (tab == null || tab.getFile() == null) {
+                        return "No file detected!";
+                    }
+
+                    try {
+                        Console.println("Assembling " + tab.getFilename() + ".asm...");
+                        String asOutput = assembler.assembleTab(tab, warnFlag);
+
+                        if (asOutput.length() != 0) {
+                            Console.println(asOutput +
+                                    "Warnings encountered during assembly (but assembly completed w/o errors).");
+                        }
+                    } catch (AsException e) {
+                        return "Failed to assemble file!";
+                    }
+
+                    int addressValue = Word.parseNum("x3000");
+                    CommandLine.this.setRegister("PC", addressValue);
+
+                    // TODO Resolve issues with loading the assembled file into memory
+                    Console.println("Loading '" + tab.getFilename() + ".obj' into memory.");
+                    return CommandLine.this.machine.loadObjectFile(new File(tab.getFilename() + ".obj"));
+                } else {
+                    return this.getUsage();
+                }
             }
         });
-        this.commands.put("lda", this.commands.get("loadassembly"));
     }
 
     public String runCommand(String input) throws GenericException, NumberFormatException {
@@ -1019,22 +1062,27 @@ public class CommandLine {
         if (PennSim.GRAPHICAL_MODE) {
             this.GUI.scrollToPC();
         }
+    }
 
+    private void scrollToPC(int row) {
+        if (PennSim.GRAPHICAL_MODE) {
+            this.GUI.scrollToPC(row);
+        }
     }
 
     private String setRegister(String register, int value) {
         String output = "Register " + register.toUpperCase() + " updated to value " + Word.toHex(value);
         if (register.equalsIgnoreCase("pc")) {
-            this.mac.getRegisterFile().setPC(value);
+            this.machine.getRegisterFile().setPC(value);
             this.scrollToPC();
         } else if (register.equalsIgnoreCase("psr")) {
-            this.mac.getRegisterFile().setPSR(value);
+            this.machine.getRegisterFile().setPSR(value);
         } else if (register.equalsIgnoreCase("mpr")) {
-            Memory memory = this.mac.getMemory();
+            Memory memory = this.machine.getMemory();
             memory.write(65042, value);
         } else if ((register.startsWith("r") || register.startsWith("R")) && register.length() == 2) {
             int registerValue = Integer.parseInt(register.substring(1, 2));
-            this.mac.getRegisterFile().setRegister(registerValue, value);
+            this.machine.getRegisterFile().setRegister(registerValue, value);
         } else {
             output = null;
         }
@@ -1051,13 +1099,13 @@ public class CommandLine {
     private String setConditionCodes(String conditionCode) {
         String result = null;
         if (conditionCode.equalsIgnoreCase("n")) {
-            this.mac.getRegisterFile().setN();
+            this.machine.getRegisterFile().setN();
             result = "PSR N bit set";
         } else if (conditionCode.equalsIgnoreCase("z")) {
-            this.mac.getRegisterFile().setZ();
+            this.machine.getRegisterFile().setZ();
             result = "PSR Z bit set";
         } else if (conditionCode.equalsIgnoreCase("p")) {
-            this.mac.getRegisterFile().setP();
+            this.machine.getRegisterFile().setP();
             result = "PSR P bit set";
         }
 
@@ -1073,23 +1121,29 @@ public class CommandLine {
     private String getRegister(String register) {
         int registerValue;
         if (register.equalsIgnoreCase("pc")) {
-            registerValue = this.mac.getRegisterFile().getPC();
+            registerValue = this.machine.getRegisterFile().getPC();
         } else if (register.equalsIgnoreCase("psr")) {
-            registerValue = this.mac.getRegisterFile().getPSR();
+            registerValue = this.machine.getRegisterFile().getPSR();
         } else if (register.equalsIgnoreCase("mpr")) {
-            registerValue = this.mac.getRegisterFile().getMPR();
+            registerValue = this.machine.getRegisterFile().getMPR();
         } else {
             if (!register.startsWith("r") && !register.startsWith("R") || register.length() != 2) {
                 return null;
             }
 
             int var3 = Integer.parseInt(register.substring(1, 2));
-            registerValue = this.mac.getRegisterFile().getRegister(var3);
+            registerValue = this.machine.getRegisterFile().getRegister(var3);
         }
 
         return Word.toHex(registerValue);
     }
 
+    /**
+     * See if the value provided exists in the register provided.
+     * @param register Register to look in.
+     * @param value The value to look for.
+     * @return if the value matches what is in the register.
+     */
     private Boolean checkRegister(String register, int value) {
         int num = Word.parseNum(this.getRegister(register));
         if (num == Integer.MAX_VALUE) {
@@ -1100,21 +1154,19 @@ public class CommandLine {
         }
     }
 
+    /**
+     * Reset CommandLine
+     */
     public void reset() {
         this.checksPassed = 0;
         this.checksFailed = 0;
     }
 
+    /**
+     * Set the GUI object.
+     * @param gui The GUI object.
+     */
     public void setGUI(GUI gui) {
         this.GUI = gui;
-    }
-
-    private interface Command {
-
-        String getUsage();
-
-        String getHelp();
-
-        String doCommand(String[] argArray, int argSize) throws GenericException;
     }
 }

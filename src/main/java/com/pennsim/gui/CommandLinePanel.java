@@ -3,7 +3,7 @@ package com.pennsim.gui;
 import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED;
 import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
 
-import com.pennsim.CommandLine;
+import com.pennsim.command.CommandLine;
 import com.pennsim.util.ErrorLog;
 import com.pennsim.exception.GenericException;
 import com.pennsim.Machine;
