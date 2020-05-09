@@ -92,7 +92,7 @@ public class Word {
      * @param value the value to be converted to an Integer
      * @return the converted value as an Integer
      */
-    static int parseNum(String value) {
+    public static int parseNum(String value) {
         int number;
         try {
             if (value.indexOf(120) == 0) {
@@ -151,7 +151,7 @@ public class Word {
      *
      * @return the value of this object to binary
      */
-    String toBinary() {
+    public String toBinary() {
         return toBinary(this.value, true);
     }
 
@@ -188,7 +188,7 @@ public class Word {
      *
      * @param value the value of this object
      */
-    void setValue(int value) {
+    public void setValue(int value) {
         this.value = value & '\uffff';
     }
 
@@ -221,7 +221,7 @@ public class Word {
     /**
      * Get the S-Extention of two values
      */
-    int getSext(int var1, int var2) {
+    public int getSext(int var1, int var2) {
         int var3 = this.value;
         if (var2 > var1) {
             return this.getSext(var2, var1);
@@ -267,7 +267,7 @@ public class Word {
     /**
      * TODO: Study this function
      */
-    void setSignedField(int var1, int var2, int var3) throws AsException {
+    public void setSignedField(int var1, int var2, int var3) throws AsException {
         if (var3 > var2) {
             throw new AsException("Hi and lo bit operands reversed.");
         } else if (var2 <= 15 && var2 >= 0 && var3 <= 15 && var3 >= 0) {
@@ -286,7 +286,7 @@ public class Word {
     /**
      * TODO: Study this function
      */
-    void setUnsignedField(int var1, int var2, int var3) throws AsException {
+    public void setUnsignedField(int var1, int var2, int var3) throws AsException {
         if (var3 > var2) {
             throw new AsException("Hi and lo bit operands reversed.");
         } else if (var2 <= 15 && var2 >= 0 && var3 <= 15 && var3 >= 0) {

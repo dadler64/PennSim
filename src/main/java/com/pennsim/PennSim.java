@@ -22,7 +22,6 @@ public class PennSim {
 
     /**
      * Get if the simulated CPU is pipelined
-     *
      * @return if the CPU is pipelined
      */
     public static boolean isPipelined() {
@@ -34,7 +33,7 @@ public class PennSim {
      *
      * @return whether or not LC3 is being used
      */
-    static boolean isLC3() {
+    public static boolean isLC3() {
         return LC3;
     }
 
@@ -133,7 +132,7 @@ public class PennSim {
             } else {
                 try {
                     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-                    String command = null;
+                    String command;
 
                     while (true) {
                         if (!machine.isContinueMode()) {
@@ -147,9 +146,7 @@ public class PennSim {
                             }
                         }
 
-                        while (commandLine.hasMoreCommands() && (!machine.isContinueMode()
-                                || commandLine
-                                .hasQueuedStop())) {
+                        while (commandLine.hasMoreCommands() && (!machine.isContinueMode() || commandLine.hasQueuedStop())) {
                             String nextCommand = commandLine.getNextCommand();
                             if (str != null && !nextCommand.startsWith("@")) {
                                 str = null;

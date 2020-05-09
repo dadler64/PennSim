@@ -1,5 +1,6 @@
 package com.pennsim.util;
 
+import com.pennsim.PennSim;
 import com.pennsim.isa.ISA;
 import com.pennsim.isa.InstructionDefinition;
 import com.pennsim.isa.P37X;

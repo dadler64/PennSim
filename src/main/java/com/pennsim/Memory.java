@@ -26,13 +26,13 @@ public class Memory extends TableModel {
     private static final int VALUE_COLUMN = 2;
     private static final int INSTRUCTION_COLUMN = 3;
     private final Machine machine;
-    private Word[] memArr = new Word[MEM_SIZE];
-    private String[] colNames = new String[]{"BP", "Address", "Value", "Instruction"};
-    private boolean[] nextBreakPoints = new boolean[MEM_SIZE];
-    private boolean[] breakPoints = new boolean[MEM_SIZE];
-    private KeyboardDevice keyboard = new KeyboardDevice();
-    private MonitorDevice monitor = new MonitorDevice();
-    private TimerDevice timer = new TimerDevice();
+    private final Word[] memArr = new Word[MEM_SIZE];
+    private final String[] colNames = new String[]{"BP", "Address", "Value", "Instruction"};
+    private final boolean[] nextBreakPoints = new boolean[MEM_SIZE];
+    private final boolean[] breakPoints = new boolean[MEM_SIZE];
+    private final KeyboardDevice keyboard = new KeyboardDevice();
+    private final MonitorDevice monitor = new MonitorDevice();
+    private final TimerDevice timer = new TimerDevice();
 
     Memory(Machine machine) {
         this.machine = machine;
@@ -138,7 +138,7 @@ public class Memory extends TableModel {
      * @param address row to set breakpoint
      * @return either the address where the breakpoint was set or an error
      */
-    String setBreakPoint(String address) {
+    public String setBreakPoint(String address) {
         int row = this.machine.getAddress(address);
         String str;
         if (row != Integer.MAX_VALUE) {
@@ -176,7 +176,7 @@ public class Memory extends TableModel {
      * @param address row to set breakpoint
      * @return either the index where the breakpoint was set or an error
      */
-    String clearBreakPoint(String address) {
+    public String clearBreakPoint(String address) {
         int row = this.machine.getAddress(address);
         String ret;
         if (row != Integer.MAX_VALUE) {
@@ -333,7 +333,7 @@ public class Memory extends TableModel {
         this.write(row, value);
     }
 
-    void write(int row, int value) {
+    public void write(int row, int value) {
         switch (row) {
             case DDR:
                 this.monitor.write((char) value);

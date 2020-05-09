@@ -4,6 +4,7 @@ import com.pennsim.exception.GenericException;
 import com.pennsim.exception.IllegalInstructionException;
 import com.pennsim.exception.IllegalMemoryAccessException;
 import com.pennsim.gui.Console;
+import com.pennsim.gui.EditorTab;
 import com.pennsim.gui.GUI;
 import com.pennsim.isa.ISA;
 import com.pennsim.isa.InstructionDefinition;
@@ -107,11 +108,11 @@ public class Machine implements Runnable {
         return this.branchPredictor;
     }
 
-    PrintWriter getTraceWriter() {
+    public PrintWriter getTraceWriter() {
         return this.traceWriter;
     }
 
-    void setTraceWriter(PrintWriter printWriter) {
+    public void setTraceWriter(PrintWriter printWriter) {
         this.traceWriter = printWriter;
     }
 
@@ -119,7 +120,7 @@ public class Machine implements Runnable {
         return this.traceWriter != null;
     }
 
-    void disableTrace() {
+    public void disableTrace() {
         this.traceWriter.close();
         this.traceWriter = null;
     }
@@ -213,7 +214,7 @@ public class Machine implements Runnable {
         }
     }
 
-    String setKeyboardInputStream(File file) {
+    public String setKeyboardInputStream(File file) {
         String response;
         try {
             this.memory.getKeyBoardDevice().setInputStream(new FileInputStream(file));
@@ -253,11 +254,11 @@ public class Machine implements Runnable {
 
     }
 
-    public synchronized String stopExecution(boolean var1) {
-        return this.stopExecution(0, var1);
+    public synchronized String stopExecution(boolean reset) {
+        return this.stopExecution(0, reset);
     }
 
-    synchronized String stopExecution(int address, boolean var2) {
+    synchronized String stopExecution(int address, boolean reset) {
         this.stopImmediately = true;
         this.clearContinueMode();
         this.updateStatusLabel();
@@ -266,11 +267,11 @@ public class Machine implements Runnable {
         }
 
         this.memory.fireTableDataChanged();
-        if (var2) {
-            ListIterator iterator = this.notifyOnStop.listIterator(0);
+        if (reset) {
+            ListIterator<ActionListener> iterator = this.notifyOnStop.listIterator(0);
 
             while (iterator.hasNext()) {
-                ActionListener listener = (ActionListener) iterator.next();
+                ActionListener listener = iterator.next();
                 listener.actionPerformed(null);
             }
         }
@@ -405,11 +406,11 @@ public class Machine implements Runnable {
 
     }
 
-    String lookupSym(int address) {
+    public String lookupSym(int address) {
         return this.inverseTable.get(address);
     }
 
-    int lookupSym(String symbol) {
+    public int lookupSym(String symbol) {
         Integer var2 = this.symbolTable.get(symbol.toLowerCase());
         return var2 != null ? var2 : Integer.MAX_VALUE;
     }
@@ -422,7 +423,7 @@ public class Machine implements Runnable {
         return this.symbolTable.get(symbol.toLowerCase()) != null;
     }
 
-    int getAddress(String address) {
+    public int getAddress(String address) {
         int row = Word.parseNum(address);
         if (row == Integer.MAX_VALUE) {
             row = this.lookupSym(address);

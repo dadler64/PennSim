@@ -12,9 +12,9 @@ public class RegisterFile extends TableModel {
     private static final int MPR_ROW = 9;
     private static final int PSR_ROW = 10;
     private static final int CC_ROW = 11;
-    private static String[] indNames = new String[]{"R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "PC", "MPR", "PSR", "CC"};
-    private static int[] indRow = new int[]{0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
-    private static int[] indCol = new int[]{1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3};
+    private static final String[] indNames = new String[]{"R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "PC", "MPR", "PSR", "CC"};
+    private static final int[] indRow = new int[]{0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
+    private static final int[] indCol = new int[]{1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3};
     private final String[] colNames = new String[]{"Register", "Value", "Register", "Value"};
     private final Machine machine;
     private final Word PC;
@@ -254,7 +254,7 @@ public class RegisterFile extends TableModel {
         this.checkAddress(word.getValue());
     }
 
-    String printCC() {
+    public String printCC() {
         if (this.getN() ^ this.getZ() ^ this.getP() && (!this.getN() || !this.getZ() || !this.getP())) {
             if (this.getN()) {
                 return "N";
@@ -268,7 +268,7 @@ public class RegisterFile extends TableModel {
         }
     }
 
-    int getPSR() {
+    public int getPSR() {
         return this.PSR.getValue();
     }
 
@@ -309,15 +309,15 @@ public class RegisterFile extends TableModel {
         }
     }
 
-    void setN() {
+    public void setN() {
         this.setNZP(32768);
     }
 
-    void setZ() {
+    public void setZ() {
         this.setNZP(0);
     }
 
-    void setP() {
+    public void setP() {
         this.setNZP(1);
     }
 
@@ -342,7 +342,7 @@ public class RegisterFile extends TableModel {
         this.MCR.setValue(value);
     }
 
-    int getMPR() {
+    public int getMPR() {
         return this.MPR.getValue();
     }
 
