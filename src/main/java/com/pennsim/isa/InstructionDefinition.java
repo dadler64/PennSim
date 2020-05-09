@@ -1,19 +1,23 @@
-package com.pennsim;
+package com.pennsim.isa;
 
+import com.pennsim.Machine;
+import com.pennsim.Memory;
+import com.pennsim.RegisterFile;
+import com.pennsim.SymbolTable;
+import com.pennsim.Word;
 import com.pennsim.exception.AsException;
 import com.pennsim.exception.IllegalInstructionException;
 import com.pennsim.exception.IllegalMemoryAccessException;
-import com.pennsim.isa.ISA;
 import java.util.List;
 
 public abstract class InstructionDefinition {
 
-    private InstructionDefinition.Location dReg = new Location();
-    private InstructionDefinition.Location sReg = new Location();
-    private InstructionDefinition.Location tReg = new Location();
-    private InstructionDefinition.Location signedImmediate = new Location();
-    private InstructionDefinition.Location pcOffset = new Location();
-    private InstructionDefinition.Location unsignedImmediate = new Location();
+    private final InstructionDefinition.Location dReg = new Location();
+    private final InstructionDefinition.Location sReg = new Location();
+    private final InstructionDefinition.Location tReg = new Location();
+    private final InstructionDefinition.Location signedImmediate = new Location();
+    private final InstructionDefinition.Location pcOffset = new Location();
+    private final InstructionDefinition.Location unsignedImmediate = new Location();
     private String opcode = null;
     private String format = "";
     private int mask = 0;
@@ -77,7 +81,7 @@ public abstract class InstructionDefinition {
         return -1;
     }
 
-    protected final int getDReg(Word word) {
+    public final int getDReg(Word word) {
         ISA.check(this.dReg.valid, "Invalid register");
         return word.getZext(this.dReg.start, this.dReg.end);
     }

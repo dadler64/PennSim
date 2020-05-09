@@ -6,6 +6,7 @@ import com.pennsim.exception.IllegalMemoryAccessException;
 import com.pennsim.gui.Console;
 import com.pennsim.gui.GUI;
 import com.pennsim.isa.ISA;
+import com.pennsim.isa.InstructionDefinition;
 import com.pennsim.isa.LC3;
 import com.pennsim.isa.P37X;
 import com.pennsim.util.ErrorLog;

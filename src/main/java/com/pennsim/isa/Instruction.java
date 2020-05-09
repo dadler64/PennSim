@@ -1,7 +1,6 @@
-package com.pennsim;
+package com.pennsim.isa;
 
 import com.pennsim.exception.AsException;
-import com.pennsim.isa.ISA;
 import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -10,19 +9,19 @@ import java.util.regex.Pattern;
 public class Instruction {
 
     private int address;
-    private int lineNumber;
     private Integer offsetImmediate;
     private String label;
     private String labelRef;
     private String opcode;
-    private String originalLine;
     private String stringz;
     private String format = "";
-    private Vector<Integer> regs = new Vector<>();
+    private final int lineNumber;
+    private final String originalLine;
+    private final Vector<Integer> regs = new Vector<>();
     private static final char COMMENT_SYMBOL = ';';
 
 
-    Instruction(String line, int lineNumber) throws AsException {
+    public Instruction(String line, int lineNumber) throws AsException {
         this.lineNumber = lineNumber;
         this.originalLine = line;
         int commentIndex = line.indexOf(COMMENT_SYMBOL); // Look for the start of the comment
@@ -68,7 +67,7 @@ public class Instruction {
                 } else if (token.matches("R[\\d]+")) {
                     token = token.replace("R", "");
                     this.regs.add(Integer.parseInt(token, 10));
-                    this.format += "Reg ";
+                    this.format  += "Reg ";
                 } else if (index == 0 && token.matches("[\\w_][\\w_\\d]*[:]?")) {
                     token = token.replace(":", "");
                     this.label = token;

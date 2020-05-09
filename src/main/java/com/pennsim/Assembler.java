@@ -3,6 +3,8 @@ package com.pennsim;
 import com.pennsim.exception.AsException;
 import com.pennsim.gui.Console;
 import com.pennsim.isa.ISA;
+import com.pennsim.isa.Instruction;
+import com.pennsim.isa.InstructionDefinition;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

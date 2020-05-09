@@ -1,6 +1,5 @@
 package com.pennsim.isa;
 
-import com.pennsim.InstructionDefinition;
 import com.pennsim.Machine;
 import com.pennsim.Memory;
 import com.pennsim.RegisterFile;

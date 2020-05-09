@@ -1,6 +1,6 @@
 package com.pennsim.exception;
 
-import com.pennsim.Instruction;
+import com.pennsim.isa.Instruction;
 
 /**
  * Custom exception class for when an exception is raised during assembly
