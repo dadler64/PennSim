@@ -5,6 +5,7 @@
 # Gradle
 .gradle/
 !gradle/wrapper/*
+test/
 
 # Build Files
 build/

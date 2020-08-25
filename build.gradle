@@ -17,6 +17,16 @@ apply plugin: 'nebula.ospackage'
 rootProject.version='1.4.0'
 targetCompatibility='1.8'
 
+project.ext.version='1.4.0'
+project.ext.author='Dan Adler'
+project.ext.email='<dadler64@users.noreply.github.com>'
+project.ext.copyright='(C) 2020'
+project.ext.description=''
+project.ext.url='https://github.com/dadler64/pennsim'
+project.ext.bundleId="com.pennsim"
+project.ext.mainClass="${project.ext.bundleId}.PennSim"
+project.ext.resPath='/src/main/resources'
+
 allprojects {
     apply plugin: 'eclipse'
     apply plugin: 'idea'
@@ -54,21 +64,21 @@ jar {
     // Add dependencies
     def deps = []
 
-    subprojects.each { subproject ->
-        from subproject.sourceSets.main.output.classesDirs
-        from subproject.sourceSets.main.output.resourcesDir
-        deps += subproject.configurations.runtime - subproject.configurations.provided
+    subprojects.each { subProject ->
+        from subProject.sourceSets.main.output.classesDirs
+        from subProject.sourceSets.main.output.resourcesDir
+        deps += subProject.configurations.runtime - subProject.configurations.provided
     }
-    subprojects.each { subproject ->
-        deps -= subproject.jar.archivePath
+    subprojects.each { subProject ->
+        deps -= subProject.jar.archivePath
     }
     deps = deps.unique().collect { it.isDirectory() ? it : zipTree(it) }
     from deps
 
     manifest {
-        attributes 'Main-Class': 'com.pennsim.PennSim',
-            'SplashScreen-Image': 'src/main/resources/PennSimIcon.png',
-            'PennSim-Version': project.version
+        attributes 'Main-Class': project.ext.mainClass.toString(),
+//                'SplashScreen-Image': "${project.ext.resPath}/${rootProject.name}.png",
+                'Version': project.version
     }
 
     duplicatesStrategy DuplicatesStrategy.EXCLUDE
@@ -79,37 +89,63 @@ launch4j {
     createExe.dependsOn 'jar'
 
     version = textVersion = project.version
-    fileDescription = productName = 'PennSim'
-    errTitle 'PennSim Windows Wrapper'
-    copyright 'Dan Adler (C) 2020'
-    fileDescription = 'PennSim, 16 bit virtual computer'
-    icon projectDir.path + '/src/main/resources/PennSimIcon.ico'
+    fileDescription = productName = project.name
+    errTitle = "${rootProject.name} Wrapper"
+    copyright = 'Dan Adler (C) 2020'
+    fileDescription = "Simple template for a Gradle swing app"
+    icon = projectDir.path + "${project.ext.resPath}/${rootProject.name}.ico"
 }
 
-// Distributions for OSX and Windows //
+// Distributions for MacOS and Windows //
 distributions {
-//    osx.contents {
-//        into('PennSim.app/Contents') {
-//            from('src/osx/resources') {
-//                include 'Info.plist'
-//                expand VERSION: project.version,
-////                        JAR: file(proguard.outJarFiles[0]).name
-//                        JAR: jar
-//            }
-//        }
-//        into('PennSim.app/Contents/MacOS') {
-//            from('src/osx/resources') {
-//                include 'universalJavaApplicationStub.sh'
-//                fileMode 0755
-//            }
-//        }
-//        into('PennSim.app/Contents/Resources/Java') {
-//            from jar
-//        }
-//        from 'LICENSE', 'README.md'
-//    }
+
+    osx.contents {
+        // info.plist file
+        into("${rootProject.name}.app/Contents") {
+            if (file("./dist/macos/resources/Info.plist").exists()) {
+                from('./dist/macos/resources') {
+                    include 'Info.plist'
+                    expand VERSION: project.ext.version,
+                            JAR: project.name,
+                            COPYRIGHT: project.ext.copyright,
+                            AUTHOR: project.ext.author,
+                            BUNDLE_ID: project.ext.bundleId,
+                            MAIN_CLASS: project.ext.mainClass
+                }
+            } else {
+                println("WARNING: Unable to locate the \'Info.plist\' file!\nMacOS bundeled app may not work!")
+            }
+        }
+        // universalJavaApplicationStub.sh
+        into("${rootProject.name}.app/Contents/MacOS") {
+            if (file("./dist/macos/resources/universalJavaApplicationStub.sh").exists()) {
+                from('./dist/macos/resources') {
+                    include 'universalJavaApplicationStub.sh'
+                    fileMode 0755
+                }
+            } else {
+                println("WARNING: Unable to locate the \'universalJavaApplicationStub.sh\' file!\nMacOS bundeled app may not work!")
+            }
+        }
+        // *.icns file
+        into ("${rootProject.name}.app/Contents/Resources") {
+            if (file("./dist/macos/resources/${rootProject.name}.icns").exists()) {
+                from ('./dist/macos/resources') {
+                    include "${rootProject.name}.icns"
+                }
+            } else {
+                println("WARNING: Unable to locate icon for MacOS app at <./dist/macos/resources/${rootProject.name}.icns>!")
+            }
+        }
+        // project *.jar file
+        into("${rootProject.name}.app/Contents/Resources/Java") {
+            from jar
+        }
+        from 'LICENSE', 'README.md'
+    }
+
     windows.contents {
-        from 'build/launch4j/pennsim.exe'
+        from "build/launch4j/${project.name}.exe"
         from 'LICENSE', 'README.md'
     }
 
@@ -117,9 +153,9 @@ distributions {
     windowsDistTar.dependsOn createExe
     windowsDistZip.dependsOn createExe
 
-//    installOsxDist.dependsOn 'jar'
-//    osxDistTar.dependsOn 'jar'
-//    osxDistZip.dependsOn 'jar'
+    installOsxDist.dependsOn 'jar'
+    osxDistTar.dependsOn 'jar'
+    osxDistZip.dependsOn 'jar'
 }
 
 dependencies {

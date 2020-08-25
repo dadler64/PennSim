@@ -1,9 +1,0 @@
-[Desktop Entry]
-Comment=PennSim Simulator
-Terminal=false
-Name=PennSim
-Exec=java -jar /opt/pennsim/pennsim.jar
-Type=Application
-Icon=pennsim
-MimeType=application/java;application/java-vm;application/java-archive
-StartupWMClass=com-pennsim-PennSim
