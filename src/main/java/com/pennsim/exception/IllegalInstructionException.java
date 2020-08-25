@@ -10,6 +10,6 @@ public class IllegalInstructionException extends GenericException {
     }
 
     public String getExceptionDescription() {
-        return "Illegal Instruction Exception: " + this.getMessage();
+        return Strings.get("illegalInstructionException") + ": " + this.getMessage();
     }
 }

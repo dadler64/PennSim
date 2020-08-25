@@ -19,7 +19,7 @@ public class EditorPanel extends JTabbedPane {
      * Add a new tab with an empty file.
      */
     public void addFileTab() {
-        String fileName = "Untitled" + fileNumber;
+        String fileName = Strings.get("untitled") + " " + fileNumber;
         addFileTab(new EditorTab(new File(fileName)));
     }
 

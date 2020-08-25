@@ -27,7 +27,7 @@ public class ButtonTabComponent extends JPanel {
         //unset default FlowLayout' gaps
         super(new FlowLayout(FlowLayout.LEFT, 0, 0));
         if (pane == null) {
-            throw new NullPointerException("TabbedPane is null");
+            throw new NullPointerException(Strings.get("tabNullException"));
         }
         this.pane = pane;
         setOpaque(false);
@@ -57,7 +57,7 @@ public class ButtonTabComponent extends JPanel {
         public TabButton() {
             int size = 17;
             setPreferredSize(new Dimension(size, size));
-            setToolTipText("close this tab");
+            setToolTipText(Strings.get("closeToolTip"));
             //Make the button looks the same for all Laf's
             setUI(new BasicButtonUI());
             //Make it transparent

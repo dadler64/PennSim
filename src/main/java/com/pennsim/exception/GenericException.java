@@ -17,11 +17,11 @@ public abstract class GenericException extends Exception {
     }
 
     public String getExceptionDescription() {
-        return "Generic Exception: " + this.getMessage();
+        return Strings.get("genericException") + ": " + this.getMessage();
     }
 
     public void showMessageDialog(Container container) {
         JOptionPane.showMessageDialog(container, this.getExceptionDescription());
-        Console.println("Exception: " + this.getExceptionDescription());
+        Console.println(Strings.get("exception") + ": " + this.getExceptionDescription());
     }
 }

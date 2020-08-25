@@ -6,6 +6,6 @@ package com.pennsim.exception;
 public class PennSimException extends GenericException {
 
     public PennSimException(String message) {
-        super("Error: " + message);
+        super(Strings.get("error") + ": " + message);
     }
 }

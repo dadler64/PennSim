@@ -1,16 +1,48 @@
 package com.pennsim.gui;
 
-import com.pennsim.command.CommandLine;
 import com.pennsim.Machine;
 import com.pennsim.Memory;
 import com.pennsim.PennSim;
 import com.pennsim.RegisterFile;
+import com.pennsim.command.CommandLine;
 import com.pennsim.exception.GenericException;
 import com.pennsim.exception.PennSimException;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.File;
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.ButtonGroup;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JViewport;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.WindowConstants;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileFilter;
@@ -24,15 +56,15 @@ public class GUI implements TableModelListener {
 
     private final JFileChooser fileChooser;
     private final JMenuBar menuBar;
-    private final JMenu fileMenu;
-    private final JMenu themeMenu;
-    private final JMenu optionsMenu;
-    private final JMenu aboutMenu;
-    private final JMenuItem openFileItem;
-    private final JMenuItem saveFileItem;
-    private final JMenuItem newFileItem;
-    private final JMenuItem quitItem;
-    private final JMenuItem commandOutputWinItem;
+    private final JMenu menuFile;
+    private final JMenu menuTheme;
+    private final JMenu menuOptions;
+    private final JMenu menuAbout;
+    private final JMenuItem itemOpenFile;
+    private final JMenuItem itemSaveFile;
+    private final JMenuItem itemNewFile;
+    private final JMenuItem itemQuit;
+    private final JMenuItem itemCommandOutputWindow;
     private final JMenuItem lightItem;
     private final JMenuItem darkItem;
     private final JMenuItem metalItem;
@@ -48,9 +80,6 @@ public class GUI implements TableModelListener {
     private final JButton newFileButton;
     private final JButton openFileButton;
     private final JButton saveFileButton;
-    private final String statusLabelRunning;
-    private final String statusLabelSuspended;
-    private final String statusLabelHalted;
     private final JLabel statusLabel;
     private final Color runningColor;
     private final Color suspendedColor;
@@ -76,33 +105,30 @@ public class GUI implements TableModelListener {
         this.frame = new JFrame("PennSim - " + PennSim.VERSION + " - " + PennSim.getISA());
         this.fileChooser = new JFileChooser(".");
         this.menuBar = new JMenuBar();
-        this.fileMenu = new JMenu("File");
-        this.themeMenu = new JMenu("Theme");
-        this.optionsMenu = new JMenu("Options");
-        this.aboutMenu = new JMenu("About");
-        this.newFileItem = new JMenuItem("New File");
-        this.openFileItem = new JMenuItem("Open File");
-        this.saveFileItem = new JMenuItem("Save File");
-        this.commandOutputWinItem = new JMenuItem("Output Window");
-        this.quitItem = new JMenuItem("Quit");
-        this.lightItem = new JRadioButtonMenuItem("Light");
-        this.darkItem = new JRadioButtonMenuItem("Dark");
-        this.metalItem = new JRadioButtonMenuItem("Metal");
-        this.systemItem = new JRadioButtonMenuItem("System");
-        this.scrollLayoutItem = new JCheckBoxMenuItem("Set ScrollLayout");
-        this.versionItem = new JMenuItem("Simulator Version");
+        this.menuFile = new JMenu(Strings.get("menuFile"));
+        this.menuTheme = new JMenu(Strings.get("menuTheme"));
+        this.menuOptions = new JMenu(Strings.get("menuOptions"));
+        this.menuAbout = new JMenu(Strings.get("menuAbout"));
+        this.itemNewFile = new JMenuItem(Strings.get("itemNewFile"));
+        this.itemOpenFile = new JMenuItem(Strings.get("itemOpenFile"));
+        this.itemSaveFile = new JMenuItem(Strings.get("itemSaveFile"));
+        this.itemCommandOutputWindow = new JMenuItem(Strings.get("itemOutputWindow"));
+        this.itemQuit = new JMenuItem(Strings.get("itemQuit"));
+        this.lightItem = new JRadioButtonMenuItem(Strings.get("itemThemeLight"));
+        this.darkItem = new JRadioButtonMenuItem(Strings.get("itemThemeDark"));
+        this.metalItem = new JRadioButtonMenuItem(Strings.get("itemThemeMetal"));
+        this.systemItem = new JRadioButtonMenuItem(Strings.get("itemThemeSystem"));
+        this.scrollLayoutItem = new JCheckBoxMenuItem(Strings.get("itemSetLayoutScroll"));
+        this.versionItem = new JMenuItem(Strings.get("itemSimulatorVersion"));
         this.controlPanel = new JPanel();
-        this.nextButton = new JButton("Next");
-        this.stepButton = new JButton("Step");
-        this.continueButton = new JButton("Continue");
-        this.stopButton = new JButton("Stop");
-        this.resetButton = new JButton("Reset");
-        this.newFileButton = new JButton("New");
-        this.openFileButton = new JButton("Open");
-        this.saveFileButton = new JButton("Save");
-        this.statusLabelRunning = "    Running ";
-        this.statusLabelSuspended = "Suspended ";
-        this.statusLabelHalted = "       Halted ";
+        this.nextButton = new JButton(Strings.get("buttonNext"));
+        this.stepButton = new JButton(Strings.get("buttonStep"));
+        this.continueButton = new JButton(Strings.get("buttonContinue"));
+        this.stopButton = new JButton(Strings.get("buttonStop"));
+        this.resetButton = new JButton(Strings.get("buttonReset"));
+        this.newFileButton = new JButton(Strings.get("buttonNew"));
+        this.openFileButton = new JButton(Strings.get("buttonOpen"));
+        this.saveFileButton = new JButton(Strings.get("buttonSave"));
         this.statusLabel = new JLabel("");
         this.runningColor = new Color(43, 129, 51);
         this.suspendedColor = new Color(209, 205, 93);
@@ -111,7 +137,7 @@ public class GUI implements TableModelListener {
         this.devicePanel = new JPanel();
         this.registerPanel = new JPanel();
         this.terminalPanel = new JPanel();
-        this.leftTabbedPanel = new LeftTabbedPanel();
+//        this.leftTabbedPanel = new LeftTabbedPanel();
         this.machine = machine;
 
         // Register pane init
@@ -181,7 +207,7 @@ public class GUI implements TableModelListener {
         column.setMinWidth(60);
         column.setMaxWidth(60);
         commandPanel = new CommandLinePanel(machine, commandLine);
-        commandOutputWindow = new CommandOutputWindow("Command Output");
+        commandOutputWindow = new CommandOutputWindow(Strings.get("titleOutputWindow"));
         WindowListener listener = new WindowListener() {
             public void windowActivated(WindowEvent event) {
 
@@ -220,6 +246,7 @@ public class GUI implements TableModelListener {
 
     /**
      * Set the UI theme
+     *
      * @param lookAndFeel the desired theme you wish to use
      */
     public void setLookAndFeel(String lookAndFeel) {
@@ -228,20 +255,28 @@ public class GUI implements TableModelListener {
         if (lookAndFeel != null) {
             switch (lookAndFeel) {
                 case "Light":
-                    if (!lightItem.isSelected()) lightItem.setSelected(true);
+                    if (!lightItem.isSelected()) {
+                        lightItem.setSelected(true);
+                    }
                     theme = "com.jtattoo.plaf.fast.FastLookAndFeel";
                     break;
                 case "Dark":
-                    if (!darkItem.isSelected()) darkItem.setSelected(true);
+                    if (!darkItem.isSelected()) {
+                        darkItem.setSelected(true);
+                    }
                     theme = "com.jtattoo.plaf.hifi.HiFiLookAndFeel"; // Dark Grey Theme
 //                    theme = "com.jtattoo.plaf.noire.NoireLookAndFeel"; // Dark Theme
                     break;
                 case "Metal":
-                    if (!metalItem.isSelected()) metalItem.setSelected(true);
+                    if (!metalItem.isSelected()) {
+                        metalItem.setSelected(true);
+                    }
                     theme = UIManager.getCrossPlatformLookAndFeelClassName();
                     break;
                 case "System":
-                    if (!systemItem.isSelected()) systemItem.setSelected(true);
+                    if (!systemItem.isSelected()) {
+                        systemItem.setSelected(true);
+                    }
                     theme = UIManager.getSystemLookAndFeelClassName();
                     break;
                 default: {
@@ -299,7 +334,7 @@ public class GUI implements TableModelListener {
             }
 
             public String getDescription() {
-                return "Object Files (*.obj)";
+                return Strings.get("objectFileDescription");
             }
         });
         fileChooser.addChoosableFileFilter(new FileFilter() {
@@ -315,7 +350,7 @@ public class GUI implements TableModelListener {
 
             @Override
             public String getDescription() {
-                return "Assembly Files (*.asm)";
+                return Strings.get("assemblyFileDescription");
             }
         });
         fileChooser.addChoosableFileFilter(new FileFilter() {
@@ -331,7 +366,7 @@ public class GUI implements TableModelListener {
 
             @Override
             public String getDescription() {
-                return "Text Files (*.txt)";
+                return Strings.get("textFileDescription");
             }
         });
         frame.setJMenuBar(menuBar);
@@ -368,30 +403,30 @@ public class GUI implements TableModelListener {
 
     private void setUpMenuBar() {
         // File Menu
-        newFileItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK));
-        openFileItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
-        saveFileItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK));
-        quitItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.META_DOWN_MASK));
+        itemNewFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_DOWN_MASK));
+        itemOpenFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
+        itemSaveFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK));
+        itemQuit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.CTRL_DOWN_MASK));
 
-        newFileItem.addActionListener(e -> editorPanel.addFileTab());
-        openFileItem.addActionListener(e -> openFile());
-        saveFileItem.addActionListener(e -> {
+        itemNewFile.addActionListener(e -> editorPanel.addFileTab());
+        itemOpenFile.addActionListener(e -> openFile());
+        itemSaveFile.addActionListener(e -> {
             try {
                 saveFile();
             } catch (PennSimException pennSimException) {
                 pennSimException.showMessageDialog(getFrame());
             }
         });
-        commandOutputWinItem.addActionListener( e -> commandOutputWindow.setVisible(true));
-        quitItem.addActionListener(e -> confirmExit());
+        itemCommandOutputWindow.addActionListener(e -> commandOutputWindow.setVisible(true));
+        itemQuit.addActionListener(e -> confirmExit());
 
-        fileMenu.add(newFileItem);
-        fileMenu.add(openFileItem);
-        fileMenu.add(saveFileItem);
-        fileMenu.addSeparator();
-        fileMenu.add(commandOutputWinItem);
-        fileMenu.addSeparator();
-        fileMenu.add(quitItem);
+        menuFile.add(itemNewFile);
+        menuFile.add(itemOpenFile);
+        menuFile.add(itemSaveFile);
+        menuFile.addSeparator();
+        menuFile.add(itemCommandOutputWindow);
+        menuFile.addSeparator();
+        menuFile.add(itemQuit);
 
         // Theme Menu
         lightItem.addActionListener(e -> setLookAndFeel("Light"));
@@ -405,10 +440,10 @@ public class GUI implements TableModelListener {
         group.add(metalItem);
         group.add(systemItem);
 
-        themeMenu.add(lightItem);
-        themeMenu.add(darkItem);
-        themeMenu.add(metalItem);
-        themeMenu.add(systemItem);
+        menuTheme.add(lightItem);
+        menuTheme.add(darkItem);
+        menuTheme.add(metalItem);
+        menuTheme.add(systemItem);
 
         // Option Menu
         scrollLayoutItem.addActionListener(e -> {
@@ -418,20 +453,20 @@ public class GUI implements TableModelListener {
                 editorPanel.setTabLayoutPolicy(JTabbedPane.WRAP_TAB_LAYOUT);
             }
         });
-        optionsMenu.add(scrollLayoutItem);
+        menuOptions.add(scrollLayoutItem);
 
         // Version Menu
         versionItem.setActionCommand("Version");
         versionItem.addActionListener(e ->
                 JOptionPane.showMessageDialog(frame, PennSim.getVersion(), "Version", JOptionPane.INFORMATION_MESSAGE)
         );
-        aboutMenu.add(versionItem);
+        menuAbout.add(versionItem);
 
         //Menu Bar
-        menuBar.add(fileMenu);
-        menuBar.add(themeMenu);
-        menuBar.add(optionsMenu);
-        menuBar.add(aboutMenu);
+        menuBar.add(menuFile);
+        menuBar.add(menuTheme);
+        menuBar.add(menuOptions);
+        menuBar.add(menuAbout);
     }
 
     /**
@@ -557,7 +592,7 @@ public class GUI implements TableModelListener {
 
         // Set up border
         controlPanel.setBorder(
-                BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Controls"),
+                BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder(Strings.get("titleControls")),
                         BorderFactory.createEmptyBorder(5, 5, 5, 5))
         );
         controlPanel.setVisible(true);
@@ -578,9 +613,11 @@ public class GUI implements TableModelListener {
 //        constraints.weightx = 1;
 //        constraints.weighty = 1;
 //        registerPanel.add(registerTable, constraints);
+        //TODO Fix the issue of this not appearing above the Devices Panel
         registerPanel.add(registerTable, "Center");
         registerTable.getModel().addTableModelListener(this);
-        registerPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Registers"),
+        registerPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder(Strings.get(
+                "titleRegisters")),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         registerPanel.setVisible(true);
     }
@@ -611,7 +648,7 @@ public class GUI implements TableModelListener {
         constraints.weighty = 1;
         devicePanel.add(ioPanel, constraints);
 
-        devicePanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Devices"),
+        devicePanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder(Strings.get("titleDevices")),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         devicePanel.setVisible(true);
     }
@@ -629,8 +666,8 @@ public class GUI implements TableModelListener {
         constraints.gridheight = 1;
 
         editorPanel.setBorder(
-                BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Editor"),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5))
+                BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder(Strings.get("titleEditor")),
+                        BorderFactory.createEmptyBorder(5, 5, 5, 5))
         );
         editorPanel.setMinimumSize(new Dimension(400, 100));
         editorPanel.setVisible(true);
@@ -645,8 +682,8 @@ public class GUI implements TableModelListener {
         memoryPanel.add(memoryScrollPane, "Center");
         memoryPanel.setMinimumSize(new Dimension(350, 100));
         memoryPanel.setBorder(
-                BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Memory"),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5))
+                BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder(Strings.get("titleMemory")),
+                        BorderFactory.createEmptyBorder(5, 5, 5, 5))
         );
         memoryTable.getModel().addTableModelListener(this);
         memoryTable.getModel().addTableModelListener(video);
@@ -668,8 +705,9 @@ public class GUI implements TableModelListener {
         constraints.weighty = 1;
         terminalPanel.add(commandPanel, constraints);
 
-        terminalPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Terminal"),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        terminalPanel
+                .setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder(Strings.get("titleTerminal")),
+                        BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         terminalPanel.setVisible(true);
     }
 
@@ -687,9 +725,9 @@ public class GUI implements TableModelListener {
                 this.editorPanel.addFileTab(file);
             }
         } else if (userSelection == JFileChooser.CANCEL_OPTION) {
-            Console.println("Open command cancelled by user.");
+            Console.println(Strings.get("openCanceled"));
         } else {
-            Console.println("ERROR: Unknown selection. Could not open file.");
+            Console.println(Strings.get("unknownSelection") + Strings.get("openFail"));
         }
     }
 
@@ -701,14 +739,14 @@ public class GUI implements TableModelListener {
         if (userSelection == JFileChooser.APPROVE_OPTION) {
             if (editorPanel.getSelectedComponent() instanceof EditorTab) {
                 File fileToSave = ((EditorTab) editorPanel.getSelectedComponent()).getFile();
-                Console.println("Save as file: " + fileToSave.getAbsolutePath());
+                Console.println(Strings.get("saveAs") + " " + fileToSave.getAbsolutePath());
             } else {
-                throw new PennSimException("Unable to save the selected file.");
+                throw new PennSimException(Strings.get("saveFail"));
             }
         } else if (userSelection == JFileChooser.CANCEL_OPTION) {
-            Console.println("Save command cancelled by user.");
+            Console.println(Strings.get("saveCanceled"));
         } else {
-            Console.println("ERROR: Unknown selection. Could not save file.");
+            Console.println(Strings.get("unknownSelection") + Strings.get("saveFail"));
         }
     }
 
@@ -733,15 +771,17 @@ public class GUI implements TableModelListener {
         memoryTable.scrollRectToVisible(memoryTable.getCellRect(address, 0, true));
     }
 
-    public void tableChanged(TableModelEvent event) { }
+    public void tableChanged(TableModelEvent event) {
+    }
 
     /**
      * Confirm exit when exiting the program
      */
     void confirmExit() {
-        Object[] options = new Object[]{"Yes", "No"};
-        int optionDialog = JOptionPane.showOptionDialog(frame, "Are you sure you want to quit?",
-                "Quit verification", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+        Object[] options = new Object[]{Strings.get("optionYes"), Strings.get("optionNo")};
+        int optionDialog = JOptionPane
+                .showOptionDialog(frame, Strings.get("quitPrompt"), Strings.get("quitTitle"), JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
         if (optionDialog == 0) {
             machine.cleanup();
             frame.setVisible(false);
@@ -755,19 +795,14 @@ public class GUI implements TableModelListener {
      */
     private void resetDialog() {
         // TODO investigate and fix the "Double Reset" issue
-        String[] options = {"Yes", "No"};
+        String[] options = {Strings.get("optionYes"), Strings.get("optionNo")};
         int answer = JOptionPane.showOptionDialog(
-                null,
-                "Do you want to reset the simulator?", "Reset Warning",
-                JOptionPane.DEFAULT_OPTION,
-                JOptionPane.WARNING_MESSAGE,
-                null,
-                options,
-                options[0]);
+                null, Strings.get("resetPrompt"), Strings.get("resetTitle"), JOptionPane.DEFAULT_OPTION,
+                JOptionPane.WARNING_MESSAGE, null, options, options[0]);
         if (answer == 0) {
             Console.println(machine.stopExecution(true));
             reset();
-            Console.println("System reset");
+            Console.println(Strings.get("resetMessage"));
         }
     }
 
@@ -784,7 +819,7 @@ public class GUI implements TableModelListener {
      * Set the status label as "Running"
      */
     public void setStatusLabelRunning() {
-        statusLabel.setText(statusLabelRunning);
+        statusLabel.setText("    " + Strings.get("statusLabelRunning") + " ");
         statusLabel.setForeground(runningColor);
     }
 
@@ -792,7 +827,7 @@ public class GUI implements TableModelListener {
      * Set the status label as "Suspended"
      */
     public void setStatusLabelSuspended() {
-        statusLabel.setText(statusLabelSuspended);
+        statusLabel.setText(Strings.get("statusLabelSuspended") + " ");
         statusLabel.setForeground(suspendedColor);
     }
 
@@ -800,7 +835,7 @@ public class GUI implements TableModelListener {
      * Set the status label as "Halted"
      */
     public void setStatusLabelHalted() {
-        statusLabel.setText(statusLabelHalted);
+        statusLabel.setText("       " + Strings.get("statusLabelHalted") + " ");
         statusLabel.setForeground(haltedColor);
     }
 
@@ -833,6 +868,7 @@ public class GUI implements TableModelListener {
 
     /**
      * Get the currently selected editor tab as an object.
+     *
      * @return The selected tab.
      */
     public EditorTab getSelectedTab() {

@@ -251,7 +251,7 @@ public class LC3 extends ISA {
                     registerFile.setPSR(literallyTheSameValue);
                     return value;
                 } else {
-                    throw new IllegalInstructionException("RTI can only be executed in privileged mode");
+                    throw new IllegalInstructionException(Strings.get("errorRTI"));
                 }
             }
         });

@@ -29,7 +29,7 @@ public class ISA {
         Word word = memory.getInstruction(pc);
         InstructionDefinition instructionDef = lookupTable[word.getValue()];
         if (instructionDef == null) {
-            throw new IllegalInstructionException("Undefined instruction:  " + word.toHex());
+            throw new IllegalInstructionException(Strings.get("undefinedInstruction") + ":  " + word.toHex());
         } else {
             int newValue = instructionDef.execute(word, pc, registerFile, memory, machine);
             registerFile.setPC(newValue);
@@ -47,7 +47,7 @@ public class ISA {
                 InstructionDefinition loadInstructionDef = lookupTable[loadWord.getValue()];
                 if (loadInstructionDef == null) {
                     throw new IllegalInstructionException(
-                            "Undefined instruction: " + loadWord.toHex());
+                            Strings.get("undefinedInstruction") + ": " + loadWord.toHex());
                 }
 
                 if (!loadInstructionDef.isStore()) {
@@ -84,11 +84,12 @@ public class ISA {
     public static void checkFormat(Instruction instruction, int lineNumber) throws AsException {
         if (formatToDefinition.get(instruction.getFormat()) == null) {
             throw new AsException(instruction,
-                    "Unexpected instruction format: actual: '" + instruction.getFormat() + "'");
+                    Strings.get("unexpectedInstructionFormatActual") + ": '" + instruction.getFormat() + "'");
         }
 
         if (lineNumber < 1) {
-            throw new AsException("Location of instruction [" + instruction.getOpcode() + "] is incorrect.");
+            throw new AsException(
+                    Strings.get("location") + " [" + instruction.getOpcode() + "] " + Strings.get("incorrect") + ".");
         }
     }
 
@@ -96,7 +97,7 @@ public class ISA {
         String instructionFormat = instruction.getFormat();
         InstructionDefinition definition = formatToDefinition.get(instructionFormat);
         if (definition == null) {
-            instruction.error("Unknown instruction format: " + instructionFormat);
+            instruction.error(Strings.get("unknownFormat") + ": " + instructionFormat);
         }
 
     }
@@ -106,7 +107,7 @@ public class ISA {
         if (definition != null) {
             return definition.isCall();
         } else {
-            throw new IllegalInstructionException("Undefined instruction:  " + word.toHex());
+            throw new IllegalInstructionException(Strings.get("unexpectedInstructionFormatActual") + ":  " + word.toHex());
         }
     }
 
@@ -130,7 +131,7 @@ public class ISA {
                 }
 
                 check(var3 > 0 || var4 > 0,
-                        "Useless instruction defined, probably an error, opcode =" + opcode);
+                        Strings.get("uselessInstruction") + " =" + opcode);
             }
         }
 
@@ -150,11 +151,11 @@ public class ISA {
         int var4 = symbolTable.lookup(instruction.getLabelRef());
         int var5 = var4 - address;
         if (var4 == -1) {
-            throw new AsException(instruction, "Undeclared label '" + instruction.getLabelRef() + "'");
+            throw new AsException(instruction, Strings.get("undeclaredLabel") + " '" + instruction.getLabelRef() + "'");
         } else if (var5 >= -(1 << jumpOffset - 1) && var5 <= 1 << jumpOffset - 1) {
             instruction.setOffsetImmediate(var5);
         } else {
-            throw new AsException(instruction, "Jump offset longer than " + jumpOffset + " bits");
+            throw new AsException(instruction, Strings.get("jumpOffset") + " " + jumpOffset + " " + Strings.get("bits"));
         }
     }
 
@@ -165,7 +166,7 @@ public class ISA {
         createDef(".ORIG", "xxxx iiiiiiiiiiii", new InstructionDefinition() {
             public void encode(SymbolTable symbolTable, Instruction instruction, List<Word> words) throws AsException {
                 if (words.size() != 0) {
-                    throw new AsException(".ORIG can only appear at the beginning of a file");
+                    throw new AsException(".ORIG " + Strings.get("origBeginningWarning"));
                 } else {
                     words.add(new Word(instruction.getOffsetImmediate()));
                 }
@@ -193,7 +194,7 @@ public class ISA {
                 int label = symbolTable.lookup(instruction.getLabelRef());
                 if (label == -1) {
                     throw new AsException(
-                            instruction, "Undeclared label: '" + instruction.getLabelRef() + "'");
+                            instruction, Strings.get("undeclaredLabel") + ": '" + instruction.getLabelRef() + "'");
                 } else {
                     words.add(new Word(label));
                 }

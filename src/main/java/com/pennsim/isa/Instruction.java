@@ -74,23 +74,23 @@ public class Instruction {
                 } else {
                     if (index == 0 || !token.matches("[\\w_][\\w_\\d]*")) {
                         throw new AsException(this,
-                                "Unrecognizable token: `" + token + "` on line  " + lineNumber + "(" + index
+                                Strings.get("unrecognizableToken") + ": `" + token + "` " + Strings.get("onLine") + "  " + lineNumber + "(" + index
                                         + " " + this.originalLine + ")\n");
                     }
 
                     this.labelRef = token;
-                    this.format += "Label ";
+                    this.format += Strings.get("label") + " ";
                 }
             }
 
-            if (this.stringz != null) {
-                this.format += "String";
+            if (this.stringZ != null) {
+                this.format += Strings.get("string");
             }
 
             this.format = this.format.trim();
             if (this.opcode == null) {
                 if (this.format.length() != 0) {
-                    throw new AsException(this, "Unexpected instruction format");
+                    throw new AsException(this, Strings.get("unexpectedInstructionFormat"));
                 }
             } else {
                 ISA.checkFormat(this, this.lineNumber);
@@ -141,7 +141,7 @@ public class Instruction {
 
     public int getOffsetImmediate() throws AsException {
         if (this.offsetImmediate == null) {
-            throw new AsException(this, "Internal error: no offset/immediate when expected");
+            throw new AsException(this, Strings.get("internalError"));
         } else {
             return this.offsetImmediate;
         }

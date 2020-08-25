@@ -19,10 +19,10 @@ public class AsException extends Exception {
     }
 
     public String getMessage() {
-        String message = "Assembly error: ";
+        String message = Strings.get("assemblyError") + ": ";
         if (this.instruction != null) {
-            message = message + "[line " + this.instruction.getLineNumber() + ", '" + this.instruction.getOriginalLine()
-                    + "']: ";
+            message = message + "[" + Strings.get("line") + " " + this.instruction.getLineNumber() + ", '" + this.instruction
+                    .getOriginalLine() + "']: ";
         }
 
         message = message + super.getMessage();

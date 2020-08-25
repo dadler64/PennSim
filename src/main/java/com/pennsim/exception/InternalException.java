@@ -6,6 +6,6 @@ package com.pennsim.exception;
 public class InternalException extends RuntimeException {
 
     public InternalException(String message) {
-        super("Internal Error: " + message);
+        super(Strings.get("internalError") + ": " + message);
     }
 }

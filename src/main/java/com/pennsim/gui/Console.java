@@ -14,8 +14,7 @@ public class Console {
     private static List<PrintableConsole> consoles = new LinkedList<>();
 
     public Console() {
-        throw new UnsupportedOperationException(
-                "Console is meant to be used statically.");
+        throw new UnsupportedOperationException(Strings.get("staticErrorMessage"));
     }
 
     /**
