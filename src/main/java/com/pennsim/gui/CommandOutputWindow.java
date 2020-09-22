@@ -13,10 +13,10 @@ import javax.swing.text.Document;
 
 public class CommandOutputWindow extends JFrame implements PrintableConsole {
 
-    private JTextArea textArea = new JTextArea();
+    private final JTextArea textArea = new JTextArea();
 
-    CommandOutputWindow(String text) {
-        super(text);
+    CommandOutputWindow() {
+        super(Strings.get("titleOutputWindow"));
         this.textArea.setEditable(false);
         this.textArea.setLineWrap(true);
         this.textArea.setWrapStyleWord(true);

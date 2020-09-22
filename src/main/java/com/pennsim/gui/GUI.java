@@ -13,7 +13,10 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
@@ -42,7 +45,6 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.WindowConstants;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileFilter;
@@ -84,22 +86,23 @@ public class GUI implements TableModelListener {
     private final Color runningColor;
     private final Color suspendedColor;
     private final Color haltedColor;
-    private final JTable registerTable;
+    private final TitledPanel registerPanel;
+    private final TitledPanel memoryPanel;
+    private final TitledPanel devicesPanel;
+    private final TitledPanel terminalPanel;
     private final CommandLinePanel commandPanel;
+    private final EditorPanel editorPanel;
     private final CommandOutputWindow commandOutputWindow;
-    private final JPanel memoryPanel;
+//    private final TerminalWindow terminalWindow;
+    private final TextConsolePanel ioPanel;
+    private final VideoConsole video;
+    private final JTable registerTable;
     private final JTable memoryTable;
     private final JScrollPane memoryScrollPane;
     private final Machine machine;
-    private final JFrame frame;
-    private final JPanel devicePanel;
-    private final JPanel registerPanel;
-    private final TextConsolePanel ioPanel;
-    private final VideoConsole video;
-    private final EditorPanel editorPanel;
-    private final LeftTabbedPanel leftTabbedPanel;
+    private final JPanel leftPanel;
     private final JPanel mainPanel;
-    private final JPanel terminalPanel;
+    private final JFrame frame;
 
     public GUI(final Machine machine, CommandLine commandLine) {
         this.frame = new JFrame("PennSim - " + PennSim.VERSION + " - " + PennSim.getISA());
@@ -120,7 +123,6 @@ public class GUI implements TableModelListener {
         this.systemItem = new JRadioButtonMenuItem(Strings.get("itemThemeSystem"));
         this.scrollLayoutItem = new JCheckBoxMenuItem(Strings.get("itemSetLayoutScroll"));
         this.versionItem = new JMenuItem(Strings.get("itemSimulatorVersion"));
-        this.controlPanel = new JPanel();
         this.nextButton = new JButton(Strings.get("buttonNext"));
         this.stepButton = new JButton(Strings.get("buttonStep"));
         this.continueButton = new JButton(Strings.get("buttonContinue"));
@@ -133,11 +135,14 @@ public class GUI implements TableModelListener {
         this.runningColor = new Color(43, 129, 51);
         this.suspendedColor = new Color(209, 205, 93);
         this.haltedColor = new Color(161, 37, 40);
-        this.memoryPanel = new JPanel(new BorderLayout());
-        this.devicePanel = new JPanel();
-        this.registerPanel = new JPanel();
-        this.terminalPanel = new JPanel();
-//        this.leftTabbedPanel = new LeftTabbedPanel();
+        this.controlPanel = new TitledPanel(Strings.get("titleControl"));
+        this.memoryPanel = new TitledPanel(Strings.get("titleMemory"));
+        this.devicesPanel = new TitledPanel(Strings.get("titleDevices"));
+        this.registerPanel = new TitledPanel(Strings.get("titleRegisters"));
+        this.terminalPanel = new TitledPanel(Strings.get("titleTerminal"));
+        this.editorPanel = new EditorPanel();
+        this.leftPanel = new JPanel();
+        this.mainPanel = new JPanel();
         this.machine = machine;
 
         // Register pane init
@@ -207,7 +212,8 @@ public class GUI implements TableModelListener {
         column.setMinWidth(60);
         column.setMaxWidth(60);
         commandPanel = new CommandLinePanel(machine, commandLine);
-        commandOutputWindow = new CommandOutputWindow(Strings.get("titleOutputWindow"));
+//        terminalWindow = new TerminalWindow(machine, commandLine);
+        commandOutputWindow = new CommandOutputWindow();
         WindowListener listener = new WindowListener() {
             public void windowActivated(WindowEvent event) {
 
@@ -218,6 +224,7 @@ public class GUI implements TableModelListener {
 
             public void windowClosing(WindowEvent event) {
                 commandOutputWindow.setVisible(false);
+//                terminalWindow.setVisible(false);
             }
 
             public void windowDeactivated(WindowEvent event) {
@@ -233,15 +240,16 @@ public class GUI implements TableModelListener {
             }
         };
         commandOutputWindow.addWindowListener(listener);
+//        terminalWindow.addWindowListener(listener);
         commandOutputWindow.setSize(700, 600);
+//        terminalWindow.setSize(700, 600);
         Console.registerConsole(commandPanel);
         Console.registerConsole(commandOutputWindow);
+//        Console.registerConsole(terminalWindow);
         ioPanel = new TextConsolePanel(machine.getMemory().getKeyBoardDevice(), machine.getMemory().getMonitor());
         ioPanel.setMinimumSize(new Dimension(256, 85));
         video = new VideoConsole(machine);
         commandPanel.setGUI(this);
-        editorPanel = new EditorPanel();
-        mainPanel = new JPanel();
     }
 
     /**
@@ -264,7 +272,7 @@ public class GUI implements TableModelListener {
                     if (!darkItem.isSelected()) {
                         darkItem.setSelected(true);
                     }
-                    theme = "com.jtattoo.plaf.hifi.HiFiLookAndFeel"; // Dark Grey Theme
+                    theme = "com.jtattoo.plaf.hifi.HiFiLookAndFeel"; // Dark Gray Theme
 //                    theme = "com.jtattoo.plaf.noire.NoireLookAndFeel"; // Dark Theme
                     break;
                 case "Metal":
@@ -314,7 +322,7 @@ public class GUI implements TableModelListener {
         setUpMenuBar();
         setupControlPanel();
         setupRegisterPanel();
-        setupDevicePanel();
+        setupDevicesPanel();
         setUpEditorPanel();
         setupMemoryPanel();
         setupTerminalPanel();
@@ -382,10 +390,19 @@ public class GUI implements TableModelListener {
         frame.getContentPane().add(mainPanel, constraints);
 
         setLookAndFeel("Metal");
+        frame.setIconImage(Toolkit.getDefaultToolkit().getImage(ClassLoader.getSystemResource("\\PennSim.png")));
         frame.setPreferredSize(new Dimension(1050, 750));
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                super.windowClosing(e);
+                closeDialog();
+            }
+
+        });
         scrollToPC();
         commandPanel.actionPerformed(null);
     }
@@ -393,9 +410,12 @@ public class GUI implements TableModelListener {
     private void setUpMainPanel() {
         mainPanel.setLayout(new BorderLayout());
 
+        leftPanel.setLayout(new BorderLayout());
+        leftPanel.add(registerPanel, BorderLayout.PAGE_START);
+        leftPanel.add(devicesPanel, BorderLayout.CENTER);
+
         mainPanel.add(controlPanel, BorderLayout.PAGE_START);
-        mainPanel.add(registerPanel, BorderLayout.LINE_START);
-        mainPanel.add(devicePanel, BorderLayout.LINE_START);
+        mainPanel.add(leftPanel, BorderLayout.LINE_START);
         mainPanel.add(editorPanel, BorderLayout.CENTER);
         mainPanel.add(memoryPanel, BorderLayout.LINE_END);
         mainPanel.add(terminalPanel, BorderLayout.PAGE_END);
@@ -417,8 +437,11 @@ public class GUI implements TableModelListener {
                 pennSimException.showMessageDialog(getFrame());
             }
         });
-        itemCommandOutputWindow.addActionListener(e -> commandOutputWindow.setVisible(true));
-        itemQuit.addActionListener(e -> confirmExit());
+        itemCommandOutputWindow.addActionListener(e -> {
+            commandOutputWindow.setVisible(true);
+//            terminalWindow.setVisible(true);
+        });
+        itemQuit.addActionListener(e -> closeDialog());
 
         menuFile.add(itemNewFile);
         menuFile.add(itemOpenFile);
@@ -561,7 +584,6 @@ public class GUI implements TableModelListener {
         stopButton.addActionListener(e -> machine.stopExecution(true));
         controlPanel.add(stopButton, constraints);
 
-        // TODO Have a dialog pop up confirming the action
         constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.BOTH;
         constraints.gridx = 8;
@@ -602,31 +624,7 @@ public class GUI implements TableModelListener {
      * Set up the Register Panel
      */
     private void setupRegisterPanel() {
-//        registerPanel.setLayout(new GridBagLayout());
-//
-//        GridBagConstraints constraints = new GridBagConstraints();
-//        constraints.fill = GridBagConstraints.BOTH;
-//        constraints.gridx = 0;
-//        constraints.gridy = 0;
-//        constraints.gridwidth = 1;
-//        constraints.gridheight = 1;
-//        constraints.weightx = 1;
-//        constraints.weighty = 1;
-//        registerPanel.add(registerTable, constraints);
-        //TODO Fix the issue of this not appearing above the Devices Panel
-        registerPanel.add(registerTable, "Center");
-        registerTable.getModel().addTableModelListener(this);
-        registerPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder(Strings.get(
-                "titleRegisters")),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-        registerPanel.setVisible(true);
-    }
-
-    /**
-     * Set up the Device Panel
-     */
-    private void setupDevicePanel() {
-        devicePanel.setLayout(new GridBagLayout());
+        registerPanel.setLayout(new GridBagLayout());
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.BOTH;
@@ -635,8 +633,29 @@ public class GUI implements TableModelListener {
         constraints.gridwidth = 1;
         constraints.gridheight = 1;
 //        constraints.weightx = 1;
+//        constraints.weighty = 1;
+        registerPanel.add(registerTable, constraints);
+//        registerPanel.add(registerTable, "Center");
+        registerTable.getModel().addTableModelListener(this);
+
+        registerPanel.setVisible(true);
+    }
+
+    /**
+     * Set up the Device Panel
+     */
+    private void setupDevicesPanel() {
+        devicesPanel.setLayout(new GridBagLayout());
+
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.gridwidth = 1;
+        constraints.gridheight = 1;
+        constraints.weightx = 1;
         constraints.weighty = 1;
-        devicePanel.add(video, constraints);
+        devicesPanel.add(video, constraints);
 
         constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.BOTH;
@@ -644,13 +663,9 @@ public class GUI implements TableModelListener {
         constraints.gridy = 1;
         constraints.gridwidth = 1;
         constraints.gridheight = 1;
-//        constraints.weightx = 1;
+        constraints.weightx = 1;
         constraints.weighty = 1;
-        devicePanel.add(ioPanel, constraints);
-
-        devicePanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder(Strings.get("titleDevices")),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-        devicePanel.setVisible(true);
+        devicesPanel.add(ioPanel, constraints);
     }
 
     /**
@@ -663,14 +678,8 @@ public class GUI implements TableModelListener {
         constraints.gridx = 0;
         constraints.gridy = 0;
         constraints.gridwidth = 1;
-        constraints.gridheight = 1;
-
-        editorPanel.setBorder(
-                BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder(Strings.get("titleEditor")),
-                        BorderFactory.createEmptyBorder(5, 5, 5, 5))
-        );
+        constraints.gridheight = 3;
         editorPanel.setMinimumSize(new Dimension(400, 100));
-        editorPanel.setVisible(true);
 //        editorPanel.repaint();
 //        editorPanel.addFileTab();
     }
@@ -679,12 +688,16 @@ public class GUI implements TableModelListener {
      * Set up the Memory Panel
      */
     private void setupMemoryPanel() {
-        memoryPanel.add(memoryScrollPane, "Center");
+        memoryPanel.setLayout(new GridBagLayout());
+
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.gridx = 2;
+        constraints.gridy = 1;
+        constraints.gridwidth = 1;
+        constraints.gridheight = 3;
+        memoryPanel.add(memoryScrollPane, constraints);
         memoryPanel.setMinimumSize(new Dimension(350, 100));
-        memoryPanel.setBorder(
-                BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder(Strings.get("titleMemory")),
-                        BorderFactory.createEmptyBorder(5, 5, 5, 5))
-        );
         memoryTable.getModel().addTableModelListener(this);
         memoryTable.getModel().addTableModelListener(video);
         memoryTable.getModel().addTableModelListener((HighlightScrollBar) memoryScrollPane.getVerticalScrollBar());
@@ -777,12 +790,12 @@ public class GUI implements TableModelListener {
     /**
      * Confirm exit when exiting the program
      */
-    void confirmExit() {
+    void closeDialog() {
         Object[] options = new Object[]{Strings.get("optionYes"), Strings.get("optionNo")};
         int optionDialog = JOptionPane
                 .showOptionDialog(frame, Strings.get("quitPrompt"), Strings.get("quitTitle"), JOptionPane.YES_NO_OPTION,
                         JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
-        if (optionDialog == 0) {
+        if (optionDialog == JOptionPane.YES_OPTION) {
             machine.cleanup();
             frame.setVisible(false);
             frame.dispose();
@@ -799,7 +812,7 @@ public class GUI implements TableModelListener {
         int answer = JOptionPane.showOptionDialog(
                 null, Strings.get("resetPrompt"), Strings.get("resetTitle"), JOptionPane.DEFAULT_OPTION,
                 JOptionPane.WARNING_MESSAGE, null, options, options[0]);
-        if (answer == 0) {
+        if (answer == JOptionPane.YES_OPTION) {
             Console.println(machine.stopExecution(true));
             reset();
             Console.println(Strings.get("resetMessage"));

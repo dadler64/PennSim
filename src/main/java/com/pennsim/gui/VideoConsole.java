@@ -21,13 +21,13 @@ public class VideoConsole extends JPanel implements TableModelListener {
     private static final int WIDTH = 256;
     private static final int HEIGHT = 248;
     private BufferedImage image;
-    private Machine machine;
+    private final Machine machine;
 
     VideoConsole(Machine machine) {
         Dimension dimension = new Dimension(WIDTH, HEIGHT);
-        this.setPreferredSize(dimension);
-        this.setMinimumSize(dimension);
-        this.setMaximumSize(dimension);
+//        this.setPreferredSize(dimension);
+        this.setMinimumSize(new Dimension(200, 150));
+//        this.setMaximumSize(dimension);
         this.machine = machine;
         this.image = new BufferedImage(WIDTH, HEIGHT, 9);
         Graphics2D graphics2D = this.image.createGraphics();

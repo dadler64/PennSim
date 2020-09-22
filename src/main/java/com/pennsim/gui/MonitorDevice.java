@@ -1,8 +1,8 @@
 package com.pennsim.gui;
 
-import com.pennsim.util.ErrorLog;
 import com.pennsim.PennSim;
 import com.pennsim.Word;
+import com.pennsim.util.ErrorLog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;

@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import javax.swing.BorderFactory;
 import javax.swing.JTabbedPane;
 
 public class EditorPanel extends JTabbedPane {
@@ -13,6 +14,8 @@ public class EditorPanel extends JTabbedPane {
 
     public EditorPanel() {
         this.setMinimumSize(new Dimension(500, 100));
+        this.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder(Strings.get("titleEditor")),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
     }
 
     /**
