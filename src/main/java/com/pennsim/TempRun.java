@@ -5,11 +5,11 @@ import com.pennsim.gui.GUI;
 /**
  * Class used to assist in initializing the GUI
  */
-class TempRun implements Runnable {
+public class TempRun implements Runnable {
 
-    private GUI gui;
+    private final GUI gui;
 
-    TempRun(GUI gui) {
+    public TempRun(GUI gui) {
         this.gui = gui;
     }
 

@@ -3,11 +3,11 @@ package com.pennsim.gui;
 import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED;
 import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
 
-import com.pennsim.command.CommandLine;
-import com.pennsim.util.ErrorLog;
-import com.pennsim.exception.GenericException;
 import com.pennsim.Machine;
 import com.pennsim.PrintableConsole;
+import com.pennsim.command.CommandLine;
+import com.pennsim.exception.GenericException;
+import com.pennsim.util.ErrorLog;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -29,8 +29,8 @@ public class CommandLinePanel extends JPanel implements ActionListener, Printabl
 
     private final CommandLine commandLine;
     private final Machine machine;
-    private JTextField textField = new JTextField(20);
-    private JTextArea textArea;
+    private final JTextField textField = new JTextField(20);
+    private final JTextArea textArea;
     private GUI gui;
 
     CommandLinePanel(Machine machine, CommandLine commandLine) {
@@ -111,6 +111,8 @@ public class CommandLinePanel extends JPanel implements ActionListener, Printabl
                     if (text.length() > 0) {
                         Console.println(text);
                     }
+                } else {
+                    this.gui.closeDialog();
                 }
             } catch (GenericException e) {
                 e.showMessageDialog(this.getParent());

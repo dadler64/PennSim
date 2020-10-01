@@ -3,8 +3,8 @@ package com.pennsim.gui;
 import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED;
 import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
 
-import com.pennsim.util.ErrorLog;
 import com.pennsim.KeyboardDevice;
+import com.pennsim.util.ErrorLog;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -23,9 +23,9 @@ import javax.swing.text.Document;
 
 public class TextConsolePanel extends JPanel implements KeyListener, FocusListener, ActionListener {
 
-    private JTextArea screen = new JTextArea(5, 21);
+    private final JTextArea screen = new JTextArea(10, 19);
     private PipedInputStream keyboardIn;
-    private PipedOutputStream keyboardOut;
+    private final PipedOutputStream keyboardOut;
 
     TextConsolePanel(KeyboardDevice keyboardDevice, MonitorDevice monitorDevice) {
         this.screen.setEditable(false);

@@ -1,6 +1,5 @@
 package com.pennsim.gui;
 
-import com.pennsim.PennSim;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.io.File;

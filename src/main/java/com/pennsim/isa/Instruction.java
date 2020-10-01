@@ -13,7 +13,7 @@ public class Instruction {
     private String label;
     private String labelRef;
     private String opcode;
-    private String stringz;
+    private String stringZ;
     private String format = "";
     private final int lineNumber;
     private final String originalLine;
@@ -32,11 +32,11 @@ public class Instruction {
         line = line.replace("\\\"", "\u0000");
         Matcher matcher = Pattern.compile("([^\"]*)[\"]([^\"]*)[\"](.*)").matcher(line);
         if (matcher.matches()) {
-            this.stringz = matcher.group(2);
-            this.stringz = this.stringz.replace("\u0000", "\"");
-            this.stringz = this.stringz.replace("\\n", "\n");
-            this.stringz = this.stringz.replace("\\t", "\t");
-            this.stringz = this.stringz.replace("\\0", "\u0000");
+            this.stringZ = matcher.group(2);
+            this.stringZ = this.stringZ.replace("\u0000", "\"");
+            this.stringZ = this.stringZ.replace("\\n", "\n");
+            this.stringZ = this.stringZ.replace("\\t", "\t");
+            this.stringZ = this.stringZ.replace("\\0", "\u0000");
             line = matcher.group(1) + " " + matcher.group(3);
         }
 
@@ -83,7 +83,7 @@ public class Instruction {
                 }
             }
 
-            if (this.stringz != null) {
+            if (this.stringZ != null) {
                 this.format += Strings.get("string");
             }
 
@@ -135,8 +135,8 @@ public class Instruction {
         return this.regs.get(var1);
     }
 
-    public String getStringz() {
-        return this.stringz;
+    public String getStringZ() {
+        return this.stringZ;
     }
 
     public int getOffsetImmediate() throws AsException {
@@ -160,10 +160,8 @@ public class Instruction {
             if (this.opcode != null && this.label != null) {
                 instructions.add(new Instruction(this.label, this.lineNumber));
                 this.label = null;
-                instructions.add(this);
-            } else {
-                instructions.add(this);
             }
+            instructions.add(this);
         }
 
     }

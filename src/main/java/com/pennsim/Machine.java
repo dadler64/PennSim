@@ -34,11 +34,11 @@ public class Machine implements Runnable {
     public int instructionCount = 0;
     public int loadStallCount = 0;
     public int branchStallCount = 0;
-    private Memory memory;
-    private RegisterFile registers;
-    private BranchPredictor branchPredictor;
+    private final Memory memory;
+    private final RegisterFile registers;
+    private final BranchPredictor branchPredictor;
     private GUI gui = null;
-    private LinkedList<ActionListener> notifyOnStop;
+    private final LinkedList<ActionListener> notifyOnStop;
     private PrintWriter traceWriter = null;
     private boolean stopImmediately = false;
     private boolean continueMode = false;
@@ -60,7 +60,7 @@ public class Machine implements Runnable {
         return this.gui;
     }
 
-    void setGUI(GUI gui) {
+    public void setGUI(GUI gui) {
         this.gui = gui;
     }
 

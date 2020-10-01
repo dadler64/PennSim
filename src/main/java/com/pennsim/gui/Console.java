@@ -11,7 +11,7 @@ import java.util.List;
 public class Console {
 
     private static final String NEWLINE = System.getProperty("line.separator");
-    private static List<PrintableConsole> consoles = new LinkedList<>();
+    private static final List<PrintableConsole> consoles = new LinkedList<>();
 
     public Console() {
         throw new UnsupportedOperationException(Strings.get("staticErrorMessage"));

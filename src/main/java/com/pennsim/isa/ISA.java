@@ -14,12 +14,11 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 
-
 public class ISA {
 
+    private static final HashSet<String> opcodeSet = new HashSet<>();
     public static InstructionDefinition[] lookupTable = new InstructionDefinition[Memory.MEM_SIZE];
     public static Hashtable<String, InstructionDefinition> formatToDefinition = new Hashtable<>();
-    private static HashSet<String> opcodeSet = new HashSet<>();
 
     @Deprecated
     public static void execute(RegisterFile registerFile, Memory memory, Machine machine)
@@ -93,7 +92,7 @@ public class ISA {
         }
     }
 
-    public static void encode(Instruction instruction, List var1) throws AsException {
+    public static void encode(Instruction instruction) throws AsException {
         String instructionFormat = instruction.getFormat();
         InstructionDefinition definition = formatToDefinition.get(instructionFormat);
         if (definition == null) {
@@ -224,8 +223,8 @@ public class ISA {
         });
         createDef(".STRINGZ", "xxxx zzzzzzzzzzzz", new InstructionDefinition() {
             public void encode(SymbolTable symbolTable, Instruction instruction, List<Word> words) {
-                for (int i = 0; i < instruction.getStringz().length(); ++i) {
-                    words.add(new Word(instruction.getStringz().charAt(i)));
+                for (int i = 0; i < instruction.getStringZ().length(); ++i) {
+                    words.add(new Word(instruction.getStringZ().charAt(i)));
                 }
 
                 words.add(new Word(0));
@@ -236,7 +235,7 @@ public class ISA {
             }
 
             public int getNextAddress(Instruction instruction) {
-                return instruction.getAddress() + instruction.getStringz().length() + 1;
+                return instruction.getAddress() + instruction.getStringZ().length() + 1;
             }
         });
         createDef(".END", "xxxx xxxxxxxxxxxx", new InstructionDefinition() {
