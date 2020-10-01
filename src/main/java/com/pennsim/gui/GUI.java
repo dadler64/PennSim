@@ -7,14 +7,13 @@ import com.pennsim.RegisterFile;
 import com.pennsim.command.CommandLine;
 import com.pennsim.exception.GenericException;
 import com.pennsim.exception.PennSimException;
+import com.pennsim.gui.generic.PFrame;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -93,19 +92,17 @@ public class GUI implements TableModelListener {
     private final CommandLinePanel commandPanel;
     private final EditorPanel editorPanel;
     private final CommandOutputWindow commandOutputWindow;
-//    private final TerminalWindow terminalWindow;
     private final TextConsolePanel ioPanel;
     private final VideoConsole video;
     private final JTable registerTable;
     private final JTable memoryTable;
-    private final JScrollPane memoryScrollPane;
     private final Machine machine;
     private final JPanel leftPanel;
     private final JPanel mainPanel;
-    private final JFrame frame;
+    private final PFrame frame;
 
     public GUI(final Machine machine, CommandLine commandLine) {
-        this.frame = new JFrame("PennSim - " + PennSim.VERSION + " - " + PennSim.getISA());
+        this.frame = new PFrame("PennSim - " + PennSim.VERSION + " - " + PennSim.getISA());
         this.fileChooser = new JFileChooser(".");
         this.menuBar = new JMenuBar();
         this.menuFile = new JMenu(Strings.get("menuFile"));
@@ -148,12 +145,7 @@ public class GUI implements TableModelListener {
         // Register pane init
         RegisterFile registerFile = machine.getRegisterFile();
         registerTable = new JTable(registerFile);
-        TableColumn column = registerTable.getColumnModel().getColumn(0);
-        column.setMaxWidth(35);
-        column.setMinWidth(35);
-        column = registerTable.getColumnModel().getColumn(2);
-        column.setMaxWidth(35);
-        column.setMinWidth(35);
+        // Memory pane init
         Memory memory = machine.getMemory();
         memoryTable = new JTable(memory) {
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
@@ -195,61 +187,14 @@ public class GUI implements TableModelListener {
 
             }
         };
-        memoryScrollPane = new JScrollPane(memoryTable) {
-            public JScrollBar createVerticalScrollBar() {
-                return new HighlightScrollBar(machine);
-            }
-        };
-        memoryScrollPane.getVerticalScrollBar().setBlockIncrement(memoryTable.getModel().getRowCount() / 512);
-        memoryScrollPane.getVerticalScrollBar().setUnitIncrement(30); // Scroll Speed
-        memoryScrollPane.getViewport().putClientProperty("EnableWindowBlit", Boolean.TRUE);
-        memoryScrollPane.getViewport().setScrollMode(JViewport.BACKINGSTORE_SCROLL_MODE);
-        column = memoryTable.getColumnModel().getColumn(0);
-        column.setMaxWidth(25);
-        column.setMinWidth(25);
-        column.setCellEditor(new DefaultCellEditor(new JCheckBox()));
-        column = memoryTable.getColumnModel().getColumn(2);
-        column.setMinWidth(60);
-        column.setMaxWidth(60);
-        commandPanel = new CommandLinePanel(machine, commandLine);
-//        terminalWindow = new TerminalWindow(machine, commandLine);
+        // Command init
         commandOutputWindow = new CommandOutputWindow();
-        WindowListener listener = new WindowListener() {
-            public void windowActivated(WindowEvent event) {
-
-            }
-
-            public void windowClosed(WindowEvent event) {
-            }
-
-            public void windowClosing(WindowEvent event) {
-                commandOutputWindow.setVisible(false);
-//                terminalWindow.setVisible(false);
-            }
-
-            public void windowDeactivated(WindowEvent event) {
-            }
-
-            public void windowDeiconified(WindowEvent event) {
-            }
-
-            public void windowIconified(WindowEvent event) {
-            }
-
-            public void windowOpened(WindowEvent event) {
-            }
-        };
-        commandOutputWindow.addWindowListener(listener);
-//        terminalWindow.addWindowListener(listener);
-        commandOutputWindow.setSize(700, 600);
-//        terminalWindow.setSize(700, 600);
-        Console.registerConsole(commandPanel);
-        Console.registerConsole(commandOutputWindow);
-//        Console.registerConsole(terminalWindow);
-        ioPanel = new TextConsolePanel(machine.getMemory().getKeyBoardDevice(), machine.getMemory().getMonitor());
-        ioPanel.setMinimumSize(new Dimension(256, 85));
-        video = new VideoConsole(machine);
+        commandPanel = new CommandLinePanel(machine, commandLine);
         commandPanel.setGUI(this);
+        Console.registerConsole(commandPanel);
+        // Devices  init
+        ioPanel = new TextConsolePanel(machine.getMemory().getKeyBoardDevice(), machine.getMemory().getMonitor());
+        video = new VideoConsole(machine);
     }
 
     /**
@@ -326,6 +271,7 @@ public class GUI implements TableModelListener {
         setUpEditorPanel();
         setupMemoryPanel();
         setupTerminalPanel();
+        setupCommandOutputWindow();
 
         setUpMainPanel();
 
@@ -377,9 +323,7 @@ public class GUI implements TableModelListener {
                 return Strings.get("textFileDescription");
             }
         });
-        frame.setJMenuBar(menuBar);
         registerTable.getModel().addTableModelListener(this);
-        frame.getContentPane().setLayout(new GridBagLayout());
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.BOTH;
@@ -387,10 +331,15 @@ public class GUI implements TableModelListener {
         constraints.gridy = 0;
         constraints.weightx = 1;
         constraints.weighty = 1;
-        frame.getContentPane().add(mainPanel, constraints);
 
-        setLookAndFeel("Metal");
-//        frame.setIconImage(Toolkit.getDefaultToolkit().getImage(ClassLoader.getSystemResource("\\PennSim.png")));
+        setLookAndFeel("System");
+
+        frame.getContentPane().setLayout(new GridBagLayout());
+        frame.setJMenuBar(menuBar);
+        frame.getContentPane().add(mainPanel, constraints);
+//        frame.setIconImage(Toolkit.getDefaultToolkit().getImage(ClassLoader.getSystemResource("/PennSim.png")));
+        // Original location of look and fel code
+        frame.setMinimumSize(new Dimension(800, 750));
         frame.setPreferredSize(new Dimension(1050, 750));
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.pack();
@@ -411,6 +360,7 @@ public class GUI implements TableModelListener {
         mainPanel.setLayout(new BorderLayout());
 
         leftPanel.setLayout(new BorderLayout());
+        leftPanel.setMaximumSize(new Dimension(256, Integer.MAX_VALUE));
         leftPanel.add(registerPanel, BorderLayout.PAGE_START);
         leftPanel.add(devicesPanel, BorderLayout.CENTER);
 
@@ -439,7 +389,6 @@ public class GUI implements TableModelListener {
         });
         itemCommandOutputWindow.addActionListener(e -> {
             commandOutputWindow.setVisible(true);
-//            terminalWindow.setVisible(true);
         });
         itemQuit.addActionListener(e -> closeDialog());
 
@@ -490,6 +439,36 @@ public class GUI implements TableModelListener {
         menuBar.add(menuTheme);
         menuBar.add(menuOptions);
         menuBar.add(menuAbout);
+    }
+
+    private void setupCommandOutputWindow() {
+        WindowListener listener = new WindowListener() {
+            public void windowActivated(WindowEvent event) {
+
+            }
+
+            public void windowClosed(WindowEvent event) {
+            }
+
+            public void windowClosing(WindowEvent event) {
+                commandOutputWindow.setVisible(false);
+            }
+
+            public void windowDeactivated(WindowEvent event) {
+            }
+
+            public void windowDeiconified(WindowEvent event) {
+            }
+
+            public void windowIconified(WindowEvent event) {
+            }
+
+            public void windowOpened(WindowEvent event) {
+            }
+        };
+        commandOutputWindow.addWindowListener(listener);
+        commandOutputWindow.setSize(700, 600);
+        Console.registerConsole(commandOutputWindow);
     }
 
     /**
@@ -624,6 +603,13 @@ public class GUI implements TableModelListener {
      * Set up the Register Panel
      */
     private void setupRegisterPanel() {
+        TableColumn column = registerTable.getColumnModel().getColumn(0);
+        column.setMaxWidth(35);
+        column.setMinWidth(35);
+        column = registerTable.getColumnModel().getColumn(2);
+        column.setMaxWidth(35);
+        column.setMinWidth(35);
+
         registerPanel.setLayout(new GridBagLayout());
 
         GridBagConstraints constraints = new GridBagConstraints();
@@ -635,7 +621,6 @@ public class GUI implements TableModelListener {
 //        constraints.weightx = 1;
 //        constraints.weighty = 1;
         registerPanel.add(registerTable, constraints);
-//        registerPanel.add(registerTable, "Center");
         registerTable.getModel().addTableModelListener(this);
 
         registerPanel.setVisible(true);
@@ -645,6 +630,8 @@ public class GUI implements TableModelListener {
      * Set up the Device Panel
      */
     private void setupDevicesPanel() {
+        ioPanel.setMinimumSize(new Dimension(256, 256));
+
         devicesPanel.setLayout(new GridBagLayout());
 
         GridBagConstraints constraints = new GridBagConstraints();
@@ -654,7 +641,7 @@ public class GUI implements TableModelListener {
         constraints.gridwidth = 1;
         constraints.gridheight = 1;
         constraints.weightx = 1;
-        constraints.weighty = 1;
+        constraints.weighty = 0.2;
         devicesPanel.add(video, constraints);
 
         constraints = new GridBagConstraints();
@@ -664,12 +651,12 @@ public class GUI implements TableModelListener {
         constraints.gridwidth = 1;
         constraints.gridheight = 1;
         constraints.weightx = 1;
-        constraints.weighty = 1;
+        constraints.weighty = 0.8;
         devicesPanel.add(ioPanel, constraints);
     }
 
     /**
-     *
+     * Set up the Editor Panel
      */
     private void setUpEditorPanel() {
         editorPanel.setLayout(new GridBagLayout());
@@ -696,8 +683,30 @@ public class GUI implements TableModelListener {
         constraints.gridy = 1;
         constraints.gridwidth = 1;
         constraints.gridheight = 3;
+        constraints.weightx = 1;
+        constraints.weighty = 1;
+
+        TableColumn column = memoryTable.getColumnModel().getColumn(0);
+        column.setMaxWidth(25);
+        column.setMinWidth(25);
+        column.setCellEditor(new DefaultCellEditor(new JCheckBox()));
+        column = memoryTable.getColumnModel().getColumn(2);
+        column.setMinWidth(60);
+        column.setMaxWidth(60);
+
+        JScrollPane memoryScrollPane = new JScrollPane(memoryTable) {
+            public JScrollBar createVerticalScrollBar() {
+                return new HighlightScrollBar(machine);
+            }
+        };
+        memoryScrollPane.getVerticalScrollBar().setBlockIncrement(memoryTable.getModel().getRowCount() / 512);
+        memoryScrollPane.getVerticalScrollBar().setUnitIncrement(30); // Scroll Speed
+        memoryScrollPane.getViewport().putClientProperty("EnableWindowBlit", Boolean.TRUE);
+        memoryScrollPane.getViewport().setScrollMode(JViewport.BACKINGSTORE_SCROLL_MODE);
+
         memoryPanel.add(memoryScrollPane, constraints);
-        memoryPanel.setMinimumSize(new Dimension(350, 100));
+//        memoryPanel.add(memoryScrollPane, Component.CENTER_ALIGNMENT);
+//        memoryPanel.setMinimumSize(new Dimension(350, 100));
         memoryTable.getModel().addTableModelListener(this);
         memoryTable.getModel().addTableModelListener(video);
         memoryTable.getModel().addTableModelListener((HighlightScrollBar) memoryScrollPane.getVerticalScrollBar());
@@ -790,7 +799,7 @@ public class GUI implements TableModelListener {
     /**
      * Confirm exit when exiting the program
      */
-    void closeDialog() {
+    protected void closeDialog() {
         Object[] options = new Object[]{Strings.get("optionYes"), Strings.get("optionNo")};
         int optionDialog = JOptionPane
                 .showOptionDialog(frame, Strings.get("quitPrompt"), Strings.get("quitTitle"), JOptionPane.YES_NO_OPTION,
