@@ -111,8 +111,6 @@ public class CommandLinePanel extends JPanel implements ActionListener, Printabl
                     if (text.length() > 0) {
                         Console.println(text);
                     }
-                } else {
-                    this.gui.confirmExit();
                 }
             } catch (GenericException e) {
                 e.showMessageDialog(this.getParent());

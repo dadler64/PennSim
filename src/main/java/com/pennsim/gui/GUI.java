@@ -390,7 +390,7 @@ public class GUI implements TableModelListener {
         frame.getContentPane().add(mainPanel, constraints);
 
         setLookAndFeel("Metal");
-        frame.setIconImage(Toolkit.getDefaultToolkit().getImage(ClassLoader.getSystemResource("\\PennSim.png")));
+//        frame.setIconImage(Toolkit.getDefaultToolkit().getImage(ClassLoader.getSystemResource("\\PennSim.png")));
         frame.setPreferredSize(new Dimension(1050, 750));
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.pack();

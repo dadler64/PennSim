@@ -83,7 +83,7 @@ public class Instruction {
                 }
             }
 
-            if (this.stringZ != null) {
+            if (this.stringz != null) {
                 this.format += Strings.get("string");
             }
 
