@@ -158,7 +158,17 @@ distributions {
     osxDistZip.dependsOn 'jar'
 }
 
+//====================
+// Local Dependencies
+//====================
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
 dependencies {
+    compile fileTree('libs') { include '*.jar' }
     compile 'com.fifesoft:rsyntaxtextarea:3.0.8'
     compile 'com.jtattoo:JTattoo:1.6.13'
 }
