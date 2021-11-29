@@ -31,7 +31,7 @@
 <!-- SCREENSHOT -->
 <h4 align="center">
   <br>
-    <a href=""><img src="src/main/resources/PennSim.png" alt="PennSim Screenshot"></a>
+    <a href=""><img src="src/main/resources/PennSim125Screenshot.png" alt="PennSim Screenshot"></a>
   <br>
     Screenshot of PennSim running on Windows
   <br>
